@@ -7,6 +7,7 @@ import {
 } from '../lib/accountSession';
 import { accountKindLabel, shortAddress } from '../lib/accounts';
 import { switchActiveAccount } from '../lib/walletManager';
+import { PassportScoreBadge } from './PassportScoreBadge';
 
 function ChevronUpIcon() {
   return (
@@ -181,6 +182,7 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
                             {accountKindLabel(account.kind)} · {shortAddress(account.address)}
                           </span>
                         </span>
+                        <PassportScoreBadge address={account.address} />
                         {selected ? (
                           <span className="w1337-acct-sheet-row__check" aria-hidden>
                             <CheckIcon />
@@ -228,6 +230,7 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
             {accountKindLabel(active.kind)} · {shortAddress(active.address)}
           </span>
         </span>
+        <PassportScoreBadge address={active.address} />
         <span className="w1337-acct-trigger__chev" aria-hidden>
           <ChevronUpIcon />
         </span>

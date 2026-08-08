@@ -861,6 +861,46 @@ button.bfox-account-manage-select:hover:not(:disabled) {
   gap: 4px;
 }
 
+.bfox-account-manage-meta {
+  font-size: 11px;
+}
+
+.bfox-passport-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.bfox-passport-badge--human {
+  color: var(--ok, #22c55e);
+  border-color: color-mix(in srgb, var(--ok, #22c55e) 35%, var(--border));
+  background: color-mix(in srgb, var(--ok, #22c55e) 8%, transparent);
+}
+
+.bfox-passport-badge--sybil {
+  color: var(--muted);
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
+.bfox-passport-badge--loading,
+.bfox-passport-badge--none {
+  min-width: 1.5em;
+  justify-content: center;
+  font-weight: 500;
+  max-width: 9.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .w1337-acct-action-sheet {
   max-height: min(420px, 70vh);
 }
@@ -2060,6 +2100,7 @@ button.w1337-pct--max {
 .w1337-sheet-backdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
   border: none;
   padding: 0;
   margin: 0;
@@ -2084,6 +2125,7 @@ button.w1337-sheet-backdrop:focus-visible {
 
 .w1337-sheet-panel {
   position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   margin-top: auto;
@@ -2983,6 +3025,21 @@ html.w1337-surface--popup .w1337-layout-network {
 }
 
 /* Pending dapp approval sheet */
+.w1337-tx-approval.w1337-sheet-mount {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+html.w1337-surface--popup .wallet-shell.w1337--main:has(.w1337-tx-approval) {
+  overflow: hidden;
+}
+
+.wallet-shell.w1337--main:has(.w1337-tx-approval) .w1337-wallet-dock {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .w1337-tx-approval__panel {
   max-height: 92%;
 }
@@ -4204,16 +4261,7 @@ button.w1337-token-row--action:hover:not(:disabled) {
   margin: 8px 0;
 }
 
-/* Network sheet leftovers (unused by dual-dropdown selector) */
-.w1337-sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 100;
-  border: none;
-  padding: 0;
-}
-
+/* Legacy network sheet (unused by dual-dropdown selector) */
 .w1337-sheet {
   position: fixed;
   left: 50%;

@@ -22,6 +22,7 @@ import {
   switchActiveAccount,
 } from '../lib/walletManager';
 import { AccountActionSheet, type AccountAction } from './AccountActionSheet';
+import { PassportScoreBadge } from './PassportScoreBadge';
 import { Segment1337 } from './Select1337';
 
 type AddMode = 'derive' | 'importKey' | 'import' | 'generate';
@@ -138,10 +139,11 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                 }
               >
                 <span>{account.label}</span>
-                <span className="muted mono" style={{ fontSize: 11 }}>
+                <span className="muted mono bfox-account-manage-meta">
                   {accountKindLabel(account.kind)} · {shortAddress(account.address)}
                 </span>
               </button>
+              <PassportScoreBadge address={account.address} />
               <div className="bfox-account-manage-actions">
                 <button
                   type="button"
