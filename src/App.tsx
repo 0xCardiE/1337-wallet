@@ -66,8 +66,8 @@ export function App() {
   useEffect(() => {
     const mode = effectiveToolbarOpenMode(settings);
     const root = document.documentElement;
-    root.classList.toggle('l33t-surface--popup', mode === 'popup');
-    root.classList.toggle('l33t-surface--side-panel', mode === 'side_panel');
+    root.classList.toggle('w1337-surface--popup', mode === 'popup');
+    root.classList.toggle('w1337-surface--side-panel', mode === 'side_panel');
   }, [settings]);
 
   useEffect(() => {

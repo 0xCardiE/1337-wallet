@@ -1,14 +1,14 @@
-import { L33tBrand } from './L33tBrand';
+import { Brand1337 } from './Brand1337';
 
 export function LoadingScreen({ message }: { message?: string }) {
   return (
     <div
-      className="loading-screen leet-loading-screen"
+      className="loading-screen w1337-loading-screen"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <L33tBrand className="loading-screen-brand-stack" skullSize={80} wordmarkWidth={180} />
+      <Brand1337 className="loading-screen-brand-stack" skullSize={80} wordmarkWidth={180} />
       {message ? (
         <p className="loading-screen-message">{message}</p>
       ) : (

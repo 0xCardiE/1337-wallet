@@ -23,8 +23,8 @@ import { loadSwapUi, saveSwapUi } from '../lib/swapUiPersist';
 import { loadWalletBalancesMap } from '../lib/walletBalances';
 import { describeRevertedTx } from '../lib/txFailureDetail';
 import { ScreenHeader } from './ScreenHeader';
-import { LeetLiFiIcon } from './LeetLiFiIcon';
-import { LeetTokenWithBadge } from './LeetTokenWithBadge';
+import { LiFiIcon } from './LiFiIcon';
+import { TokenWithBadge } from './TokenWithBadge';
 import { DefiYieldPanel } from './DefiYieldPanel';
 import { RefreshIconButton } from './RefreshIconButton';
 
@@ -297,10 +297,10 @@ function SwapExecLog({
   if (url && tx && log.includes(tx.hash)) {
     const i = log.indexOf(tx.hash);
     return (
-      <div className="leet-exec-log">
-        <p className="leet-exec-log__text">
+      <div className="w1337-exec-log">
+        <p className="w1337-exec-log__text">
           {log.slice(0, i)}
-          <a href={url} target="_blank" rel="noopener noreferrer" className="leet-tx-link mono">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="w1337-tx-link mono">
             {tx.hash}
           </a>
           {log.slice(i + tx.hash.length)}
@@ -310,11 +310,11 @@ function SwapExecLog({
   }
 
   return (
-    <div className="leet-exec-log">
-      <p className="leet-exec-log__text">{log}</p>
+    <div className="w1337-exec-log">
+      <p className="w1337-exec-log__text">{log}</p>
       {url && tx ? (
-        <p className="leet-exec-log__sub">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="leet-tx-link">
+        <p className="w1337-exec-log__sub">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="w1337-tx-link">
             Open in {explorerHint} ↗
           </a>
         </p>
@@ -1266,7 +1266,7 @@ export function SwapView({
   const settingsBtn = (
     <button
       type="button"
-      className="leet-icon-head"
+      className="w1337-icon-head"
       onClick={onOpenSettings}
       aria-label="Settings"
     >
@@ -1288,9 +1288,9 @@ export function SwapView({
   );
 
   const sheetSearch = (placeholder: string, value: string, set: (s: string) => void) => (
-    <div className="leet-search-field">
+    <div className="w1337-search-field">
       <svg
-        className="leet-search-field__icon"
+        className="w1337-search-field__icon"
         width="18"
         height="18"
         viewBox="0 0 24 24"
@@ -1305,7 +1305,7 @@ export function SwapView({
       </svg>
       <input
         type="search"
-        className="leet-search-field__input"
+        className="w1337-search-field__input"
         placeholder={placeholder}
         value={value}
         onChange={e => set(e.target.value)}
@@ -1322,23 +1322,23 @@ export function SwapView({
   }, [embedded]);
 
   const body = (
-    <div className={embedded ? 'leet-body leet-body--compact' : 'screen-body leet-body leet-body--compact'}>
+    <div className={embedded ? 'w1337-body w1337-body--compact' : 'screen-body w1337-body w1337-body--compact'}>
         {(embedded || walletTab === 'swap') ? (
           <>
-            <p className="leet-li-fi-hint">Powered by Li.Fi</p>
+            <p className="w1337-li-fi-hint">Powered by Li.Fi</p>
 
-            <div className="leet-card leet-exchange-card">
-              <div className="leet-pair-row">
+            <div className="w1337-card w1337-exchange-card">
+              <div className="w1337-pair-row">
                 <button
                   type="button"
-                  className="leet-pair-cell"
+                  className="w1337-pair-cell"
                   onClick={() => {
                     setFromTokenSearch('');
                     setSheet('fromToken');
                   }}
                   disabled={balancesBusy}
                 >
-                  <LeetTokenWithBadge
+                  <TokenWithBadge
                     tokenLogoURI={fromToken?.logoURI}
                     chainLogoURI={fromChainMeta?.logoURI}
                     size={40}
@@ -1350,12 +1350,12 @@ export function SwapView({
 
                 <button
                   type="button"
-                  className="leet-pair-flip"
+                  className="w1337-pair-flip"
                   aria-label="Swap from and to tokens"
                   onClick={() => flipExchangePair()}
                   disabled={balancesBusy || fromChainId == null || toChainId == null}
                 >
-                  <span className="leet-pair-mid-circle">
+                  <span className="w1337-pair-mid-circle">
                     <svg
                       width="18"
                       height="18"
@@ -1375,14 +1375,14 @@ export function SwapView({
 
                 <button
                   type="button"
-                  className="leet-pair-cell"
+                  className="w1337-pair-cell"
                   onClick={() => {
                     setToSearch('');
                     setSheet('toToken');
                   }}
                   disabled={destBusy}
                 >
-                  <LeetTokenWithBadge
+                  <TokenWithBadge
                     tokenLogoURI={toToken?.logoURI}
                     chainLogoURI={toChainMeta?.logoURI}
                     size={40}
@@ -1393,10 +1393,10 @@ export function SwapView({
                 </button>
               </div>
 
-              <div className="leet-send-block">
-                <span className="leet-label">From</span>
+              <div className="w1337-send-block">
+                <span className="w1337-label">From</span>
                 <input
-                  className="leet-amount-massive"
+                  className="w1337-amount-massive"
                   value={amountStr}
                   disabled={execBusy}
                   onChange={e => {
@@ -1408,17 +1408,17 @@ export function SwapView({
                   placeholder="0"
                   inputMode="decimal"
                 />
-                <div className="leet-amount-meta">
-                  <span className="leet-amount-usd">
+                <div className="w1337-amount-meta">
+                  <span className="w1337-amount-usd">
                     {amountUsdPreview != null ? `~$${amountUsdPreview}` : '—'}
                   </span>
                 </div>
-                <div className="leet-pct-row">
+                <div className="w1337-pct-row">
                   {([25, 50, 75] as const).map(pct => (
                     <button
                       key={pct}
                       type="button"
-                      className="leet-pct"
+                      className="w1337-pct"
                       disabled={!fromToken || balancesBusy || execBusy}
                       onClick={() => applyAmountPercent(pct)}
                     >
@@ -1427,7 +1427,7 @@ export function SwapView({
                   ))}
                   <button
                     type="button"
-                    className="leet-pct leet-pct--max"
+                    className="w1337-pct w1337-pct--max"
                     disabled={!fromToken || balancesBusy || execBusy}
                     onClick={onMaxHalfToggle}
                   >
@@ -1436,11 +1436,11 @@ export function SwapView({
                 </div>
               </div>
 
-              <div className="leet-actions">
+              <div className="w1337-actions">
                 {swapSuccessCta && !quote && !quoteBusy ? (
                   <button
                     type="button"
-                    className="primary leet-success-cta"
+                    className="primary w1337-success-cta"
                     tabIndex={-1}
                     aria-disabled="true"
                     aria-live="polite"
@@ -1463,10 +1463,10 @@ export function SwapView({
               {balancesErr && <p className="error">Balances: {balancesErr}</p>}
               {quoteErr && <p className="error">{quoteErr}</p>}
               {quote && (
-                <div className="leet-quote leet-quote--compact">
-                  <div className="leet-quote-assets">
-                    <div className="leet-quote-chip">
-                      <LeetLiFiIcon
+                <div className="w1337-quote w1337-quote--compact">
+                  <div className="w1337-quote-assets">
+                    <div className="w1337-quote-chip">
+                      <LiFiIcon
                         logoURI={quote.action.fromToken.logoURI}
                         label={quote.action.fromToken.symbol}
                         size={28}
@@ -1476,11 +1476,11 @@ export function SwapView({
                         <strong>{quote.action.fromToken.symbol}</strong>
                       </span>
                     </div>
-                    <span className="leet-quote-arrow" aria-hidden>
+                    <span className="w1337-quote-arrow" aria-hidden>
                       →
                     </span>
-                    <div className="leet-quote-chip">
-                      <LeetLiFiIcon
+                    <div className="w1337-quote-chip">
+                      <LiFiIcon
                         logoURI={quote.action.toToken.logoURI}
                         label={quote.action.toToken.symbol}
                         size={28}
@@ -1491,12 +1491,12 @@ export function SwapView({
                       </span>
                     </div>
                   </div>
-                  <div className="muted leet-quote-route">
+                  <div className="muted w1337-quote-route">
                     Via <strong>{quote.tool}</strong>
                     {quote.toolDetails?.name ? ` · ${quote.toolDetails.name}` : ''}
                   </div>
                   {outPreview && quote.action.toToken && (
-                    <p className="leet-est">
+                    <p className="w1337-est">
                       Est.{' '}
                       <strong>
                         {fmtNum(Number(outPreview))} {quote.action.toToken.symbol}
@@ -1505,7 +1505,7 @@ export function SwapView({
                   )}
                   <button
                     type="button"
-                    className="primary leet-swap-btn"
+                    className="primary w1337-swap-btn"
                     disabled={execBusy || !quote.transactionRequest || !!quoteErr}
                     onClick={() => void execute()}
                   >
@@ -1520,7 +1520,7 @@ export function SwapView({
               )}
             </div>
 
-            <div className="leet-footer leet-footer--tight leet-footer--icon">
+            <div className="w1337-footer w1337-footer--tight w1337-footer--icon">
               <RefreshIconButton
                 busy={balancesBusy}
                 ariaLabel="Refresh balances"
@@ -1534,11 +1534,11 @@ export function SwapView({
         ) : walletTab === 'defi' ? (
           <DefiYieldPanel />
         ) : (
-          <div className="leet-history-tab">
+          <div className="w1337-history-tab">
             {swapHistory.length === 0 ? (
-              <p className="leet-history-tab__empty muted">No activity recorded yet.</p>
+              <p className="w1337-history-tab__empty muted">No activity recorded yet.</p>
             ) : (
-              <ul className="leet-history-tab__list leet-swap-history__list">
+              <ul className="w1337-history-tab__list w1337-swap-history__list">
                 {swapHistory.map(e => {
                   const url = transactionExplorerUrl(
                     e.txChainId,
@@ -1552,17 +1552,17 @@ export function SwapView({
                     (url ? ' · View tx' : '');
                   const inner = (
                     <>
-                      <span className="leet-swap-history__pair">
+                      <span className="w1337-swap-history__pair">
                         {e.fromSymbol} → {e.toSymbol}
                       </span>
-                      <span className="leet-swap-history__sub muted">{sub}</span>
+                      <span className="w1337-swap-history__sub muted">{sub}</span>
                     </>
                   );
                   return (
                     <li key={e.id}>
                       {url ? (
                         <a
-                          className="leet-swap-history__row"
+                          className="w1337-swap-history__row"
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1570,7 +1570,7 @@ export function SwapView({
                           {inner}
                         </a>
                       ) : (
-                        <span className="leet-swap-history__row leet-swap-history__row--dead">
+                        <span className="w1337-swap-history__row w1337-swap-history__row--dead">
                           {inner}
                         </span>
                       )}
@@ -1583,7 +1583,7 @@ export function SwapView({
         )}
 
         {!embedded ? (
-          <p className="muted mono leet-address" title={addr}>
+          <p className="muted mono w1337-address" title={addr}>
             {addr}
           </p>
         ) : null}
@@ -1591,40 +1591,40 @@ export function SwapView({
   );
 
   const sheets = walletTab === 'swap' && sheet ? (
-        <div className="leet-sheet-mount">
+        <div className="w1337-sheet-mount">
           <button
             type="button"
-            className="leet-sheet-backdrop"
+            className="w1337-sheet-backdrop"
             aria-label="Dismiss"
             onClick={closeSheet}
           />
           <div
-            className="leet-sheet-panel"
+            className="w1337-sheet-panel"
             role="dialog"
             aria-modal="true"
             onClick={e => e.stopPropagation()}
           >
             {sheet === 'fromNet' && (
               <>
-                <div className="leet-sheet-head">
+                <div className="w1337-sheet-head">
                   <button
                     type="button"
-                    className="leet-sheet-back"
+                    className="w1337-sheet-back"
                     onClick={() => setSheet('fromToken')}
                     aria-label="Back"
                   >
                     ‹
                   </button>
-                  <h2 className="leet-sheet-h2">From network</h2>
+                  <h2 className="w1337-sheet-h2">From network</h2>
                 </div>
                 {sheetSearch('Search network', fromNetSearch, setFromNetSearch)}
-                <ul className="leet-sheet-list">
+                <ul className="w1337-sheet-list">
                   {filteredFromChainsSheet.map(c => (
                     <li key={c.id}>
                       <button
                         type="button"
                         className={
-                          'leet-sheet-row' + (c.id === fromChainId ? ' leet-sheet-row--on' : '')
+                          'w1337-sheet-row' + (c.id === fromChainId ? ' w1337-sheet-row--on' : '')
                         }
                         onClick={() => {
                           setSwapSuccessCta(false);
@@ -1636,8 +1636,8 @@ export function SwapView({
                           setSheet('fromToken');
                         }}
                       >
-                        <LeetLiFiIcon logoURI={c.logo} label={c.name} size={34} rounded />
-                        <span className="leet-sheet-row-text">{c.name}</span>
+                        <LiFiIcon logoURI={c.logo} label={c.name} size={34} rounded />
+                        <span className="w1337-sheet-row-text">{c.name}</span>
                       </button>
                     </li>
                   ))}
@@ -1647,47 +1647,47 @@ export function SwapView({
 
             {sheet === 'fromToken' && (
               <>
-                <div className="leet-sheet-head">
+                <div className="w1337-sheet-head">
                   <button
                     type="button"
-                    className="leet-sheet-back"
+                    className="w1337-sheet-back"
                     onClick={closeSheet}
                     aria-label="Back"
                   >
                     ‹
                   </button>
-                  <h2 className="leet-sheet-h2">Exchange from</h2>
+                  <h2 className="w1337-sheet-h2">Exchange from</h2>
                 </div>
                 <button
                   type="button"
-                  className="leet-sheet-net-pill leet-sheet-net-pill--brand"
+                  className="w1337-sheet-net-pill w1337-sheet-net-pill--brand"
                   onClick={() => setSheet('fromNet')}
                   disabled={!chainChoices.length}
                 >
-                  <LeetLiFiIcon
+                  <LiFiIcon
                     logoURI={fromChainMeta?.logoURI}
                     label={fromChainId != null ? chainName(fromChainId) : ' '}
                     size={28}
                     rounded
                   />
-                  <span className="leet-sheet-net-pill-stack">
-                    <span className="leet-sheet-net-pill-muted">Network</span>
-                    <span className="leet-sheet-net-pill-name">
+                  <span className="w1337-sheet-net-pill-stack">
+                    <span className="w1337-sheet-net-pill-muted">Network</span>
+                    <span className="w1337-sheet-net-pill-name">
                       {fromChainId != null ? chainName(fromChainId) : '…'}
                     </span>
                   </span>
-                  <span className="leet-sheet-net-pill-chev" aria-hidden>
+                  <span className="w1337-sheet-net-pill-chev" aria-hidden>
                     ›
                   </span>
                 </button>
                 {sheetSearch('Search by token or address', fromTokenSearch, setFromTokenSearch)}
-                <ul className="leet-sheet-list">
+                <ul className="w1337-sheet-list">
                   {sourceTokensBusy ? (
-                    <li className="leet-sheet-empty">Loading tokens…</li>
+                    <li className="w1337-sheet-empty">Loading tokens…</li>
                   ) : sourceTokensErr && !fromChoices.length ? (
-                    <li className="leet-sheet-empty">{sourceTokensErr}</li>
+                    <li className="w1337-sheet-empty">{sourceTokensErr}</li>
                   ) : !filteredFromTokensSheet.length ? (
-                    <li className="leet-sheet-empty">
+                    <li className="w1337-sheet-empty">
                       {fromTokenSearch.trim()
                         ? 'No tokens match search.'
                         : 'No token list for this network yet. Pull to refresh balances or try search.'}
@@ -1698,9 +1698,9 @@ export function SwapView({
                         <button
                           type="button"
                           className={
-                            'leet-sheet-row leet-sheet-row--token' +
+                            'w1337-sheet-row w1337-sheet-row--token' +
                             (fromToken && addressesMatchPayToken(fromToken.address, t.address)
-                              ? ' leet-sheet-row--on'
+                              ? ' w1337-sheet-row--on'
                               : '')
                           }
                           onClick={() => {
@@ -1716,16 +1716,16 @@ export function SwapView({
                             closeSheet();
                           }}
                         >
-                          <LeetTokenWithBadge
+                          <TokenWithBadge
                             tokenLogoURI={t.logoURI}
                             chainLogoURI={fromChainMeta?.logoURI}
                             size={36}
                             symbol={t.symbol}
                             subline={t.name.length > 42 ? `${t.name.slice(0, 40)}…` : t.name}
                           />
-                          <div className="leet-sheet-row-bal">
-                            <span className="leet-sheet-row-amt">{fmtBal(t)}</span>
-                            <span className="leet-sheet-row-usd">${fmtBalUsd(t)}</span>
+                          <div className="w1337-sheet-row-bal">
+                            <span className="w1337-sheet-row-amt">{fmtBal(t)}</span>
+                            <span className="w1337-sheet-row-usd">${fmtBalUsd(t)}</span>
                           </div>
                         </button>
                       </li>
@@ -1737,25 +1737,25 @@ export function SwapView({
 
             {sheet === 'toNet' && (
               <>
-                <div className="leet-sheet-head">
+                <div className="w1337-sheet-head">
                   <button
                     type="button"
-                    className="leet-sheet-back"
+                    className="w1337-sheet-back"
                     onClick={() => setSheet('toToken')}
                     aria-label="Back"
                   >
                     ‹
                   </button>
-                  <h2 className="leet-sheet-h2">To network</h2>
+                  <h2 className="w1337-sheet-h2">To network</h2>
                 </div>
                 {sheetSearch('Search network', toNetSearch, setToNetSearch)}
-                <ul className="leet-sheet-list">
+                <ul className="w1337-sheet-list">
                   {filteredToChainsSheet.map(c => (
                     <li key={c.id}>
                       <button
                         type="button"
                         className={
-                          'leet-sheet-row' + (c.id === toChainId ? ' leet-sheet-row--on' : '')
+                          'w1337-sheet-row' + (c.id === toChainId ? ' w1337-sheet-row--on' : '')
                         }
                         onClick={() => {
                           setSwapSuccessCta(false);
@@ -1768,8 +1768,8 @@ export function SwapView({
                           setSheet('toToken');
                         }}
                       >
-                        <LeetLiFiIcon logoURI={c.logoURI} label={c.name} size={34} rounded />
-                        <span className="leet-sheet-row-text">{c.name}</span>
+                        <LiFiIcon logoURI={c.logoURI} label={c.name} size={34} rounded />
+                        <span className="w1337-sheet-row-text">{c.name}</span>
                       </button>
                     </li>
                   ))}
@@ -1779,56 +1779,56 @@ export function SwapView({
 
             {sheet === 'toToken' && (
               <>
-                <div className="leet-sheet-head">
+                <div className="w1337-sheet-head">
                   <button
                     type="button"
-                    className="leet-sheet-back"
+                    className="w1337-sheet-back"
                     onClick={closeSheet}
                     aria-label="Back"
                   >
                     ‹
                   </button>
-                  <h2 className="leet-sheet-h2">You receive</h2>
+                  <h2 className="w1337-sheet-h2">You receive</h2>
                 </div>
                 <button
                   type="button"
-                  className="leet-sheet-net-pill leet-sheet-net-pill--brand"
+                  className="w1337-sheet-net-pill w1337-sheet-net-pill--brand"
                   onClick={() => setSheet('toNet')}
                   disabled={!evmChains.length}
                 >
-                  <LeetLiFiIcon
+                  <LiFiIcon
                     logoURI={toChainMeta?.logoURI}
                     label={toChainId != null ? chainName(toChainId) : ' '}
                     size={28}
                     rounded
                   />
-                  <span className="leet-sheet-net-pill-stack">
-                    <span className="leet-sheet-net-pill-muted">Network</span>
-                    <span className="leet-sheet-net-pill-name">
+                  <span className="w1337-sheet-net-pill-stack">
+                    <span className="w1337-sheet-net-pill-muted">Network</span>
+                    <span className="w1337-sheet-net-pill-name">
                       {toChainId != null ? chainName(toChainId) : '…'}
                     </span>
                   </span>
-                  <span className="leet-sheet-net-pill-chev" aria-hidden>
+                  <span className="w1337-sheet-net-pill-chev" aria-hidden>
                     ›
                   </span>
                 </button>
                 {sheetSearch('Search token or address', toSearch, setToSearch)}
-                <ul className="leet-sheet-list">
+                <ul className="w1337-sheet-list">
                   {!destTokens?.length && destBusy ? (
-                    <li className="leet-sheet-empty">Loading tokens…</li>
+                    <li className="w1337-sheet-empty">Loading tokens…</li>
                   ) : destErr ? (
-                    <li className="leet-sheet-empty">{destErr}</li>
+                    <li className="w1337-sheet-empty">{destErr}</li>
                   ) : !filteredToTokens.length ? (
-                    <li className="leet-sheet-empty">No match</li>
+                    <li className="w1337-sheet-empty">No match</li>
                   ) : (
                     filteredToTokens.map(t => (
                       <li key={t.address + t.symbol}>
                         <button
                           type="button"
                           className={
-                            'leet-sheet-row leet-sheet-row--token' +
+                            'w1337-sheet-row w1337-sheet-row--token' +
                             (toToken && addressesMatchPayToken(toToken.address, t.address)
-                              ? ' leet-sheet-row--on'
+                              ? ' w1337-sheet-row--on'
                               : '')
                           }
                           onClick={() => {
@@ -1844,7 +1844,7 @@ export function SwapView({
                             closeSheet();
                           }}
                         >
-                          <LeetTokenWithBadge
+                          <TokenWithBadge
                             tokenLogoURI={t.logoURI}
                             chainLogoURI={toChainMeta?.logoURI}
                             size={36}
@@ -1864,7 +1864,7 @@ export function SwapView({
 
   if (embedded) {
     return (
-      <div className="leet leet--swap leet--embedded">
+      <div className="w1337 w1337--swap w1337--embedded">
         {body}
         {sheets}
       </div>
@@ -1873,16 +1873,16 @@ export function SwapView({
 
   return (
     <div
-      className={`wallet-shell leet leet--swap${walletTab === 'swap' ? '' : ' leet--wallet-subtab'}`}
+      className={`wallet-shell w1337 w1337--swap${walletTab === 'swap' ? '' : ' w1337--wallet-subtab'}`}
     >
       <ScreenHeader title={walletTitle} trailing={settingsBtn} />
 
-      <nav className="leet-wallet-tabs" aria-label="Wallet sections">
+      <nav className="w1337-wallet-tabs" aria-label="Wallet sections">
         {(['swap', 'defi', 'history'] as const).map(t => (
           <button
             key={t}
             type="button"
-            className={`leet-wallet-tabs__btn${walletTab === t ? ' leet-wallet-tabs__btn--on' : ''}`}
+            className={`w1337-wallet-tabs__btn${walletTab === t ? ' w1337-wallet-tabs__btn--on' : ''}`}
             aria-current={walletTab === t ? 'page' : undefined}
             onClick={() => setWalletTab(t)}
           >

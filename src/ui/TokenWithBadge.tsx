@@ -1,7 +1,7 @@
-import { LeetLiFiIcon } from './LeetLiFiIcon';
+import { LiFiIcon } from './LiFiIcon';
 
 /** Token logo (circle) + small chain badge bottom-right, Jumper-style. */
-export function LeetTokenWithBadge({
+export function TokenWithBadge({
   tokenLogoURI,
   chainLogoURI,
   size = 40,
@@ -21,21 +21,21 @@ export function LeetTokenWithBadge({
   const sym = empty ? '—' : symbol;
 
   return (
-    <div className={`leet-tw ${empty ? 'leet-tw--empty' : ''}`}>
-      <div className="leet-tw-inner">
-        <LeetLiFiIcon
+    <div className={`w1337-tw ${empty ? 'w1337-tw--empty' : ''}`}>
+      <div className="w1337-tw-inner">
+        <LiFiIcon
           logoURI={empty ? null : tokenLogoURI}
           label={sym}
           size={size}
           rounded
         />
-        <div className="leet-tw-badge" aria-hidden>
-          <LeetLiFiIcon logoURI={chainLogoURI} label="" size={badgeSize} rounded />
+        <div className="w1337-tw-badge" aria-hidden>
+          <LiFiIcon logoURI={chainLogoURI} label="" size={badgeSize} rounded />
         </div>
       </div>
-      <div className="leet-tw-text">
-        <span className="leet-tw-symbol">{empty ? 'Token' : sym}</span>
-        <span className="leet-tw-sub">{empty ? 'Tap to choose' : subline ?? ' '}</span>
+      <div className="w1337-tw-text">
+        <span className="w1337-tw-symbol">{empty ? 'Token' : sym}</span>
+        <span className="w1337-tw-sub">{empty ? 'Tap to choose' : subline ?? ' '}</span>
       </div>
     </div>
   );

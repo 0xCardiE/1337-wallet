@@ -9,7 +9,7 @@ import {
   loadWalletBalancesForChain,
   type WalletBalEntry,
 } from '../lib/walletBalances';
-import { LeetLiFiIcon } from './LeetLiFiIcon';
+import { LiFiIcon } from './LiFiIcon';
 import { QuickSendInline } from './QuickSendInline';
 import { RefreshIconButton } from './RefreshIconButton';
 
@@ -59,8 +59,8 @@ export function WalletHomeView({
   }
 
   return (
-    <div className="l33t-home">
-      <div className="l33t-home-refresh-row">
+    <div className="w1337-home">
+      <div className="w1337-home-refresh-row">
         <RefreshIconButton
           busy={busy}
           ariaLabel="Refresh balances"
@@ -68,41 +68,41 @@ export function WalletHomeView({
         />
       </div>
 
-      {err ? <p className="error l33t-home-error">{err}</p> : null}
+      {err ? <p className="error w1337-home-error">{err}</p> : null}
 
       {busy && rows.length === 0 ? (
-        <p className="muted l33t-home-loading">Loading balances…</p>
+        <p className="muted w1337-home-loading">Loading balances…</p>
       ) : null}
 
       {!busy && rows.length === 0 && !err ? (
-        <p className="muted l33t-home-empty">No tokens with balance on this network.</p>
+        <p className="muted w1337-home-empty">No tokens with balance on this network.</p>
       ) : null}
 
-      <ul className="l33t-token-list">
+      <ul className="w1337-token-list">
         {rows.map(t => {
           const usd = fmtUsdValue(t);
           const key = tokenRowKey(t);
           const open = expandedKey === key;
           return (
-            <li key={key} className={`l33t-token-item${open ? ' l33t-token-item--open' : ''}`}>
+            <li key={key} className={`w1337-token-item${open ? ' w1337-token-item--open' : ''}`}>
               <button
                 type="button"
-                className="l33t-token-row l33t-token-row--action"
+                className="w1337-token-row w1337-token-row--action"
                 aria-expanded={open}
                 onClick={() => toggleSend(t)}
               >
-                <LeetLiFiIcon logoURI={t.logoURI} label={t.symbol} size={40} rounded />
-                <div className="l33t-token-row__meta">
-                  <span className="l33t-token-row__name">{t.name || t.symbol}</span>
-                  <span className="l33t-token-row__sym">{t.symbol}</span>
+                <LiFiIcon logoURI={t.logoURI} label={t.symbol} size={40} rounded />
+                <div className="w1337-token-row__meta">
+                  <span className="w1337-token-row__name">{t.name || t.symbol}</span>
+                  <span className="w1337-token-row__sym">{t.symbol}</span>
                 </div>
-                <div className="l33t-token-row__vals">
-                  <span className="l33t-token-row__usd">{usd ?? '—'}</span>
-                  <span className="l33t-token-row__amt">
+                <div className="w1337-token-row__vals">
+                  <span className="w1337-token-row__usd">{usd ?? '—'}</span>
+                  <span className="w1337-token-row__amt">
                     {fmtTokenAmount(t)} {t.symbol}
                   </span>
                 </div>
-                <span className="l33t-token-row__toggle" aria-hidden>
+                <span className="w1337-token-row__toggle" aria-hidden>
                   {open ? '−' : '+'}
                 </span>
               </button>

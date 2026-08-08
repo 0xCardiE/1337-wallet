@@ -126,7 +126,7 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
       await switchActiveAccount(id);
       setOpen(false);
       onChanged?.();
-      window.dispatchEvent(new Event('burnbox-account-changed'));
+      window.dispatchEvent(new Event('1337-account-changed'));
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -139,50 +139,50 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
   const sheet =
     open && typeof document !== 'undefined'
       ? createPortal(
-          <div className="l33t-acct-sheet-mount" role="dialog" aria-label="Switch account">
+          <div className="w1337-acct-sheet-mount" role="dialog" aria-label="Switch account">
             <button
               type="button"
-              className="l33t-acct-sheet-backdrop"
+              className="w1337-acct-sheet-backdrop"
               aria-label="Close"
               onClick={() => setOpen(false)}
             />
-            <div className="l33t-acct-sheet-panel">
-              <div className="l33t-acct-sheet-head">
+            <div className="w1337-acct-sheet-panel">
+              <div className="w1337-acct-sheet-head">
                 <strong>Switch account</strong>
-                <span className="muted l33t-acct-sheet-count">
+                <span className="muted w1337-acct-sheet-count">
                   {accounts.length} wallet{accounts.length === 1 ? '' : 's'}
                 </span>
               </div>
 
-              <ul className="l33t-acct-sheet-list">
+              <ul className="w1337-acct-sheet-list">
                 {accounts.map(account => {
                   const selected = account.id === activeId;
                   return (
                     <li key={account.id}>
                       <button
                         type="button"
-                        className={`l33t-acct-sheet-row${selected ? ' l33t-acct-sheet-row--on' : ''}`}
+                        className={`w1337-acct-sheet-row${selected ? ' w1337-acct-sheet-row--on' : ''}`}
                         disabled={busy}
                         title="Click to switch · double-click address to copy"
                         onClick={() => scheduleSelect(account.id)}
                         onDoubleClick={() => onRowDoubleClick(account.address, account.id)}
                       >
-                        <span className="l33t-acct-sheet-row__text">
+                        <span className="w1337-acct-sheet-row__text">
                           <span
-                            className={`l33t-acct-sheet-row__label${
-                              copiedId === account.id ? ' l33t-acct-sheet-row__label--copied' : ''
+                            className={`w1337-acct-sheet-row__label${
+                              copiedId === account.id ? ' w1337-acct-sheet-row__label--copied' : ''
                             }`}
                           >
                             {copiedId === account.id
                               ? 'Copied!'
                               : account.label || shortAddress(account.address)}
                           </span>
-                          <span className="l33t-acct-sheet-row__meta mono">
+                          <span className="w1337-acct-sheet-row__meta mono">
                             {accountKindLabel(account.kind)} · {shortAddress(account.address)}
                           </span>
                         </span>
                         {selected ? (
-                          <span className="l33t-acct-sheet-row__check" aria-hidden>
+                          <span className="w1337-acct-sheet-row__check" aria-hidden>
                             <CheckIcon />
                           </span>
                         ) : null}
@@ -193,12 +193,12 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
               </ul>
 
               {!canSwitch ? (
-                <p className="muted l33t-acct-sheet-hint">
+                <p className="muted w1337-acct-sheet-hint">
                   Add more accounts in Settings → Wallets.
                 </p>
               ) : null}
 
-              {err ? <p className="error l33t-acct-sheet-err">{err}</p> : null}
+              {err ? <p className="error w1337-acct-sheet-err">{err}</p> : null}
             </div>
           </div>,
           document.body,
@@ -209,26 +209,26 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
     <>
       <button
         type="button"
-        className={`l33t-acct-trigger l33t-acct-trigger--dock${open ? ' l33t-acct-trigger--open' : ''}`}
+        className={`w1337-acct-trigger w1337-acct-trigger--dock${open ? ' w1337-acct-trigger--open' : ''}`}
         onClick={() => scheduleOpen()}
         onDoubleClick={() => onTriggerDoubleClick(active.address)}
         title={`${active.address} · double-click to copy`}
         aria-expanded={open}
         aria-haspopup="dialog"
       >
-        <span className="l33t-acct-trigger__main">
+        <span className="w1337-acct-trigger__main">
           <span
-            className={`l33t-acct-trigger__label${
-              copiedId === 'dock' ? ' l33t-acct-trigger__label--copied' : ''
+            className={`w1337-acct-trigger__label${
+              copiedId === 'dock' ? ' w1337-acct-trigger__label--copied' : ''
             }`}
           >
             {copiedId === 'dock' ? 'Copied!' : active.label || 'Account'}
           </span>
-          <span className="l33t-acct-trigger__sub mono">
+          <span className="w1337-acct-trigger__sub mono">
             {accountKindLabel(active.kind)} · {shortAddress(active.address)}
           </span>
         </span>
-        <span className="l33t-acct-trigger__chev" aria-hidden>
+        <span className="w1337-acct-trigger__chev" aria-hidden>
           <ChevronUpIcon />
         </span>
       </button>

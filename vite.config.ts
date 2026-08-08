@@ -39,7 +39,7 @@ function buildContentScripts(): Plugin {
                   format: 'iife',
                   entryFileNames: `${name}.js`,
                   inlineDynamicImports: true,
-                  name: `L33t_${name}`,
+                  name: `Wallet1337_${name}`,
                 },
               },
             },

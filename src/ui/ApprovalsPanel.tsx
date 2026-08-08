@@ -27,7 +27,7 @@ import {
 } from '../lib/tokenApprovalsCache';
 import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
 import { describeError } from '../lib/utils';
-import { LeetLiFiIcon } from './LeetLiFiIcon';
+import { LiFiIcon } from './LiFiIcon';
 import { RefreshIconButton } from './RefreshIconButton';
 
 function shortAddress(addr: string): string {
@@ -61,14 +61,14 @@ function ApprovalRowItem({
   const txUrl = row.lastApprovalTx ? txExplorerLink(chainId, row.lastApprovalTx) : undefined;
 
   return (
-    <li className="l33t-approvals__item">
-      <div className="l33t-approvals__token">
-        <LeetLiFiIcon logoURI={row.tokenLogo} label={row.tokenSymbol} size={28} rounded />
-        <div className="l33t-approvals__token-meta">
-          <span className="l33t-approvals__token-symbol">{row.tokenSymbol}</span>
+    <li className="w1337-approvals__item">
+      <div className="w1337-approvals__token">
+        <LiFiIcon logoURI={row.tokenLogo} label={row.tokenSymbol} size={28} rounded />
+        <div className="w1337-approvals__token-meta">
+          <span className="w1337-approvals__token-symbol">{row.tokenSymbol}</span>
           {tokenUrl ? (
             <a
-              className="l33t-approvals__link muted"
+              className="w1337-approvals__link muted"
               href={tokenUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -81,11 +81,11 @@ function ApprovalRowItem({
         </div>
       </div>
 
-      <div className="l33t-approvals__detail">
-        <span className="l33t-approvals__label muted">Spender</span>
+      <div className="w1337-approvals__detail">
+        <span className="w1337-approvals__label muted">Spender</span>
         {spenderUrl ? (
           <a
-            className="l33t-approvals__link"
+            className="w1337-approvals__link"
             href={spenderUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -97,16 +97,16 @@ function ApprovalRowItem({
         )}
       </div>
 
-      <div className="l33t-approvals__detail">
-        <span className="l33t-approvals__label muted">Allowance</span>
-        <span className={`l33t-approvals__allowance${row.unlimited ? ' l33t-approvals__allowance--warn' : ''}`}>
+      <div className="w1337-approvals__detail">
+        <span className="w1337-approvals__label muted">Allowance</span>
+        <span className={`w1337-approvals__allowance${row.unlimited ? ' w1337-approvals__allowance--warn' : ''}`}>
           {formatAllowance(row.allowance, row.tokenDecimals, row.unlimited)}
         </span>
       </div>
 
       {txUrl ? (
         <a
-          className="l33t-approvals__tx-link muted"
+          className="w1337-approvals__tx-link muted"
           href={txUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -117,7 +117,7 @@ function ApprovalRowItem({
 
       <button
         type="button"
-        className="l33t-approvals__revoke"
+        className="w1337-approvals__revoke"
         disabled={busy}
         onClick={() => onRevoke(row)}
       >
@@ -351,12 +351,12 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
   }
 
   if (!addr) {
-    return <p className="l33t-tools-empty muted">Unlock wallet to view token approvals.</p>;
+    return <p className="w1337-tools-empty muted">Unlock wallet to view token approvals.</p>;
   }
 
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
-      <p className="l33t-tools-empty muted">
+      <p className="w1337-tools-empty muted">
         Add a free <strong>Etherscan API key</strong> in Settings to scan token approvals on{' '}
         {chain?.name ?? chainId}. One key works across Etherscan-family chains.
       </p>
@@ -369,15 +369,15 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
       : null;
 
   return (
-    <div className="l33t-approvals">
-      <div className="l33t-tx-history__head">
-        <div className="l33t-tx-history__head-main">
+    <div className="w1337-approvals">
+      <div className="w1337-tx-history__head">
+        <div className="w1337-tx-history__head-main">
           {chainLogo ? (
-            <LeetLiFiIcon logoURI={chainLogo} label={chain?.name} size={28} rounded />
+            <LiFiIcon logoURI={chainLogo} label={chain?.name} size={28} rounded />
           ) : null}
           <div>
-            <p className="l33t-tx-history__head-title">{chain?.name ?? `Chain ${chainId}`}</p>
-            <p className="l33t-tx-history__head-sub muted">
+            <p className="w1337-tx-history__head-title">{chain?.name ?? `Chain ${chainId}`}</p>
+            <p className="w1337-tx-history__head-sub muted">
               {visibleRows.length > 0
                 ? `${visibleRows.length} active approval${visibleRows.length === 1 ? '' : 's'}`
                 : 'Token approvals'}
@@ -395,7 +395,7 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
         />
       </div>
 
-      <div className="l33t-approvals__notice" role="note">
+      <div className="w1337-approvals__notice" role="note">
         <strong>Limited scan.</strong> We only check ERC-20 tokens currently in your wallet, using
         Etherscan approval logs from the last {APPROVAL_LOG_LOOKBACK_DAYS} days. Approvals on tokens
         you no longer hold, or older than this window, are not shown. New wallet tokens are scanned
@@ -409,14 +409,14 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
       </div>
 
       {err ? <p className="error">{err}</p> : null}
-      {scanningLabel ? <p className="l33t-tools-empty muted">{scanningLabel}</p> : null}
+      {scanningLabel ? <p className="w1337-tools-empty muted">{scanningLabel}</p> : null}
 
       {!hydrated || (busy && visibleRows.length === 0 && scanningTokens.length === 0) ? (
-        <p className="l33t-tools-empty muted">Loading wallet tokens…</p>
+        <p className="w1337-tools-empty muted">Loading wallet tokens…</p>
       ) : null}
 
       {hydrated && !busy && scanningTokens.length === 0 && visibleRows.length === 0 && !err ? (
-        <p className="l33t-tools-empty muted">
+        <p className="w1337-tools-empty muted">
           {walletTokens.length === 0
             ? 'No tokens in wallet on this network.'
             : 'No active approvals found for your current wallet tokens.'}
@@ -424,7 +424,7 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
       ) : null}
 
       {visibleRows.length > 0 ? (
-        <ul className="l33t-approvals__list">
+        <ul className="w1337-approvals__list">
           {visibleRows.map(row => {
             const key = `${row.token}:${row.spender}`;
             return (

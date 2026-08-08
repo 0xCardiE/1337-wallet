@@ -22,7 +22,7 @@ function logoSrcAttempts(uri: string): string[] {
  * Displays a token or chain graphic from LiFi metadata (`logoURI`).
  * Broken or blocked URLs disappear — fallback shows the asset letter (never a fake PNG).
  */
-export function LeetLiFiIcon({
+export function LiFiIcon({
   logoURI,
   label,
   size = 32,
@@ -48,7 +48,7 @@ export function LeetLiFiIcon({
 
   return (
     <span
-      className={`leet-li-icon ${rounded ? 'leet-li-icon--round' : ''}`}
+      className={`w1337-li-icon ${rounded ? 'w1337-li-icon--round' : ''}`}
       style={{
         width: size,
         height: size,
@@ -74,10 +74,10 @@ export function LeetLiFiIcon({
               setOk(false);
             }
           }}
-          className="leet-li-icon-img"
+          className="w1337-li-icon-img"
         />
       ) : (
-        <span className="leet-li-icon-fallback" title={label}>
+        <span className="w1337-li-icon-fallback" title={label}>
           {letter}
         </span>
       )}

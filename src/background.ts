@@ -105,22 +105,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 void syncToolbarOpenModeFromSettings();
 void loadPersistedSettingsOnStart();
 
-const SESSION_KEY = 'l33t_session_pk';
-const UNLOCK_PASSWORD_KEY = 'l33t_session_unlock';
-/** Legacy session keys — read once then cleared after unlock. */
-const LEGACY_SESSION_KEYS = [
-  'burn_box_session_pk',
-  'burning_fox_session_pk',
-  'jumpa_session_pk',
-  'beewallet_session_pk',
-] as const;
-const ACTIVITY_KEY = 'l33t_last_activity';
-const LEGACY_ACTIVITY_KEYS = [
-  'burn_box_last_activity',
-  'burning_fox_last_activity',
-  'jumpa_last_activity',
-  'beewallet_last_activity',
-] as const;
+const SESSION_KEY = '1337_session_pk';
+const UNLOCK_PASSWORD_KEY = '1337_session_unlock';
+const ACTIVITY_KEY = '1337_last_activity';
+const HW_SESSION_KEY = '1337_session_hw';
 
 let memoryPk: string | null = null;
 let memoryUnlockPassword: string | null = null;
@@ -131,7 +119,6 @@ type HwSession = {
   derivationPath: string;
 };
 let memoryHw: HwSession | null = null;
-const HW_SESSION_KEY = 'burn_box_session_hw';
 
 async function emitToTab(
   tabId: number,
@@ -147,7 +134,7 @@ async function emitToTab(
       target: { tabId },
       world: 'MAIN',
       func: (ev: { type: string; chainId?: string; accounts?: string[] }) => {
-        const channel = 'l33t-provider';
+        const channel = '1337-provider';
         window.postMessage({ channel, target: 'inpage', type: 'event', event: ev }, '*');
         const eth = (window as Window & { ethereum?: { request?: (a: unknown) => Promise<unknown> } })
           .ethereum;
@@ -304,24 +291,11 @@ async function sessionUnlockPassword(): Promise<string | null> {
 async function sessionPrivateKey(): Promise<`0x${string}` | null> {
   await maybeAutoLockExpired();
   if (memoryPk && isValidPkHex(memoryPk)) return memoryPk as `0x${string}`;
-  const data = await chrome.storage.session.get([
-    SESSION_KEY,
-    ...LEGACY_SESSION_KEYS,
-  ]);
-  let hex = data[SESSION_KEY];
-  if (!hex) {
-    for (const k of LEGACY_SESSION_KEYS) {
-      if (data[k]) {
-        hex = data[k];
-        break;
-      }
-    }
-  }
+  const data = await chrome.storage.session.get([SESSION_KEY]);
+  const hex = data[SESSION_KEY];
   if (typeof hex === 'string' && isValidPkHex(hex)) {
     memoryPk = hex;
     memoryHw = null;
-    void chrome.storage.session.set({ [SESSION_KEY]: memoryPk });
-    void chrome.storage.session.remove([...LEGACY_SESSION_KEYS, HW_SESSION_KEY]);
     return memoryPk as `0x${string}`;
   }
   return null;
@@ -365,14 +339,8 @@ async function maybeAutoLockExpired(): Promise<void> {
     const { settings } = await loadPersisted();
     const mins = settings.autoLockMinutes ?? 0;
     if (!Number.isFinite(mins) || mins <= 0) return;
-    const data = await chrome.storage.session.get([
-      ACTIVITY_KEY,
-      ...LEGACY_ACTIVITY_KEYS,
-    ]);
-    const times = [data[ACTIVITY_KEY], ...LEGACY_ACTIVITY_KEYS.map(k => data[k])].filter(
-      (v): v is number => typeof v === 'number',
-    );
-    const last = times.length ? Math.max(...times) : 0;
+    const data = await chrome.storage.session.get([ACTIVITY_KEY]);
+    const last = typeof data[ACTIVITY_KEY] === 'number' ? data[ACTIVITY_KEY] : 0;
     if (!last) return;
     if (Date.now() - last > mins * 60 * 1000) {
       memoryPk = null;
@@ -382,9 +350,7 @@ async function maybeAutoLockExpired(): Promise<void> {
         SESSION_KEY,
         UNLOCK_PASSWORD_KEY,
         HW_SESSION_KEY,
-        ...LEGACY_SESSION_KEYS,
         ACTIVITY_KEY,
-        ...LEGACY_ACTIVITY_KEYS,
       ]);
     }
   } catch {
@@ -717,11 +683,7 @@ chrome.runtime.onMessage.addListener(
           void chrome.storage.session.set({ [UNLOCK_PASSWORD_KEY]: memoryUnlockPassword });
         }
         void chrome.storage.session.set({ [SESSION_KEY]: memoryPk });
-        void chrome.storage.session.remove([
-          ...LEGACY_SESSION_KEYS,
-          ...LEGACY_ACTIVITY_KEYS,
-          HW_SESSION_KEY,
-        ]);
+        void chrome.storage.session.remove([HW_SESSION_KEY]);
         void touchActivity();
         sendResponse({ ok: true });
         return;
@@ -730,11 +692,7 @@ chrome.runtime.onMessage.addListener(
         memoryHw = message.session;
         memoryPk = null;
         void chrome.storage.session.set({ [HW_SESSION_KEY]: memoryHw });
-        void chrome.storage.session.remove([
-          SESSION_KEY,
-          ...LEGACY_SESSION_KEYS,
-          ...LEGACY_ACTIVITY_KEYS,
-        ]);
+        void chrome.storage.session.remove([SESSION_KEY, UNLOCK_PASSWORD_KEY]);
         void touchActivity();
         sendResponse({ ok: true });
         return;
@@ -758,9 +716,7 @@ chrome.runtime.onMessage.addListener(
         SESSION_KEY,
         UNLOCK_PASSWORD_KEY,
         HW_SESSION_KEY,
-        ...LEGACY_SESSION_KEYS,
         ACTIVITY_KEY,
-        ...LEGACY_ACTIVITY_KEYS,
       ]);
       sendResponse({ ok: true });
     }

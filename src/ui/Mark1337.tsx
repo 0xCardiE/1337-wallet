@@ -1,8 +1,8 @@
 /** Compact skull mark for headers and toolbar contexts. */
 
-const SKULL_SRC = 'icons/l33t-skull.png';
+const SKULL_SRC = 'icons/1337-skull.png';
 
-export function L33tMark({
+export function Mark1337({
   className,
   size = 28,
   animated = true,
@@ -19,7 +19,7 @@ export function L33tMark({
       alt=""
       width={size}
       height={height}
-      className={`l33t-mark${animated ? ' l33t-mark--live' : ''}${className ? ` ${className}` : ''}`}
+      className={`w1337-mark${animated ? ' w1337-mark--live' : ''}${className ? ` ${className}` : ''}`}
       decoding="async"
       draggable={false}
     />

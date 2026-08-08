@@ -18,13 +18,13 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
   const [tab, setTab] = useState<ToolsSubTab>('multisend');
 
   return (
-    <div className="l33t-tools">
-      <nav className="l33t-tools-tabs" aria-label="Tools">
+    <div className="w1337-tools">
+      <nav className="w1337-tools-tabs" aria-label="Tools">
         {TOOL_TABS.map(t => (
           <button
             key={t.id}
             type="button"
-            className={`l33t-tools-tabs__btn${tab === t.id ? ' l33t-tools-tabs__btn--on' : ''}`}
+            className={`w1337-tools-tabs__btn${tab === t.id ? ' w1337-tools-tabs__btn--on' : ''}`}
             aria-current={tab === t.id ? 'page' : undefined}
             onClick={() => setTab(t.id)}
           >
@@ -33,7 +33,7 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
         ))}
       </nav>
 
-      <div className="l33t-tools-panel">
+      <div className="w1337-tools-panel">
         {tab === 'multisend' ? <MultiSendView settings={settings} /> : null}
         {tab === 'gas' ? <GasStationView settings={settings} /> : null}
         {tab === 'approvals' ? <ApprovalsPanel settings={settings} /> : null}

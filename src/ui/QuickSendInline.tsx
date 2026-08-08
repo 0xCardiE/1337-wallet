@@ -65,13 +65,13 @@ function SendProgressPanel({ progress }: { progress: SendProgress }) {
       : null;
 
   return (
-    <div className="l33t-quick-send-inline__progress" aria-live="polite">
-      <div className="l33t-quick-send-inline__progress-head">
-        <span className="l33t-quick-send-inline__pulse" aria-hidden />
-        <span className="l33t-quick-send-inline__progress-phase">{phaseLabel(progress.phase)}</span>
-        <span className="l33t-quick-send-inline__progress-elapsed muted">{progress.elapsedSec}s</span>
+    <div className="w1337-quick-send-inline__progress" aria-live="polite">
+      <div className="w1337-quick-send-inline__progress-head">
+        <span className="w1337-quick-send-inline__pulse" aria-hidden />
+        <span className="w1337-quick-send-inline__progress-phase">{phaseLabel(progress.phase)}</span>
+        <span className="w1337-quick-send-inline__progress-elapsed muted">{progress.elapsedSec}s</span>
       </div>
-      <div className="l33t-quick-send-inline__progress-meta mono">
+      <div className="w1337-quick-send-inline__progress-meta mono">
         {progress.headBlock != null ? (
           <span title="Chain block when transaction was sent">Sent #{progress.headBlock.toLocaleString()}</span>
         ) : null}
@@ -362,59 +362,59 @@ export function QuickSendInline({
 
   if (txHash) {
     return (
-      <div className="l33t-quick-send-inline l33t-quick-send-inline--done">
-        <div className="l33t-quick-send-inline__done-head">
-          <span className="l33t-quick-send-inline__ok-badge">
+      <div className="w1337-quick-send-inline w1337-quick-send-inline--done">
+        <div className="w1337-quick-send-inline__done-head">
+          <span className="w1337-quick-send-inline__ok-badge">
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
               <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Sent
           </span>
-          <span className="l33t-quick-send-inline__timer muted">{secondsLeft}s</span>
+          <span className="w1337-quick-send-inline__timer muted">{secondsLeft}s</span>
         </div>
-        <div className="l33t-quick-send-inline__done-body">
-          <div className="l33t-quick-send-inline__done-line">
-            <span className="l33t-quick-send-inline__done-label">Amount</span>
-            <span className="l33t-quick-send-inline__done-value">
+        <div className="w1337-quick-send-inline__done-body">
+          <div className="w1337-quick-send-inline__done-line">
+            <span className="w1337-quick-send-inline__done-label">Amount</span>
+            <span className="w1337-quick-send-inline__done-value">
               {formatTokenAmount(sentAmount, token.decimals)} {token.symbol}
             </span>
           </div>
           {sentTo ? (
-            <div className="l33t-quick-send-inline__done-line">
-              <span className="l33t-quick-send-inline__done-label">To</span>
-              <span className="l33t-quick-send-inline__done-value mono" title={sentTo}>
+            <div className="w1337-quick-send-inline__done-line">
+              <span className="w1337-quick-send-inline__done-label">To</span>
+              <span className="w1337-quick-send-inline__done-value mono" title={sentTo}>
                 {shortAddress(sentTo)}
               </span>
             </div>
           ) : null}
           {confirmBlock != null ? (
-            <div className="l33t-quick-send-inline__done-line">
-              <span className="l33t-quick-send-inline__done-label">Block</span>
-              <span className="l33t-quick-send-inline__done-value mono">
+            <div className="w1337-quick-send-inline__done-line">
+              <span className="w1337-quick-send-inline__done-label">Block</span>
+              <span className="w1337-quick-send-inline__done-value mono">
                 #{confirmBlock.toLocaleString()}
               </span>
             </div>
           ) : null}
           {explorerUrl ? (
-            <div className="l33t-quick-send-inline__done-line">
-              <span className="l33t-quick-send-inline__done-label">Tx</span>
+            <div className="w1337-quick-send-inline__done-line">
+              <span className="w1337-quick-send-inline__done-label">Tx</span>
               <a
-                className="l33t-quick-send-inline__done-value l33t-quick-send-inline__done-link mono"
+                className="w1337-quick-send-inline__done-value w1337-quick-send-inline__done-link mono"
                 href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 title={txHash}
               >
                 {shortHash(txHash)}
-                <span className="l33t-quick-send-inline__done-link-icon" aria-hidden>
+                <span className="w1337-quick-send-inline__done-link-icon" aria-hidden>
                   ↗
                 </span>
               </a>
             </div>
           ) : (
-            <div className="l33t-quick-send-inline__done-line">
-              <span className="l33t-quick-send-inline__done-label">Tx</span>
-              <span className="l33t-quick-send-inline__done-value mono">{shortHash(txHash)}</span>
+            <div className="w1337-quick-send-inline__done-line">
+              <span className="w1337-quick-send-inline__done-label">Tx</span>
+              <span className="w1337-quick-send-inline__done-value mono">{shortHash(txHash)}</span>
             </div>
           )}
         </div>
@@ -426,10 +426,10 @@ export function QuickSendInline({
     addrFocused || !toValid ? toRaw : shortAddress(getAddress(toRaw.trim()));
 
   return (
-    <div className={`l33t-quick-send-inline${busy ? ' l33t-quick-send-inline--sending' : ''}`}>
-      <div className="l33t-quick-send-inline__row">
+    <div className={`w1337-quick-send-inline${busy ? ' w1337-quick-send-inline--sending' : ''}`}>
+      <div className="w1337-quick-send-inline__row">
         <input
-          className="l33t-quick-send-inline__addr"
+          className="w1337-quick-send-inline__addr"
           value={addrDisplay}
           onChange={e => setToRaw(e.target.value)}
           onFocus={() => setAddrFocused(true)}
@@ -442,7 +442,7 @@ export function QuickSendInline({
           title={toValid ? getAddress(toRaw.trim()) : undefined}
         />
         <input
-          className="l33t-quick-send-inline__amt"
+          className="w1337-quick-send-inline__amt"
           value={amountStr}
           onChange={e => {
             setAmountQuickToggle('max');
@@ -453,10 +453,10 @@ export function QuickSendInline({
           autoComplete="off"
           disabled={busy}
         />
-        <div className="l33t-quick-send-inline__actions">
+        <div className="w1337-quick-send-inline__actions">
           <button
             type="button"
-            className="l33t-quick-send-inline__max"
+            className="w1337-quick-send-inline__max"
             onClick={onMaxHalfToggle}
             disabled={busy}
             title={amountQuickToggle === 'max' ? 'Use max balance' : 'Use half balance'}
@@ -465,12 +465,12 @@ export function QuickSendInline({
           </button>
           <button
             type="button"
-            className={`l33t-quick-send-inline__send primary${busy ? ' l33t-quick-send-inline__send--busy' : ''}`}
+            className={`w1337-quick-send-inline__send primary${busy ? ' w1337-quick-send-inline__send--busy' : ''}`}
             disabled={!canSend}
             onClick={onSendClick}
           >
             {busy ? (
-              <span className="l33t-quick-send-inline__send-spinner" aria-hidden />
+              <span className="w1337-quick-send-inline__send-spinner" aria-hidden />
             ) : confirming ? (
               'Review'
             ) : (
@@ -480,12 +480,12 @@ export function QuickSendInline({
         </div>
       </div>
       {confirming && !busy ? (
-        <div className="l33t-quick-send-inline__confirm">
-          <p className="l33t-quick-send-inline__confirm-text">
+        <div className="w1337-quick-send-inline__confirm">
+          <p className="w1337-quick-send-inline__confirm-text">
             Send {amountStr.trim()} {token.symbol} to{' '}
             <span className="mono">{to ? shortAddress(to) : '…'}</span>?
           </p>
-          <div className="l33t-quick-send-inline__confirm-actions">
+          <div className="w1337-quick-send-inline__confirm-actions">
             <button type="button" className="ghost" onClick={() => setConfirming(false)}>
               Cancel
             </button>
@@ -496,7 +496,7 @@ export function QuickSendInline({
         </div>
       ) : null}
       {busy && sendProgress ? <SendProgressPanel progress={sendProgress} /> : null}
-      {fieldErr ? <p className="error l33t-quick-send-inline__err">{fieldErr}</p> : null}
+      {fieldErr ? <p className="error w1337-quick-send-inline__err">{fieldErr}</p> : null}
     </div>
   );
 }

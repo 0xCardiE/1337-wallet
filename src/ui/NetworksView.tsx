@@ -11,7 +11,7 @@ import { allRpcOptionsFor } from '../lib/chainRpcRegistry';
 import { getNativeBalance, erc20BalanceOf } from '../lib/ethereum';
 import { describeError } from '../lib/utils';
 import { ScreenHeader } from './ScreenHeader';
-import { L33tSimpleSelect } from './L33tSelect';
+import { SimpleSelect1337 } from './Select1337';
 import { RefreshIconButton } from './RefreshIconButton';
 
 export function NetworksView({
@@ -129,7 +129,7 @@ export function NetworksView({
   const settingsBtn = (
     <button
       type="button"
-      className="l33t-icon-head"
+      className="w1337-icon-head"
       onClick={onOpenSettings}
       aria-label="Settings"
     >
@@ -138,15 +138,15 @@ export function NetworksView({
   );
 
   return (
-    <div className="wallet-shell l33t l33t--networks">
+    <div className="wallet-shell w1337 w1337--networks">
       <ScreenHeader title="Networks" trailing={settingsBtn} />
-      <div className="screen-body l33t-body">
+      <div className="screen-body w1337-body">
         <p className="muted" style={{ marginTop: 0, fontSize: 12 }}>
           Developer network switcher with pre-filled public RPCs (chainlist-style). Pick a chain,
           choose an endpoint, refresh balances.
         </p>
 
-        <L33tSimpleSelect
+        <SimpleSelect1337
           id="net-chain"
           label="Chain"
           openMenu={openMenu}
@@ -161,7 +161,7 @@ export function NetworksView({
         />
 
         <div style={{ marginTop: 12 }}>
-          <L33tSimpleSelect
+          <SimpleSelect1337
             id="net-rpc"
             label="RPC endpoint"
             openMenu={openMenu}

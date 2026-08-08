@@ -43,7 +43,7 @@ export interface AppSettings {
   customRpcByChain?: Record<string, string[]>;
   /** User-added chains (not in the curated catalog). */
   customChains?: ChainDefinition[];
-  /** When true, inject as window.ethereum (MetaMask drop-in). When false, use window.l33t. */
+  /** When true, inject as window.ethereum (MetaMask drop-in). When false, use window.wallet1337. */
   replaceMetaMask?: boolean;
   /** Optional Etherscan API v2 key — one key covers most *scan explorers for tx history. */
   explorerApiKey?: string;
@@ -60,8 +60,7 @@ export interface PersistedState {
 }
 
 /** Local storage key for the persisted vault + settings bundle. */
-export const WALLET_PERSIST_KEY = 'l33t_wallet_v1' as const;
-const LEGACY_KEYS = ['burn_box_wallet_v1', 'burning_fox_wallet_v1', 'jumpa_wallet_v1', 'beewallet_v1'] as const;
+export const WALLET_PERSIST_KEY = '1337_wallet_v1' as const;
 const KEY = WALLET_PERSIST_KEY;
 
 const EMPTY: PersistedState = {
@@ -179,15 +178,13 @@ function applyRpcPreferences(settings: AppSettings): void {
 
 export async function loadPersisted(): Promise<PersistedState> {
   return new Promise((resolve, reject) => {
-    area().get([KEY, ...LEGACY_KEYS], (r) => {
+    area().get([KEY], (r) => {
       const err = chrome.runtime?.lastError;
       if (err) {
         reject(new Error(err.message));
         return;
       }
-      const row =
-        (r[KEY] as PersistedState | undefined) ??
-        (LEGACY_KEYS.map(k => r[k]).find(Boolean) as PersistedState | undefined);
+      const row = r[KEY] as PersistedState | undefined;
       if (!row) {
         resolve({ ...EMPTY });
         return;
@@ -220,9 +217,6 @@ export async function loadPersisted(): Promise<PersistedState> {
         },
       };
       applyRpcPreferences(next.settings);
-      if (!r[KEY]) {
-        void savePersisted(next);
-      }
       resolve(next);
     });
   });
@@ -233,10 +227,7 @@ export async function savePersisted(next: PersistedState): Promise<void> {
     area().set({ [KEY]: next }, () => {
       const e = chrome.runtime?.lastError;
       if (e) reject(new Error(e.message));
-      else {
-        void chrome.storage.local.remove(LEGACY_KEYS);
-        resolve();
-      }
+      else resolve();
     });
   });
 }

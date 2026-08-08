@@ -23,7 +23,7 @@ import {
 } from '../lib/storageState';
 import { appendSwapToHistory } from '../lib/swapHistory';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
-import { L33tSelect, type L33tSelectGroup } from './L33tSelect';
+import { Select1337, type Select1337Group } from './Select1337';
 type BalEntry = {
   address: string;
   symbol: string;
@@ -197,7 +197,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
     []
   );
 
-  const chainGroups = useMemo((): L33tSelectGroup[] => {
+  const chainGroups = useMemo((): Select1337Group[] => {
     const opts = chainChoices.map(id => {
       const c = chainById.get(id);
       return {
@@ -212,7 +212,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
     return [{ label: 'Networks', options: opts }];
   }, [balancesRecord, chainById, chainChoices]);
 
-  const tokenGroups = useMemo((): L33tSelectGroup[] => {
+  const tokenGroups = useMemo((): Select1337Group[] => {
     const opts = sourceTokenChoices.map(t => ({
       value: t.address,
       label: t.symbol,
@@ -361,7 +361,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
   };
 
   if (!addr) {
-    return <p className="l33t-tools-empty muted">Unlock wallet to use Gas Station.</p>;
+    return <p className="w1337-tools-empty muted">Unlock wallet to use Gas Station.</p>;
   }
 
   const destChain = destChainId != null ? chainById.get(destChainId) : undefined;
@@ -394,8 +394,8 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       : undefined;
 
   return (
-    <div className="l33t-send-panel l33t-gas-station">
-      <L33tSelect
+    <div className="w1337-send-panel w1337-gas-station">
+      <Select1337
         id="gas-dest-chain"
         label="Need gas on"
         openMenu={openMenu}
@@ -428,7 +428,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
         Destination chain native token — e.g. ETH on Ethereum, POL on Polygon, not a generic gas estimate.
       </p>
 
-      <L33tSelect
+      <Select1337
         id="gas-source-chain"
         label="Pay from chain"
         openMenu={openMenu}
@@ -444,7 +444,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
         }}
       />
 
-      <L33tSelect
+      <Select1337
         id="gas-source-token"
         label="Pay with token"
         openMenu={openMenu}
@@ -470,25 +470,25 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       {quoteErr ? <p className="error">{quoteErr}</p> : null}
 
       {quote ? (
-        <div className="l33t-gas-quote">
-          <div className="l33t-gas-quote__row">
+        <div className="w1337-gas-quote">
+          <div className="w1337-gas-quote__row">
             <span>You pay</span>
             <strong>
               {quotePay} {sourceToken?.symbol}
             </strong>
           </div>
-          <div className="l33t-gas-quote__row">
+          <div className="w1337-gas-quote__row">
             <span>You receive</span>
             <strong>
               ≥ {quoteReceive} {nativeSym}
             </strong>
           </div>
-          <div className="l33t-gas-quote__row muted">
+          <div className="w1337-gas-quote__row muted">
             <span>Route</span>
             <span>{formatToolRoute(quote)}</span>
           </div>
           {quote.estimate.feeCosts?.length ? (
-            <div className="l33t-gas-quote__row muted">
+            <div className="w1337-gas-quote__row muted">
               <span>Fees</span>
               <span>
                 {quote.estimate.feeCosts
@@ -504,11 +504,11 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       ) : null}
 
       {execLog ? (
-        <div className="leet-exec-log" style={{ marginTop: 12 }}>
-          <p className="leet-exec-log__text">{execLog}</p>
+        <div className="w1337-exec-log" style={{ marginTop: 12 }}>
+          <p className="w1337-exec-log__text">{execLog}</p>
           {execUrl ? (
-            <p className="leet-exec-log__sub">
-              <a href={execUrl} target="_blank" rel="noopener noreferrer" className="leet-tx-link">
+            <p className="w1337-exec-log__sub">
+              <a href={execUrl} target="_blank" rel="noopener noreferrer" className="w1337-tx-link">
                 Open in explorer ↗
               </a>
             </p>
@@ -516,7 +516,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
         </div>
       ) : null}
 
-      <div className="l33t-gas-actions">
+      <div className="w1337-gas-actions">
         <button
           type="button"
           disabled={quoteBusy || execBusy || !sourceToken || !destNative}

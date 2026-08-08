@@ -53,7 +53,7 @@ function CopyBtn({ text }: { text: string }) {
   }
 
   return (
-    <button type="button" className="l33t-tx-approval__copy" onClick={() => void onCopy()}>
+    <button type="button" className="w1337-tx-approval__copy" onClick={() => void onCopy()}>
       {copied ? 'Copied' : 'Copy'}
     </button>
   );
@@ -61,10 +61,10 @@ function CopyBtn({ text }: { text: string }) {
 
 function DetailField({ f }: { f: ApprovalDetailField }) {
   return (
-    <div className={`l33t-tx-approval__field${f.warn ? ' l33t-tx-approval__field--warn' : ''}`}>
+    <div className={`w1337-tx-approval__field${f.warn ? ' w1337-tx-approval__field--warn' : ''}`}>
       <dt>{f.label}</dt>
-      <dd className={f.mono ? 'l33t-tx-approval__mono' : undefined}>
-        <span className="l33t-tx-approval__value">{f.value}</span>
+      <dd className={f.mono ? 'w1337-tx-approval__mono' : undefined}>
+        <span className="w1337-tx-approval__value">{f.value}</span>
         {f.copyable ? <CopyBtn text={f.value} /> : null}
       </dd>
     </div>
@@ -130,23 +130,23 @@ function FunctionSourceBlock({
   const contractUrl = addressExplorerLink(chainId, contractAddress);
 
   return (
-    <div className="l33t-tx-approval__fn-source">
+    <div className="w1337-tx-approval__fn-source">
       <button
         type="button"
-        className="l33t-tx-approval__fn-source-head"
+        className="w1337-tx-approval__fn-source-head"
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
       >
-        <span className="l33t-tx-approval__fn-source-title">
+        <span className="w1337-tx-approval__fn-source-title">
           Function source
-          <span className="l33t-tx-approval__chev" aria-hidden>
+          <span className="w1337-tx-approval__chev" aria-hidden>
             {open ? '▾' : '▸'}
           </span>
         </span>
         {contractUrl ? (
-          <span className="l33t-tx-approval__fn-source-actions">
+          <span className="w1337-tx-approval__fn-source-actions">
             <a
-              className="l33t-tx-approval__fn-source-link"
+              className="w1337-tx-approval__fn-source-link"
               href={contractUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -159,21 +159,21 @@ function FunctionSourceBlock({
         ) : null}
       </button>
       {open ? (
-        <div className="l33t-tx-approval__fn-source-body">
+        <div className="w1337-tx-approval__fn-source-body">
           {!result ? (
-            <p className="l33t-tx-approval__fn-source-meta muted">Loading verified source…</p>
+            <p className="w1337-tx-approval__fn-source-meta muted">Loading verified source…</p>
           ) : result.functionSource ? (
             <>
               {result.contractName ? (
-                <p className="l33t-tx-approval__fn-source-meta muted">
+                <p className="w1337-tx-approval__fn-source-meta muted">
                   {result.contractName}
                   {result.sourceFileHint ? ` · ${result.sourceFileHint.replace('// File: ', '')}` : ''}
                 </p>
               ) : null}
-              <pre className="l33t-tx-approval__fn-source-pre">{result.functionSource}</pre>
+              <pre className="w1337-tx-approval__fn-source-pre">{result.functionSource}</pre>
             </>
           ) : (
-            <p className="l33t-tx-approval__fn-source-meta muted">{result.error ?? 'Source unavailable.'}</p>
+            <p className="w1337-tx-approval__fn-source-meta muted">{result.error ?? 'Source unavailable.'}</p>
           )}
         </div>
       ) : null}
@@ -199,22 +199,22 @@ function OverviewSection({
   const showSource = likelyIdx !== -1 && !!functionSignature && !!contractAddress;
 
   return (
-    <section className="l33t-tx-approval__section">
+    <section className="w1337-tx-approval__section">
       <button
         type="button"
-        className="l33t-tx-approval__section-head"
+        className="w1337-tx-approval__section-head"
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
       >
         <span>{section.title}</span>
-        <span className="l33t-tx-approval__chev" aria-hidden>
+        <span className="w1337-tx-approval__chev" aria-hidden>
           {open ? '▾' : '▸'}
         </span>
       </button>
       {open ? (
         showSource ? (
           <>
-            <dl className="l33t-tx-approval__fields">
+            <dl className="w1337-tx-approval__fields">
               {section.fields.slice(0, likelyIdx + 1).map(field => (
                 <DetailField key={`${section.id}-${field.label}`} f={field} />
               ))}
@@ -227,7 +227,7 @@ function OverviewSection({
             />
           </>
         ) : (
-          <dl className="l33t-tx-approval__fields">
+          <dl className="w1337-tx-approval__fields">
             {section.fields.map(field => (
               <DetailField key={`${section.id}-${field.label}`} f={field} />
             ))}
@@ -242,20 +242,20 @@ function DetailSection({ section }: { section: ApprovalDetailSection }) {
   const [open, setOpen] = useState(section.defaultOpen ?? false);
 
   return (
-    <section className="l33t-tx-approval__section">
+    <section className="w1337-tx-approval__section">
       <button
         type="button"
-        className="l33t-tx-approval__section-head"
+        className="w1337-tx-approval__section-head"
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
       >
         <span>{section.title}</span>
-        <span className="l33t-tx-approval__chev" aria-hidden>
+        <span className="w1337-tx-approval__chev" aria-hidden>
           {open ? '▾' : '▸'}
         </span>
       </button>
       {open ? (
-        <dl className="l33t-tx-approval__fields">
+        <dl className="w1337-tx-approval__fields">
           {section.fields.map(field => (
             <DetailField key={`${section.id}-${field.label}`} f={field} />
           ))}
@@ -328,11 +328,11 @@ const GAS_FIELD_TIPS = {
 
 function GasFieldLabel({ label, tip }: { label: string; tip: string }) {
   return (
-    <span className="l33t-tx-approval__gas-fee-field-label">
+    <span className="w1337-tx-approval__gas-fee-field-label">
       {label}
       <button
         type="button"
-        className="l33t-tx-approval__gas-tip"
+        className="w1337-tx-approval__gas-tip"
         aria-label={`About ${label}`}
         data-tip={tip}
       >
@@ -393,15 +393,15 @@ function GasFeeBar({
   const modeLabel = isCustom ? 'Custom' : 'Auto';
 
   return (
-    <div className="l33t-tx-approval__gas-fee">
-      <div className="l33t-tx-approval__gas-fee-row">
-        <span className="l33t-tx-approval__gas-fee-label">Network fee</span>
-        <span className="l33t-tx-approval__gas-fee-value">
+    <div className="w1337-tx-approval__gas-fee">
+      <div className="w1337-tx-approval__gas-fee-row">
+        <span className="w1337-tx-approval__gas-fee-label">Network fee</span>
+        <span className="w1337-tx-approval__gas-fee-value">
           {feeLabel} · {modeLabel}
         </span>
         <button
           type="button"
-          className={`l33t-tx-approval__gas-fee-custom${isCustom ? ' l33t-tx-approval__gas-fee-custom--active' : ''}`}
+          className={`w1337-tx-approval__gas-fee-custom${isCustom ? ' w1337-tx-approval__gas-fee-custom--active' : ''}`}
           aria-pressed={isCustom}
           onClick={() => toggleCustom()}
         >
@@ -410,8 +410,8 @@ function GasFeeBar({
       </div>
 
       {isCustom ? (
-        <div className="l33t-tx-approval__gas-fee-panel">
-          <label className="l33t-tx-approval__gas-fee-field">
+        <div className="w1337-tx-approval__gas-fee-panel">
+          <label className="w1337-tx-approval__gas-fee-field">
             <GasFieldLabel label="Max fee (gwei)" tip={GAS_FIELD_TIPS.maxFee} />
             <input
               type="text"
@@ -423,7 +423,7 @@ function GasFeeBar({
               placeholder={autoEstimate ? gweiToInput(autoEstimate.maxFeePerGas) : ''}
             />
           </label>
-          <label className="l33t-tx-approval__gas-fee-field">
+          <label className="w1337-tx-approval__gas-fee-field">
             <GasFieldLabel label="Priority fee (gwei)" tip={GAS_FIELD_TIPS.priorityFee} />
             <input
               type="text"
@@ -437,7 +437,7 @@ function GasFeeBar({
               }
             />
           </label>
-          <label className="l33t-tx-approval__gas-fee-field">
+          <label className="w1337-tx-approval__gas-fee-field">
             <GasFieldLabel label="Gas limit" tip={GAS_FIELD_TIPS.gasLimit} />
             <input
               type="text"
@@ -450,7 +450,7 @@ function GasFeeBar({
             />
           </label>
 
-          {validationErr ? <p className="error l33t-tx-approval__gas-fee-err">{validationErr}</p> : null}
+          {validationErr ? <p className="error w1337-tx-approval__gas-fee-err">{validationErr}</p> : null}
         </div>
       ) : null}
     </div>
@@ -555,17 +555,17 @@ function ApprovalContent({
 
   return (
     <>
-      <div className="l33t-tx-approval__body">
+      <div className="w1337-tx-approval__body">
         {hostname ? (
-          <p className="l33t-tx-approval__site">
+          <p className="w1337-tx-approval__site">
             Request from <strong>{hostname}</strong>
             {pending.origin ? (
-              <span className="l33t-tx-approval__origin muted"> · {pending.origin}</span>
+              <span className="w1337-tx-approval__origin muted"> · {pending.origin}</span>
             ) : null}
           </p>
         ) : null}
         {chain ? (
-          <p className="l33t-tx-approval__chain muted">
+          <p className="w1337-tx-approval__chain muted">
             Network · {chain.name} (chainId {pending.chainId})
           </p>
         ) : null}
@@ -579,11 +579,11 @@ function ApprovalContent({
           />
         ) : null}
 
-        <p className="l33t-tx-approval__dev-note muted">
+        <p className="w1337-tx-approval__dev-note muted">
           Developer view — inspect gas, calldata, and raw RPC params before signing.
         </p>
 
-        <div className="l33t-tx-approval__sections">
+        <div className="w1337-tx-approval__sections">
           {sections.map(section =>
             section.id === 'tx-overview' ? (
               <OverviewSection
@@ -777,16 +777,16 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
   }
 
   return (
-    <div className="leet-sheet-mount l33t-tx-approval">
-      <div className="leet-sheet-backdrop" aria-hidden />
+    <div className="w1337-sheet-mount w1337-tx-approval">
+      <div className="w1337-sheet-backdrop" aria-hidden />
       <div
-        className="leet-sheet-panel l33t-tx-approval__panel"
+        className="w1337-sheet-panel w1337-tx-approval__panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="tx-approval-title"
       >
-        <div className="leet-sheet-head">
-          <h2 id="tx-approval-title" className="leet-sheet-h2">
+        <div className="w1337-sheet-head">
+          <h2 id="tx-approval-title" className="w1337-sheet-h2">
             {title}
           </h2>
         </div>
@@ -799,12 +799,12 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
           onGasOverridesChange={setGasOverrides}
         />
 
-        {err ? <p className="error l33t-tx-approval__err">{err}</p> : null}
+        {err ? <p className="error w1337-tx-approval__err">{err}</p> : null}
 
-        <div className="l33t-tx-approval__actions">
+        <div className="w1337-tx-approval__actions">
           <button
             type="button"
-            className="l33t-tx-approval__reject"
+            className="w1337-tx-approval__reject"
             disabled={busy}
             onClick={() => void onDecision(false)}
           >
@@ -812,7 +812,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
           </button>
           <button
             type="button"
-            className="l33t-tx-approval__approve"
+            className="w1337-tx-approval__approve"
             disabled={busy || confirmBlocked}
             onClick={() => void onDecision(true)}
           >

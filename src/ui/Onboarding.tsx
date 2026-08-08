@@ -80,7 +80,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
 
   if (showBackup && (backupMnemonic || backupKey)) {
     return (
-      <div className="wallet-shell l33t">
+      <div className="wallet-shell w1337">
         <ScreenHeader title="1337" />
         <div className="screen-body">
           <h2 style={{ fontSize: '1.1rem', marginBottom: 8 }}>
@@ -127,7 +127,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
   }
 
   return (
-    <div className="wallet-shell l33t">
+    <div className="wallet-shell w1337">
       <ScreenHeader title="1337" />
       <div className="screen-body">
         <p className="muted" style={{ marginBottom: 14 }}>

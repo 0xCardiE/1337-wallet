@@ -1,9 +1,9 @@
 /** Hero branding — CRT skull + 1337 wordmark (public/icons). */
 
-const SKULL_SRC = 'icons/l33t-skull.png';
-const WORDMARK_SRC = 'icons/l33t-wordmark.png';
+const SKULL_SRC = 'icons/1337-skull.png';
+const WORDMARK_SRC = 'icons/1337-wordmark.png';
 
-export function L33tBrand({
+export function Brand1337({
   skullSize = 88,
   wordmarkWidth = 200,
   className,
@@ -13,11 +13,11 @@ export function L33tBrand({
   className?: string;
 }) {
   return (
-    <div className={`l33t-brand${className ? ` ${className}` : ''}`}>
+    <div className={`w1337-brand${className ? ` ${className}` : ''}`}>
       <img
         src={SKULL_SRC}
         alt=""
-        className="l33t-brand__skull"
+        className="w1337-brand__skull"
         width={skullSize}
         height={Math.round(skullSize * (125 / 110))}
         decoding="async"
@@ -26,7 +26,7 @@ export function L33tBrand({
       <img
         src={WORDMARK_SRC}
         alt="1337"
-        className="l33t-brand__wordmark"
+        className="w1337-brand__wordmark"
         width={wordmarkWidth}
         height={Math.round(wordmarkWidth * (126 / 329))}
         decoding="async"

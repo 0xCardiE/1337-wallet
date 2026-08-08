@@ -72,7 +72,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     .filter(Boolean).length;
 
   return (
-    <div className="l33t-send-panel">
+    <div className="w1337-send-panel">
       <p className="muted" style={{ marginTop: 0, fontSize: 12 }}>
         Distribute {chain?.nativeCurrency.symbol ?? 'native'} or an ERC-20 to many addresses at once.
         Uses the network selected on the Assets tab ({chain?.name ?? chainId}).

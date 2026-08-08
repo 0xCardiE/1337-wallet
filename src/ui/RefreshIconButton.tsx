@@ -14,7 +14,7 @@ export function RefreshIconButton({
   return (
     <button
       type="button"
-      className={`l33t-icon-head l33t-refresh-icon${busy ? ' l33t-refresh-icon--busy' : ''}${className ? ` ${className}` : ''}`}
+      className={`w1337-icon-head w1337-refresh-icon${busy ? ' w1337-refresh-icon--busy' : ''}${className ? ` ${className}` : ''}`}
       aria-label={ariaLabel}
       disabled={disabled ?? busy}
       onClick={onClick}

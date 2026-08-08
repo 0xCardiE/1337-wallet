@@ -1,15 +1,15 @@
-import { L33T_ICON_DATA_URI } from './l33tProviderIcon.generated';
+import { ICON_1337_DATA_URI } from './providerIcon1337.generated';
 
 /** Slippage shown as percent in settings (e.g. 5 = 5%). */
 export const DEFAULT_SLIPPAGE_PERCENT = 5;
 
 export const LIFI_INTEGRATOR_ID = '1337-wallet';
 
-export const L33T_PROVIDER_INFO = {
-  uuid: 'l33t-dev-wallet-2026',
+export const PROVIDER_INFO_1337 = {
+  uuid: '1337-dev-wallet-2026',
   name: '1337',
-  icon: L33T_ICON_DATA_URI,
-  rdns: 'io.l33t.wallet',
+  icon: ICON_1337_DATA_URI,
+  rdns: 'io.1337.wallet',
 } as const;
 
 /** Default chain when no network is selected yet. */

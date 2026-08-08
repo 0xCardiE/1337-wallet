@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'l33t_swap_ui_by_wallet_v1' as const;
+const STORAGE_KEY = '1337_swap_ui_by_wallet_v1' as const;
 
 export type PersistedSwapUi = {
   fromChainId: number;

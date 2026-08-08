@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { loadPersisted } from '../lib/storageState';
 import { unlockWallet } from '../lib/walletManager';
-import { L33tBrand } from './L33tBrand';
+import { Brand1337 } from './Brand1337';
 
 export function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
   const [hasVault, setHasVault] = useState<boolean | undefined>(undefined);
@@ -45,7 +45,7 @@ export function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
   return (
     <div className="unlock-screen">
       <div className="unlock-brand">
-        <L33tBrand className="unlock-brand-stack" skullSize={96} wordmarkWidth={210} />
+        <Brand1337 className="unlock-brand-stack" skullSize={96} wordmarkWidth={210} />
         <p className="unlock-lead">Enter your password to decrypt local keys.</p>
       </div>
 

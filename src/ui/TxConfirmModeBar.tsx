@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { L33tSegmented } from './L33tSelect';
+import { Segment1337 } from './Select1337';
 import {
   effectiveTxConfirmMode,
   patchSettings,
@@ -43,8 +43,8 @@ export function TxConfirmModeToggle({
 
   return (
     <>
-      <L33tSegmented
-        className="l33t-seg--compact"
+      <Segment1337
+        className="w1337-seg--compact"
         value={mode}
         onChange={onChange}
         ariaLabel="Transaction confirmation mode"
@@ -53,7 +53,7 @@ export function TxConfirmModeToggle({
           { value: 'normal', label: 'Normal', title: MODE_HINTS.normal },
         ]}
       />
-      {err ? <span className="l33t-tx-mode-err">{err}</span> : null}
+      {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>
   );
 }

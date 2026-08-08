@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getUnlockedAccount } from '../lib/accountSession';
 import type { AppSettings } from '../lib/storageState';
 import { AccountSwitcher } from './AccountSwitcher';
-import { L33tMark } from './L33tMark';
+import { Mark1337 } from './Mark1337';
 import { NetworkSelector } from './NetworkSelector';
 import { DappConnectionBar } from './DappConnectionBar';
 import { TxApprovalSheet } from './TxApprovalSheet';
@@ -37,14 +37,14 @@ export function WalletLayout({
 
   useEffect(() => {
     const bump = () => setTick(t => t + 1);
-    window.addEventListener('burnbox-account-changed', bump);
-    return () => window.removeEventListener('burnbox-account-changed', bump);
+    window.addEventListener('1337-account-changed', bump);
+    return () => window.removeEventListener('1337-account-changed', bump);
   }, []);
 
   const settingsBtn = (
     <button
       type="button"
-      className="l33t-icon-head"
+      className="w1337-icon-head"
       onClick={onOpenSettings}
       aria-label="Settings"
     >
@@ -56,21 +56,21 @@ export function WalletLayout({
   );
 
   return (
-    <div className="wallet-shell l33t l33t--main">
-      <header className="screen-header l33t-main-header">
-        <div className="l33t-main-header__brand">
-          <L33tMark size={22} animated={false} />
-          <span className="l33t-main-header__title">1337</span>
+    <div className="wallet-shell w1337 w1337--main">
+      <header className="screen-header w1337-main-header">
+        <div className="w1337-main-header__brand">
+          <Mark1337 size={22} animated={false} />
+          <span className="w1337-main-header__title">1337</span>
         </div>
         <div className="screen-header-right">{settingsBtn}</div>
       </header>
 
-      <nav className="l33t-mm-tabs" aria-label="Wallet sections">
+      <nav className="w1337-mm-tabs" aria-label="Wallet sections">
         {(Object.keys(TAB_LABELS) as WalletMainTab[]).map(tab => (
           <button
             key={tab}
             type="button"
-            className={`l33t-mm-tabs__btn${activeTab === tab ? ' l33t-mm-tabs__btn--on' : ''}`}
+            className={`w1337-mm-tabs__btn${activeTab === tab ? ' w1337-mm-tabs__btn--on' : ''}`}
             aria-current={activeTab === tab ? 'page' : undefined}
             onClick={() => onTabChange(tab)}
           >
@@ -79,14 +79,14 @@ export function WalletLayout({
         ))}
       </nav>
 
-      <div className="l33t-layout-network">
+      <div className="w1337-layout-network">
         <NetworkSelector settings={settings} onSaved={onSaved} compact />
       </div>
 
-      <div className="screen-body l33t-body l33t-body--main">{children}</div>
+      <div className="screen-body w1337-body w1337-body--main">{children}</div>
 
       <DevErrorPanel />
-      <footer className="l33t-wallet-dock" aria-label="Wallet status">
+      <footer className="w1337-wallet-dock" aria-label="Wallet status">
         {account ? <AccountSwitcher onChanged={onSaved} /> : null}
         <DappConnectionBar settings={settings} onSaved={onSaved} embedded />
       </footer>

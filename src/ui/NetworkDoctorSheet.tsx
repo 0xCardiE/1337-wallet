@@ -230,36 +230,36 @@ export function NetworkDoctorSheet({
           : 'Network doctor';
 
   return (
-    <div className="leet-sheet-mount l33t-rpc-doctor">
+    <div className="w1337-sheet-mount w1337-rpc-doctor">
       <button
         type="button"
-        className="leet-sheet-backdrop"
+        className="w1337-sheet-backdrop"
         aria-label="Close"
         onClick={() => closeNetworkDoctor()}
       />
       <div
-        className="leet-sheet-panel l33t-rpc-doctor__panel"
+        className="w1337-sheet-panel w1337-rpc-doctor__panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="rpc-doctor-title"
       >
-        <div className="leet-sheet-head">
+        <div className="w1337-sheet-head">
           <button
             type="button"
-            className="leet-sheet-back"
+            className="w1337-sheet-back"
             aria-label="Close"
             onClick={() => closeNetworkDoctor()}
           >
             ←
           </button>
-          <h2 id="rpc-doctor-title" className="leet-sheet-h2">
+          <h2 id="rpc-doctor-title" className="w1337-sheet-h2">
             Network doctor
           </h2>
         </div>
 
-        <div className="l33t-rpc-doctor__body">
+        <div className="w1337-rpc-doctor__body">
           <div
-            className={`l33t-rpc-doctor__banner l33t-rpc-doctor__banner--${summary?.tone ?? 'unknown'}`}
+            className={`w1337-rpc-doctor__banner w1337-rpc-doctor__banner--${summary?.tone ?? 'unknown'}`}
           >
             <strong>{bannerTitle}</strong>
             <p>
@@ -267,44 +267,44 @@ export function NetworkDoctorSheet({
               {req.method ? ` · while calling ${req.method}` : ''}
             </p>
             {summary ? (
-              <p className="l33t-rpc-doctor__banner-sub">
+              <p className="w1337-rpc-doctor__banner-sub">
                 {summary.label}: {summary.detail}
               </p>
             ) : (
-              <p className="l33t-rpc-doctor__banner-sub muted">Probing endpoints…</p>
+              <p className="w1337-rpc-doctor__banner-sub muted">Probing endpoints…</p>
             )}
             {req.lastError ? (
-              <p className="l33t-rpc-doctor__banner-err mono">{req.lastError}</p>
+              <p className="w1337-rpc-doctor__banner-err mono">{req.lastError}</p>
             ) : null}
           </div>
 
-          <section className="l33t-rpc-doctor__section">
+          <section className="w1337-rpc-doctor__section">
             <h3>What we checked</h3>
-            <ul className="l33t-rpc-doctor__checks">
+            <ul className="w1337-rpc-doctor__checks">
               {checks.map(c => (
                 <li
                   key={c.text}
-                  className={`l33t-rpc-doctor__check l33t-rpc-doctor__check--${c.ok ? 'ok' : 'bad'}`}
+                  className={`w1337-rpc-doctor__check w1337-rpc-doctor__check--${c.ok ? 'ok' : 'bad'}`}
                 >
                   <span aria-hidden>{c.ok ? '✓' : '!'}</span>
                   <span>{c.text}</span>
                 </li>
               ))}
               {checks.length === 0 ? (
-                <li className="l33t-rpc-doctor__check muted">Running probes…</li>
+                <li className="w1337-rpc-doctor__check muted">Running probes…</li>
               ) : null}
             </ul>
           </section>
 
-          <section className="l33t-rpc-doctor__section">
+          <section className="w1337-rpc-doctor__section">
             <h3>RPC endpoints</h3>
-            <ul className="l33t-rpc-doctor__list">
+            <ul className="w1337-rpc-doctor__list">
               {(snap?.endpoints ?? []).map(e => (
-                <li key={e.url} className={`l33t-rpc-doctor__ep l33t-rpc-doctor__ep--${e.status}`}>
-                  <div className="l33t-rpc-doctor__ep-main">
-                    <span className="l33t-rpc-doctor__ep-status">{statusLabel(e.status)}</span>
-                    <span className="l33t-rpc-doctor__ep-host">{rpcHostLabel(e.url)}</span>
-                    <span className="l33t-rpc-doctor__ep-hint muted">
+                <li key={e.url} className={`w1337-rpc-doctor__ep w1337-rpc-doctor__ep--${e.status}`}>
+                  <div className="w1337-rpc-doctor__ep-main">
+                    <span className="w1337-rpc-doctor__ep-status">{statusLabel(e.status)}</span>
+                    <span className="w1337-rpc-doctor__ep-host">{rpcHostLabel(e.url)}</span>
+                    <span className="w1337-rpc-doctor__ep-hint muted">
                       {rpcProviderHint(e.url)}
                       {e.lastLatencyMs != null ? ` · ${e.lastLatencyMs}ms` : ''}
                       {preferred === e.url ? ' · preferred' : ''}
@@ -312,7 +312,7 @@ export function NetworkDoctorSheet({
                     </span>
                   </div>
                   {e.lastError ? (
-                    <p className="l33t-rpc-doctor__ep-err">{e.lastError}</p>
+                    <p className="w1337-rpc-doctor__ep-err">{e.lastError}</p>
                   ) : null}
                 </li>
               ))}
@@ -323,12 +323,12 @@ export function NetworkDoctorSheet({
           </section>
 
           {err ? <p className="error">{err}</p> : null}
-          {actionMsg ? <p className="l33t-rpc-doctor__msg">{actionMsg}</p> : null}
+          {actionMsg ? <p className="w1337-rpc-doctor__msg">{actionMsg}</p> : null}
 
-          <div className="l33t-rpc-doctor__actions">
+          <div className="w1337-rpc-doctor__actions">
             <button
               type="button"
-              className="l33t-rpc-doctor__btn l33t-rpc-doctor__btn--primary"
+              className="w1337-rpc-doctor__btn w1337-rpc-doctor__btn--primary"
               disabled={busy}
               onClick={() => void runProbe(true)}
             >
@@ -336,7 +336,7 @@ export function NetworkDoctorSheet({
             </button>
             <button
               type="button"
-              className="l33t-rpc-doctor__btn"
+              className="w1337-rpc-doctor__btn"
               disabled={busy || !snap || snap.healthyCount === 0}
               onClick={() => void useHealthyRpc()}
             >
@@ -344,7 +344,7 @@ export function NetworkDoctorSheet({
             </button>
             <button
               type="button"
-              className="l33t-rpc-doctor__btn"
+              className="w1337-rpc-doctor__btn"
               disabled={busy || !preferred}
               onClick={() => void clearPreferred()}
             >
@@ -352,7 +352,7 @@ export function NetworkDoctorSheet({
             </button>
             <button
               type="button"
-              className="l33t-rpc-doctor__btn"
+              className="w1337-rpc-doctor__btn"
               disabled={busy}
               onClick={() => closeNetworkDoctor()}
             >
@@ -360,7 +360,7 @@ export function NetworkDoctorSheet({
             </button>
           </div>
 
-          <p className="l33t-rpc-doctor__hint muted">
+          <p className="w1337-rpc-doctor__hint muted">
             Tip: if public RPCs keep failing (geo blocks / rate limits), add your own Alchemy or
             Infura URL under Settings → Networks &amp; RPCs.
           </p>

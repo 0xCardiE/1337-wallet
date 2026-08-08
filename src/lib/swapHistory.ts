@@ -1,4 +1,4 @@
-const SWAP_HISTORY_KEY = 'l33t_swap_history_v1' as const;
+const SWAP_HISTORY_KEY = '1337_swap_history_v1' as const;
 const MAX_ENTRIES = 40;
 
 export type SwapHistoryEntry = {

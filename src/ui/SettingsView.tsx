@@ -21,7 +21,7 @@ import {
   PRODUCT_MANIFEST,
 } from '../lib/productManifest';
 import { ScreenHeader } from './ScreenHeader';
-import { L33tSimpleSelect } from './L33tSelect';
+import { SimpleSelect1337 } from './Select1337';
 
 export function SettingsView({
   settings,
@@ -128,12 +128,12 @@ export function SettingsView({
   }
 
   return (
-    <div className="wallet-shell l33t">
+    <div className="wallet-shell w1337">
       <ScreenHeader title="Settings" onClose={onBack} />
       <div className="screen-body settings-panel">
         <div className="settings-body">
           {onOpenNetworks ? (
-            <div className="l33t-settings-link-card">
+            <div className="w1337-settings-link-card">
               <div>
                 <strong>Networks &amp; RPCs</strong>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
@@ -147,7 +147,7 @@ export function SettingsView({
           ) : null}
 
           {onOpenWallets ? (
-            <div className="l33t-settings-link-card">
+            <div className="w1337-settings-link-card">
               <div>
                 <strong>Wallets</strong>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
@@ -177,7 +177,7 @@ export function SettingsView({
           </p>
 
           <div style={{ marginTop: 16 }}>
-            <L33tSimpleSelect
+            <SimpleSelect1337
               id="autolock"
               label="Auto-lock after idle"
             openMenu={openMenu}
@@ -198,7 +198,7 @@ export function SettingsView({
           </p>
 
           <div style={{ marginTop: 16 }}>
-            <L33tSimpleSelect
+            <SimpleSelect1337
               id="openmode"
               label="Open from toolbar"
               openMenu={openMenu}
@@ -244,7 +244,7 @@ export function SettingsView({
           </p>
 
           <div style={{ marginTop: 16 }}>
-            <L33tSimpleSelect
+            <SimpleSelect1337
               id="metamask"
               label="Dapp connection"
               openMenu={openMenu}
@@ -252,7 +252,7 @@ export function SettingsView({
               value={replaceMetaMask ? 'replace' : 'separate'}
               options={[
                 { value: 'replace', label: 'Replace MetaMask (window.ethereum)' },
-                { value: 'separate', label: 'Separate provider (window.l33t only)' },
+                { value: 'separate', label: 'Separate provider (window.wallet1337 only)' },
               ]}
               onChange={v => setReplaceMetaMask(v === 'replace')}
             />

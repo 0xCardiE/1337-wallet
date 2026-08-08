@@ -25,11 +25,11 @@ import {
   summarizeChainHealth,
 } from '../lib/rpcHealth';
 import { describeError } from '../lib/utils';
-import { L33tSelect, L33tSegmented, type L33tSelectGroup } from './L33tSelect';
+import { Select1337, Segment1337, type Select1337Group } from './Select1337';
 
 type NetFilter = ChainKind;
 
-function chainGroups(kind: NetFilter): L33tSelectGroup[] {
+function chainGroups(kind: NetFilter): Select1337Group[] {
   const label = kind === 'mainnet' ? 'Mainnets' : 'Testnets';
   return [{ label, options: chainsByKind(kind).map(chainToOption) }];
 }
@@ -120,7 +120,7 @@ export function NetworkSelector({ settings, onSaved }: Props) {
     [netFilter, settings.customChains],
   );
 
-  const rpcGroups = useMemo<L33tSelectGroup[]>(
+  const rpcGroups = useMemo<Select1337Group[]>(
     () => [
       {
         label: 'RPC endpoints',
@@ -194,8 +194,8 @@ export function NetworkSelector({ settings, onSaved }: Props) {
   const activeInCatalog = allChains().some(c => c.chainId === activeChainId);
 
   return (
-    <div className="l33t-net-select">
-      <L33tSegmented
+    <div className="w1337-net-select">
+      <Segment1337
         value={netFilter}
         onChange={v => void onFilterChange(v as NetFilter)}
         options={[
@@ -204,9 +204,9 @@ export function NetworkSelector({ settings, onSaved }: Props) {
         ]}
       />
 
-      <div className="l33t-net-select__row">
-        <L33tSelect
-          id="l33t-chain"
+      <div className="w1337-net-select__row">
+        <Select1337
+          id="w1337-chain"
           label="Chain"
           openMenu={openMenu}
           setOpenMenu={setOpenMenu}
@@ -228,8 +228,8 @@ export function NetworkSelector({ settings, onSaved }: Props) {
           onPick={v => void onChainChange(Number(v))}
         />
 
-        <L33tSelect
-          id="l33t-rpc"
+        <Select1337
+          id="w1337-rpc"
           label="RPC"
           openMenu={openMenu}
           setOpenMenu={setOpenMenu}
@@ -243,18 +243,18 @@ export function NetworkSelector({ settings, onSaved }: Props) {
         />
       </div>
 
-      <div className="l33t-rpc-status">
+      <div className="w1337-rpc-status">
         <span
-          className={`l33t-rpc-status__dot l33t-rpc-status__dot--${healthSummary.tone}`}
+          className={`w1337-rpc-status__dot w1337-rpc-status__dot--${healthSummary.tone}`}
           aria-hidden
         />
-        <span className="l33t-rpc-status__text">
+        <span className="w1337-rpc-status__text">
           <strong>{healthSummary.label}</strong>
           <span className="muted"> · {healthSummary.detail}</span>
         </span>
         <button
           type="button"
-          className="l33t-rpc-status__doctor"
+          className="w1337-rpc-status__doctor"
           onClick={() =>
             openNetworkDoctor({
               chainId: activeChainId,
@@ -267,7 +267,7 @@ export function NetworkSelector({ settings, onSaved }: Props) {
         </button>
       </div>
 
-      {err ? <p className="error l33t-net-select__err">{err}</p> : null}
+      {err ? <p className="error w1337-net-select__err">{err}</p> : null}
     </div>
   );
 }

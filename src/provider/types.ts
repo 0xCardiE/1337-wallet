@@ -1,5 +1,5 @@
 /** Message types for inpage ↔ content ↔ background provider bridge. */
-export const PROVIDER_CHANNEL = 'l33t-provider' as const;
+export const PROVIDER_CHANNEL = '1337-provider' as const;
 
 export type ProviderRequest = {
   id: string;

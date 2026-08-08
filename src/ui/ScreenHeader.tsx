@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { L33tMark } from './L33tMark';
+import { Mark1337 } from './Mark1337';
 
 type Props = {
   title: string;
@@ -13,7 +13,7 @@ export function ScreenHeader({ title, onClose, trailing }: Props) {
   return (
     <header className="screen-header">
       <div className="screen-header-left">
-        <L33tMark className="screen-header-logo" size={26} />
+        <Mark1337 className="screen-header-logo" size={26} />
       </div>
       <h1 className="screen-header-title">{title}</h1>
       <div className="screen-header-right">

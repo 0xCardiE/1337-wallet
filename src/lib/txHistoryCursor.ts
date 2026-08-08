@@ -1,6 +1,6 @@
 import type { TxHistoryRow } from './explorerTxHistory';
 
-const STORAGE_KEY = 'l33t_tx_history_v2';
+const STORAGE_KEY = '1337_tx_history_v2';
 
 type StoredRow = {
   hash: string;
@@ -85,7 +85,8 @@ async function readAll(): Promise<PersistedBundle> {
         return;
       }
       const raw = r[STORAGE_KEY];
-      resolve(raw && typeof raw === 'object' ? (raw as PersistedBundle) : {});
+      const bundle = raw && typeof raw === 'object' ? (raw as PersistedBundle) : {};
+      resolve(bundle);
     });
   });
 }

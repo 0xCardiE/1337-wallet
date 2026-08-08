@@ -16,9 +16,9 @@ import { chainLogoUri } from '../lib/chainLogo';
 import { notifyConnectedTabsChainChanged } from '../lib/chainSyncBridge';
 import { allRpcOptionsFor } from '../lib/chainRpcRegistry';
 import { describeError } from '../lib/utils';
-import { LeetLiFiIcon } from './LeetLiFiIcon';
+import { LiFiIcon } from './LiFiIcon';
 import { ScreenHeader } from './ScreenHeader';
-import { L33tSimpleSelect } from './L33tSelect';
+import { SimpleSelect1337 } from './Select1337';
 
 type Panel = 'list' | 'detail' | 'add';
 
@@ -316,17 +316,17 @@ export function NetworksManageView({
         : 'Networks';
 
   return (
-    <div className="wallet-shell l33t l33t--networks-manage">
+    <div className="wallet-shell w1337 w1337--networks-manage">
       <ScreenHeader title={title} onClose={headerBack} />
-      <div className="screen-body l33t-body l33t-networks">
+      <div className="screen-body w1337-body w1337-networks">
         {panel === 'list' ? (
           <>
-            <p className="muted l33t-networks__lead">
+            <p className="muted w1337-networks__lead">
               Manage chains and RPC endpoints. Active network stays on the Assets tab.
             </p>
 
-            <div className="l33t-networks__toolbar">
-              <div className="l33t-networks__filters" role="group" aria-label="Filter chains">
+            <div className="w1337-networks__toolbar">
+              <div className="w1337-networks__filters" role="group" aria-label="Filter chains">
                 {(
                   [
                     ['mainnet', 'Mainnets'],
@@ -338,8 +338,8 @@ export function NetworksManageView({
                     type="button"
                     className={
                       filter === value
-                        ? 'l33t-networks__chip l33t-networks__chip--on'
-                        : 'l33t-networks__chip'
+                        ? 'w1337-networks__chip w1337-networks__chip--on'
+                        : 'w1337-networks__chip'
                     }
                     onClick={() => setFilter(value)}
                   >
@@ -347,12 +347,12 @@ export function NetworksManageView({
                   </button>
                 ))}
               </div>
-              <button type="button" className="ghost l33t-networks__add-btn" onClick={openAdd}>
+              <button type="button" className="ghost w1337-networks__add-btn" onClick={openAdd}>
                 Add chain
               </button>
             </div>
 
-            <ul className="l33t-networks__list">
+            <ul className="w1337-networks__list">
               {chains.map(c => {
                 const active = c.chainId === activeChainId;
                 const custom = !isCuratedChain(c.chainId);
@@ -362,35 +362,35 @@ export function NetworksManageView({
                       type="button"
                       className={
                         active
-                          ? 'l33t-networks__row l33t-networks__row--active'
-                          : 'l33t-networks__row'
+                          ? 'w1337-networks__row w1337-networks__row--active'
+                          : 'w1337-networks__row'
                       }
                       onClick={() => openDetail(c.chainId)}
                     >
-                      <LeetLiFiIcon
+                      <LiFiIcon
                         logoURI={chainLogoUri(c)}
                         label={c.name}
                         size={28}
                         rounded
                       />
-                      <span className="l33t-networks__row-text">
-                        <span className="l33t-networks__row-name">
+                      <span className="w1337-networks__row-text">
+                        <span className="w1337-networks__row-name">
                           {c.name}
                           {custom ? (
-                            <span className="l33t-networks__badge">Custom</span>
+                            <span className="w1337-networks__badge">Custom</span>
                           ) : null}
                           {active ? (
-                            <span className="l33t-networks__badge l33t-networks__badge--on">
+                            <span className="w1337-networks__badge w1337-networks__badge--on">
                               Active
                             </span>
                           ) : null}
                         </span>
-                        <span className="l33t-networks__row-sub muted">
+                        <span className="w1337-networks__row-sub muted">
                           Chain ID {c.chainId}
                           {c.kind === 'testnet' ? ' · Testnet' : ''}
                         </span>
                       </span>
-                      <span className="l33t-networks__chev" aria-hidden>
+                      <span className="w1337-networks__chev" aria-hidden>
                         ›
                       </span>
                     </button>
@@ -403,15 +403,15 @@ export function NetworksManageView({
 
         {panel === 'detail' && selected ? (
           <>
-            <div className="l33t-networks__detail-head">
-              <LeetLiFiIcon
+            <div className="w1337-networks__detail-head">
+              <LiFiIcon
                 logoURI={chainLogoUri(selected)}
                 label={selected.name}
                 size={36}
                 rounded
               />
               <div>
-                <p className="l33t-networks__detail-name">{selected.name}</p>
+                <p className="w1337-networks__detail-name">{selected.name}</p>
                 <p className="muted" style={{ margin: 0, fontSize: 12 }}>
                   ID {selected.chainId} · {selected.nativeCurrency.symbol}
                   {!isCuratedChain(selected.chainId) ? ' · Custom' : ''}
@@ -430,36 +430,36 @@ export function NetworksManageView({
                 Use this network
               </button>
             ) : (
-              <p className="muted l33t-networks__active-note">Currently active in wallet &amp; dapps</p>
+              <p className="muted w1337-networks__active-note">Currently active in wallet &amp; dapps</p>
             )}
 
-            <h3 className="l33t-networks__section-title">RPC endpoints</h3>
-            <ul className="l33t-networks__rpc-list">
+            <h3 className="w1337-networks__section-title">RPC endpoints</h3>
+            <ul className="w1337-networks__rpc-list">
               {rpcOptions.map(url => {
                 const isPreferred = preferredRpc ? preferredRpc === url : url === rpcOptions[0];
                 const isUser = userRpcs.includes(url);
                 return (
-                  <li key={url} className="l33t-networks__rpc-row">
+                  <li key={url} className="w1337-networks__rpc-row">
                     <button
                       type="button"
                       className={
                         isPreferred
-                          ? 'l33t-networks__rpc-pick l33t-networks__rpc-pick--on'
-                          : 'l33t-networks__rpc-pick'
+                          ? 'w1337-networks__rpc-pick w1337-networks__rpc-pick--on'
+                          : 'w1337-networks__rpc-pick'
                       }
                       disabled={busy}
                       onClick={() => void setPreferred(selected.chainId, url)}
                       title={url}
                     >
-                      <span className="l33t-networks__rpc-label">{shortRpcLabel(url)}</span>
+                      <span className="w1337-networks__rpc-label">{shortRpcLabel(url)}</span>
                       {isPreferred ? (
-                        <span className="l33t-networks__badge l33t-networks__badge--on">Preferred</span>
+                        <span className="w1337-networks__badge w1337-networks__badge--on">Preferred</span>
                       ) : null}
                     </button>
                     {isUser ? (
                       <button
                         type="button"
-                        className="ghost l33t-networks__rpc-remove"
+                        className="ghost w1337-networks__rpc-remove"
                         disabled={busy}
                         aria-label="Remove RPC"
                         onClick={() => void removeUserRpc(selected.chainId, url)}
@@ -472,7 +472,7 @@ export function NetworksManageView({
               })}
             </ul>
 
-            <label htmlFor="net-add-rpc" className="l33t-networks__section-title" style={{ display: 'block' }}>
+            <label htmlFor="net-add-rpc" className="w1337-networks__section-title" style={{ display: 'block' }}>
               Add RPC
             </label>
             <div className="row" style={{ marginBottom: 8 }}>
@@ -509,7 +509,7 @@ export function NetworksManageView({
 
         {panel === 'add' ? (
           <>
-            <p className="muted l33t-networks__lead">
+            <p className="muted w1337-networks__lead">
               Add a custom EVM network. It appears in the chain picker alongside curated networks.
             </p>
 
@@ -542,7 +542,7 @@ export function NetworksManageView({
               placeholder="ETH"
             />
 
-            <L33tSimpleSelect
+            <SimpleSelect1337
               id="add-kind"
               label="Network type"
               openMenu={openMenu}

@@ -1,16 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { LeetLiFiIcon } from './LeetLiFiIcon';
+import { LiFiIcon } from './LiFiIcon';
 
-export type L33tSelectOption = {
+export type Select1337Option = {
   value: string;
   label: string;
   sublabel?: string;
   logoURI?: string;
 };
 
-export type L33tSelectGroup = {
+export type Select1337Group = {
   label: string;
-  options: L33tSelectOption[];
+  options: Select1337Option[];
 };
 
 function ChevronDownIcon() {
@@ -50,10 +50,10 @@ function CheckIcon() {
 }
 
 function OptionLogo({ logoURI, label }: { logoURI?: string; label: string }) {
-  return <LeetLiFiIcon logoURI={logoURI} label={label} size={24} rounded />;
+  return <LiFiIcon logoURI={logoURI} label={label} size={24} rounded />;
 }
 
-export function L33tSelect({
+export function Select1337({
   id,
   label,
   openMenu,
@@ -76,7 +76,7 @@ export function L33tSelect({
   triggerLabel: string;
   triggerSublabel?: string;
   triggerLogoURI?: string;
-  groups: L33tSelectGroup[];
+  groups: Select1337Group[];
   onPick: (value: string) => void;
   disabled?: boolean;
   panelMaxHeight?: number;
@@ -126,45 +126,45 @@ export function L33tSelect({
   return (
     <div
       ref={rootRef}
-      className={`l33t-dd${showLogos ? '' : ' l33t-dd--plain'}${open ? ' l33t-dd--open' : ''}`}
+      className={`w1337-dd${showLogos ? '' : ' w1337-dd--plain'}${open ? ' w1337-dd--open' : ''}`}
     >
-      <span className="l33t-dd__label">{label}</span>
+      <span className="w1337-dd__label">{label}</span>
       <button
         type="button"
-        className={`l33t-dd__trigger${open ? ' l33t-dd__trigger--open' : ''}`}
+        className={`w1337-dd__trigger${open ? ' w1337-dd__trigger--open' : ''}`}
         disabled={disabled}
         aria-expanded={open}
         aria-haspopup="listbox"
         title={triggerSublabel ?? triggerLabel}
         onClick={() => setOpenMenu(open ? null : id)}
       >
-        <span className="l33t-dd__trigger-main">
+        <span className="w1337-dd__trigger-main">
           {showLogos && triggerLogoURI ? (
             <OptionLogo logoURI={triggerLogoURI} label={triggerLabel} />
           ) : null}
-          <span className="l33t-dd__trigger-text">
-            <span className="l33t-dd__trigger-value">{triggerLabel}</span>
+          <span className="w1337-dd__trigger-text">
+            <span className="w1337-dd__trigger-value">{triggerLabel}</span>
             {triggerSublabel ? (
-              <span className="l33t-dd__trigger-sub">{triggerSublabel}</span>
+              <span className="w1337-dd__trigger-sub">{triggerSublabel}</span>
             ) : null}
           </span>
         </span>
-        <span className="l33t-dd__chev" aria-hidden>
+        <span className="w1337-dd__chev" aria-hidden>
           <ChevronDownIcon />
         </span>
       </button>
       {open ? (
         <div
           ref={panelRef}
-          className="l33t-dd__panel"
+          className="w1337-dd__panel"
           role="listbox"
           aria-label={label}
           style={{ maxHeight: panelMaxHeight }}
         >
           {groups.map(group => (
-            <div key={group.label} className="l33t-dd__group">
+            <div key={group.label} className="w1337-dd__group">
               {groups.length > 1 ? (
-                <div className="l33t-dd__group-label">{group.label}</div>
+                <div className="w1337-dd__group-label">{group.label}</div>
               ) : null}
               {group.options.map(opt => {
                 const selected = opt.value === value;
@@ -174,26 +174,26 @@ export function L33tSelect({
                     type="button"
                     role="option"
                     aria-selected={selected}
-                    className={`l33t-dd__option${selected ? ' l33t-dd__option--on' : ''}`}
+                    className={`w1337-dd__option${selected ? ' w1337-dd__option--on' : ''}`}
                     title={opt.sublabel ?? opt.label}
                     onClick={() => {
                       onPick(opt.value);
                       setOpenMenu(null);
                     }}
                   >
-                    <span className="l33t-dd__option-main">
+                    <span className="w1337-dd__option-main">
                       {showLogos ? (
                         <OptionLogo logoURI={opt.logoURI} label={opt.label} />
                       ) : null}
-                      <span className="l33t-dd__option-text">
-                        <span className="l33t-dd__option-label">{opt.label}</span>
+                      <span className="w1337-dd__option-text">
+                        <span className="w1337-dd__option-label">{opt.label}</span>
                         {opt.sublabel ? (
-                          <span className="l33t-dd__option-sub">{opt.sublabel}</span>
+                          <span className="w1337-dd__option-sub">{opt.sublabel}</span>
                         ) : null}
                       </span>
                     </span>
                     {selected ? (
-                      <span className="l33t-dd__check" aria-hidden>
+                      <span className="w1337-dd__check" aria-hidden>
                         <CheckIcon />
                       </span>
                     ) : null}
@@ -208,7 +208,7 @@ export function L33tSelect({
   );
 }
 
-export function L33tSimpleSelect({
+export function SimpleSelect1337({
   id,
   label,
   openMenu,
@@ -224,7 +224,7 @@ export function L33tSimpleSelect({
   openMenu: string | null;
   setOpenMenu: (v: string | null) => void;
   value: string;
-  options: L33tSelectOption[];
+  options: Select1337Option[];
   onChange: (value: string) => void;
   disabled?: boolean;
   panelMaxHeight?: number;
@@ -232,7 +232,7 @@ export function L33tSimpleSelect({
   const selected = options.find(opt => opt.value === value);
 
   return (
-    <L33tSelect
+    <Select1337
       id={id}
       label={label}
       openMenu={openMenu}
@@ -249,7 +249,7 @@ export function L33tSimpleSelect({
   );
 }
 
-export function L33tSegmented({
+export function Segment1337({
   value,
   onChange,
   options,
@@ -264,7 +264,7 @@ export function L33tSegmented({
 }) {
   return (
     <div
-      className={`l33t-seg${className ? ` ${className}` : ''}`}
+      className={`w1337-seg${className ? ` ${className}` : ''}`}
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -274,7 +274,7 @@ export function L33tSegmented({
           type="button"
           role="tab"
           aria-selected={value === opt.value}
-          className={`l33t-seg__btn${value === opt.value ? ' l33t-seg__btn--on' : ''}`}
+          className={`w1337-seg__btn${value === opt.value ? ' w1337-seg__btn--on' : ''}`}
           title={opt.title}
           onClick={() => onChange(opt.value)}
         >

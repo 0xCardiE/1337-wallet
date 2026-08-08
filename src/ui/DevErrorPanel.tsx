@@ -22,11 +22,11 @@ function formatWhen(at: number): string {
 
 function SectionBlock({ section }: { section: DevErrorSection }) {
   return (
-    <div className="l33t-dev-error__section">
-      <div className="l33t-dev-error__section-label">{section.label}</div>
-      <div className={`l33t-dev-error__section-body${section.mono ? ' mono' : ''}`}>
+    <div className="w1337-dev-error__section">
+      <div className="w1337-dev-error__section-label">{section.label}</div>
+      <div className={`w1337-dev-error__section-body${section.mono ? ' mono' : ''}`}>
         {section.lines.map((line, i) => (
-          <div key={i} className="l33t-dev-error__line">
+          <div key={i} className="w1337-dev-error__line">
             {line}
           </div>
         ))}
@@ -84,30 +84,30 @@ export function DevErrorPanel() {
   if (!entry) return null;
 
   return (
-    <div className="l33t-dev-error" role="alert" aria-live="assertive">
-      <div className="l33t-dev-error__head">
-        <div className="l33t-dev-error__titles">
-          <span className="l33t-dev-error__badge">Dev</span>
-          <strong className="l33t-dev-error__title">{entry.title}</strong>
-          <span className="l33t-dev-error__meta muted">
+    <div className="w1337-dev-error" role="alert" aria-live="assertive">
+      <div className="w1337-dev-error__head">
+        <div className="w1337-dev-error__titles">
+          <span className="w1337-dev-error__badge">Dev</span>
+          <strong className="w1337-dev-error__title">{entry.title}</strong>
+          <span className="w1337-dev-error__meta muted">
             {entry.source}
             {formatWhen(entry.at) ? ` · ${formatWhen(entry.at)}` : ''}
           </span>
         </div>
-        <div className="l33t-dev-error__actions">
+        <div className="w1337-dev-error__actions">
           <button
             type="button"
-            className="l33t-dev-error__btn"
+            className="w1337-dev-error__btn"
             onClick={() => setExpanded(v => !v)}
           >
             {expanded ? 'Hide detail' : 'Show detail'}
           </button>
-          <button type="button" className="l33t-dev-error__btn" onClick={() => void copyDetail()}>
+          <button type="button" className="w1337-dev-error__btn" onClick={() => void copyDetail()}>
             {copyFlash ? 'Copied' : 'Copy'}
           </button>
           <button
             type="button"
-            className="l33t-dev-error__btn l33t-dev-error__btn--close"
+            className="w1337-dev-error__btn w1337-dev-error__btn--close"
             onClick={() => clearDevError()}
             aria-label="Dismiss error"
           >
@@ -115,10 +115,10 @@ export function DevErrorPanel() {
           </button>
         </div>
       </div>
-      <p className="l33t-dev-error__summary">{entry.summary}</p>
+      <p className="w1337-dev-error__summary">{entry.summary}</p>
       {expanded ? (
-        <div className="l33t-dev-error__scroll">
-          <div className="l33t-dev-error__sections">
+        <div className="w1337-dev-error__scroll">
+          <div className="w1337-dev-error__sections">
             {entry.sections.map((section, i) => (
               <SectionBlock key={`${section.label}-${i}`} section={section} />
             ))}

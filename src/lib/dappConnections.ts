@@ -1,15 +1,9 @@
-const CONNECTED_ORIGINS_KEY = 'l33t_connected_origins';
-const LEGACY_CONNECTED_ORIGINS_KEYS = ['burning_fox_connected_origins'] as const;
+const CONNECTED_ORIGINS_KEY = '1337_connected_origins';
 
 export async function getConnectedOrigins(): Promise<Set<string>> {
   try {
-    const data = await chrome.storage.session.get([
-      CONNECTED_ORIGINS_KEY,
-      ...LEGACY_CONNECTED_ORIGINS_KEYS,
-    ]);
-    const list =
-      data[CONNECTED_ORIGINS_KEY] ??
-      LEGACY_CONNECTED_ORIGINS_KEYS.map(k => data[k]).find(Boolean);
+    const data = await chrome.storage.session.get([CONNECTED_ORIGINS_KEY]);
+    const list = data[CONNECTED_ORIGINS_KEY];
     if (!Array.isArray(list)) return new Set();
     return new Set(list.filter((o): o is string => typeof o === 'string' && o.length > 0));
   } catch {

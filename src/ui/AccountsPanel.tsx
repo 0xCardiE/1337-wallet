@@ -42,7 +42,7 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
     try {
       await fn();
       onChanged();
-      window.dispatchEvent(new Event('burnbox-account-changed'));
+      window.dispatchEvent(new Event('1337-account-changed'));
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {

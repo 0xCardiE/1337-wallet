@@ -38,15 +38,15 @@ export function WalletsView({
   }, []);
 
   return (
-    <div className="wallet-shell l33t">
+    <div className="wallet-shell w1337">
       <ScreenHeader title="Wallets" onClose={onBack} />
       <div className="screen-body settings-panel">
         <div className="settings-body">
           {walletAddress ? (
-            <div className="l33t-wallets-active">
+            <div className="w1337-wallets-active">
               <strong>Active wallet</strong>
-              <p className="mono l33t-wallets-active__addr">{walletAddress}</p>
-              <div className="row l33t-wallets-active__row">
+              <p className="mono w1337-wallets-active__addr">{walletAddress}</p>
+              <div className="row w1337-wallets-active__row">
                 <p className="muted">
                   Your address on EVM chains — use this to receive funds.
                 </p>
@@ -64,12 +64,12 @@ export function WalletsView({
                   <label htmlFor="wallet-privkey">Private key</label>
                   <p
                     id="wallet-privkey"
-                    className="mono l33t-wallets-active__pk"
+                    className="mono w1337-wallets-active__pk"
                     aria-label="Private key hidden"
                   >
                     ••••••••••••••••••••••••••••••••
                   </p>
-                  <div className="row l33t-wallets-active__row">
+                  <div className="row w1337-wallets-active__row">
                     <p className="muted">
                       Hidden for safety — copy only when you need to back up or import elsewhere.
                     </p>
