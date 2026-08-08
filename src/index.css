@@ -4328,6 +4328,136 @@ button.w1337-token-row--action:hover:not(:disabled) {
   margin: 12px 0;
 }
 
+/* ENS (Tools) */
+.w1337-ens-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.w1337-ens-intro {
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+.w1337-ens-note,
+.w1337-ens-msg,
+.w1337-ens-tx {
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.w1337-ens-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.w1337-ens-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.w1337-ens-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.w1337-ens-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.w1337-ens-row__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.w1337-ens-row__name {
+  font-weight: 600;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.w1337-ens-row__expiry {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.w1337-ens-row__expiry--soon {
+  color: var(--warn, #d97706);
+}
+
+.w1337-ens-row__body {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.w1337-ens-row__meta,
+.w1337-ens-row__hint {
+  font-size: 11px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.w1337-ens-row__field label {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.w1337-ens-row__field input {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.w1337-ens-register label {
+  display: block;
+  font-size: 12px;
+  margin: 10px 0 4px;
+}
+
+.w1337-ens-register__input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.w1337-ens-register__input input {
+  flex: 1;
+}
+
+.w1337-ens-register__actions {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* Gas Station (Tools) */
 .w1337-gas-station .w1337-dd {
   margin-bottom: 10px;

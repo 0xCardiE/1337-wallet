@@ -47,6 +47,8 @@ export interface AppSettings {
   replaceMetaMask?: boolean;
   /** Optional Etherscan API v2 key — one key covers most *scan explorers for tx history. */
   explorerApiKey?: string;
+  /** Optional The Graph API key for ENS subgraph (100k free queries/mo). */
+  theGraphApiKey?: string;
   /** Dapp signing mode — defaults to speed (auto-confirm). */
   txConfirmMode?: TxConfirmMode;
 }
@@ -211,6 +213,10 @@ export async function loadPersisted(): Promise<PersistedState> {
           explorerApiKey:
             typeof row.settings?.explorerApiKey === 'string' && row.settings.explorerApiKey.trim()
               ? row.settings.explorerApiKey.trim()
+              : undefined,
+          theGraphApiKey:
+            typeof row.settings?.theGraphApiKey === 'string' && row.settings.theGraphApiKey.trim()
+              ? row.settings.theGraphApiKey.trim()
               : undefined,
           txConfirmMode: normalizeTxConfirmMode(row.settings?.txConfirmMode),
           ...(tm ? { toolbarOpenMode: tm } : {}),

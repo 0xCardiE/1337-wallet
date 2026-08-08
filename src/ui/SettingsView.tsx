@@ -54,6 +54,7 @@ export function SettingsView({
     () => settings.replaceMetaMask !== false,
   );
   const [explorerApiKey, setExplorerApiKey] = useState(() => settings.explorerApiKey ?? '');
+  const [theGraphApiKey, setTheGraphApiKey] = useState(() => settings.theGraphApiKey ?? '');
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -65,12 +66,14 @@ export function SettingsView({
     setOpenMode(!sidePanelSupported && m === 'side_panel' ? 'popup' : m);
     setReplaceMetaMask(settings.replaceMetaMask !== false);
     setExplorerApiKey(settings.explorerApiKey ?? '');
+    setTheGraphApiKey(settings.theGraphApiKey ?? '');
   }, [
     settings.slippagePercent,
     settings.autoLockMinutes,
     settings.toolbarOpenMode,
     settings.replaceMetaMask,
     settings.explorerApiKey,
+    settings.theGraphApiKey,
     sidePanelSupported,
   ]);
 
@@ -94,6 +97,7 @@ export function SettingsView({
         toolbarOpenMode: openMode,
         replaceMetaMask,
         explorerApiKey: explorerApiKey.trim() || undefined,
+        theGraphApiKey: theGraphApiKey.trim() || undefined,
       });
       await syncToolbarOpenModeNow();
       onSaved();
@@ -241,6 +245,22 @@ export function SettingsView({
           <p className="muted" style={{ fontSize: 12 }}>
             One Etherscan v2 key loads normal txs on Ethereum, Base, Arbitrum, Optimism, Polygon,
             BSC, and other *scan chains. Blockscout chains work without a key.
+          </p>
+
+          <label htmlFor="thegraph-key" style={{ marginTop: 16 }}>
+            The Graph API key (ENS names)
+          </label>
+          <input
+            id="thegraph-key"
+            type="password"
+            value={theGraphApiKey}
+            onChange={e => setTheGraphApiKey(e.target.value)}
+            placeholder="Optional — free at thegraph.com/studio/apikeys"
+            autoComplete="off"
+          />
+          <p className="muted" style={{ fontSize: 12 }}>
+            Used to list ENS domains in Tools → ENS. Without a key, the public rate-limited
+            subgraph is used.
           </p>
 
           <div style={{ marginTop: 16 }}>

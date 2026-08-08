@@ -2,16 +2,18 @@ import { useState } from 'react';
 import type { AppSettings } from '../lib/storageState';
 import { MultiSendView } from './MultiSendView';
 import { ApprovalsPanel } from './ApprovalsPanel';
+import { EnsView } from './EnsView';
 import { GasStationView } from './GasStationView';
 import { SwapView } from './SwapView';
 
-export type ToolsSubTab = 'multisend' | 'gas' | 'approvals' | 'swap';
+export type ToolsSubTab = 'multisend' | 'gas' | 'approvals' | 'swap' | 'ens';
 
 const TOOL_TABS: { id: ToolsSubTab; label: string }[] = [
   { id: 'multisend', label: 'Multisend' },
   { id: 'gas', label: 'Gas' },
   { id: 'approvals', label: 'Approvals' },
   { id: 'swap', label: 'Swap' },
+  { id: 'ens', label: 'ENS' },
 ];
 
 export function ToolsView({ settings }: { settings: AppSettings }) {
@@ -38,6 +40,7 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
         {tab === 'gas' ? <GasStationView settings={settings} /> : null}
         {tab === 'approvals' ? <ApprovalsPanel settings={settings} /> : null}
         {tab === 'swap' ? <SwapView settings={settings} embedded /> : null}
+        {tab === 'ens' ? <EnsView settings={settings} /> : null}
       </div>
     </div>
   );
