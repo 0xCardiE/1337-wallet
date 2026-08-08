@@ -265,6 +265,18 @@ type Msg =
       path?: string;
       transaction?: Record<string, unknown>;
     }
+  | {
+      type: 'TREZOR_ETHEREUM_SIGN_MESSAGE';
+      path?: string;
+      message?: string;
+      hex?: boolean;
+    }
+  | {
+      type: 'TREZOR_ETHEREUM_SIGN_TYPED_DATA';
+      path?: string;
+      data?: Record<string, unknown>;
+      metamask_v4_compat?: boolean;
+    }
   | { type: 'PING' }
   | { type: 'SYNC_TOOLBAR_OPEN_MODE' }
   | { type: 'PROVIDER_GET_CONFIG' }

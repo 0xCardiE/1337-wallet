@@ -48,7 +48,8 @@ export async function executeSignRequest(
   }
 
   if (method === 'personal_sign' || method === 'eth_sign') {
-    const [msgParam, addrParam] = params as [unknown, unknown];
+    const msgParam = method === 'personal_sign' ? params[0] : params[1];
+    const addrParam = method === 'personal_sign' ? params[1] : params[0];
     const addr = addressFromPrivateKey(pk);
     if (typeof addrParam === 'string' && getAddress(addrParam) !== addr) {
       throw new Error('Signer address mismatch');

@@ -73,7 +73,7 @@ Sources for 1337: `src/lib/vault.ts`, `src/lib/walletCore.ts`, `src/lib/walletMa
 - **Ledger:** `@ledgerhq/hw-transport-webhid` + `@ledgerhq/hw-app-eth` (Chrome `hid` permission). Blind signing may be required depending on app settings.
 - **Trezor:** `@trezor/connect-webextension` in the service worker; Connect popup on `connect.trezor.io`.
 - Persisted data: address, label, derivation path, kind — **never** the device seed.
-- Signing for sends / swaps / dApp `eth_sendTransaction` goes through the device SDK; message signing (personal_sign / typed data) is not fully wired for hardware yet — use a local account or MM for those flows today.
+- Signing for sends / swaps / dApp `eth_sendTransaction`, `personal_sign`, and EIP-712 typed data goes through the device SDK.
 
 ---
 

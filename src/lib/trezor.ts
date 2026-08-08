@@ -79,6 +79,40 @@ export async function signTxWithTrezor(params: {
   });
 }
 
+export async function signPersonalMessageWithTrezor(params: {
+  derivationPath: string;
+  message: string;
+  hex: boolean;
+}): Promise<Hex> {
+  await sendTrezorMessage({ type: 'TREZOR_INIT' });
+  const payload = await sendTrezorMessage<{ signature: string }>({
+    type: 'TREZOR_ETHEREUM_SIGN_MESSAGE',
+    path: params.derivationPath,
+    message: params.message,
+    hex: params.hex,
+  });
+  return ensureHex(payload.signature);
+}
+
+export async function signEip712WithTrezor(params: {
+  derivationPath: string;
+  typedData: {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{ name: string; type: string }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+  };
+}): Promise<Hex> {
+  await sendTrezorMessage({ type: 'TREZOR_INIT' });
+  const payload = await sendTrezorMessage<{ signature: string }>({
+    type: 'TREZOR_ETHEREUM_SIGN_TYPED_DATA',
+    path: params.derivationPath,
+    data: params.typedData,
+    metamask_v4_compat: true,
+  });
+  return ensureHex(payload.signature);
+}
+
 function ensureHex(value: string): Hex {
   return (value.startsWith('0x') ? value : `0x${value}`) as Hex;
 }

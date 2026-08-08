@@ -30,7 +30,7 @@ import { lookupFunctionSelectors } from '../lib/fourByteDirectory';
 import { addressExplorerLink } from '../lib/tokenApprovals';
 import { chainById } from '../lib/chainCatalog';
 import { chainJsonRpcCall } from '../lib/ethereum';
-import { signAndSendWithHardware } from '../lib/hardwareSign';
+import { executeHardwareSignRequest } from '../lib/hardwareSign';
 import type { AppSettings } from '../lib/storageState';
 import {
   completePendingApproval,
@@ -670,80 +670,15 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
 
     if (hw) {
       try {
-        if (pending.request.method !== 'eth_sendTransaction') {
-          throw new Error(
-            'This request needs a message signature. Switch to a local account or approve on a future hardware message-signing build.',
-          );
-        }
-        const rawTx = (pending.request.params?.[0] ?? {}) as Record<string, unknown>;
-        const { tx: merged } = applyGasOverrides(rawTx, gasOverrides);
-        if (!merged.to || typeof merged.to !== 'string') {
-          throw new Error('Missing transaction to address.');
-        }
-        const value =
-          typeof merged.value === 'string' && merged.value
-            ? BigInt(merged.value)
-            : 0n;
-        const gas =
-          typeof merged.gas === 'string' && merged.gas
-            ? BigInt(merged.gas)
-            : typeof merged.gasLimit === 'string' && merged.gasLimit
-              ? BigInt(merged.gasLimit)
-              : await chainJsonRpcCall<string>(pending.chainId, 'eth_estimateGas', [
-                  {
-                    from: meta.address,
-                    to: merged.to,
-                    data: (merged.data as string) ?? '0x',
-                    value: merged.value ?? '0x0',
-                  },
-                ]).then(h => BigInt(h));
-        const nonce =
-          merged.nonce != null
-            ? Number.parseInt(String(merged.nonce), String(merged.nonce).startsWith('0x') ? 16 : 10)
-            : Number.parseInt(
-                await chainJsonRpcCall<string>(pending.chainId, 'eth_getTransactionCount', [
-                  meta.address,
-                  'pending',
-                ]),
-                16,
-              );
-        const maxFee = merged.maxFeePerGas != null ? BigInt(String(merged.maxFeePerGas)) : undefined;
-        const maxPrio =
-          merged.maxPriorityFeePerGas != null
-            ? BigInt(String(merged.maxPriorityFeePerGas))
-            : undefined;
-        const gasPrice = merged.gasPrice != null ? BigInt(String(merged.gasPrice)) : undefined;
-
-        const tx =
-          maxFee != null
-            ? {
-                type: 'eip1559' as const,
-                chainId: pending.chainId,
-                nonce,
-                gas,
-                maxFeePerGas: maxFee,
-                maxPriorityFeePerGas: maxPrio ?? maxFee / 10n,
-                to: merged.to as `0x${string}`,
-                value,
-                data: ((merged.data as string) ?? '0x') as `0x${string}`,
-              }
-            : {
-                type: 'legacy' as const,
-                chainId: pending.chainId,
-                nonce,
-                gas,
-                gasPrice: gasPrice ?? 1n,
-                to: merged.to as `0x${string}`,
-                value,
-                data: ((merged.data as string) ?? '0x') as `0x${string}`,
-              };
-
-        const hash = await signAndSendWithHardware({
+        const result = await executeHardwareSignRequest({
           account: meta,
           chainId: pending.chainId,
-          tx,
+          method: pending.request.method,
+          requestParams: pending.request.params ?? [],
+          gasOverrides:
+            pending.request.method === 'eth_sendTransaction' ? gasOverrides : undefined,
         });
-        const res = await completePendingApproval(pending.id, hash);
+        const res = await completePendingApproval(pending.id, result);
         setBusy(false);
         if (!res.ok) {
           setErr(res.error ?? 'Could not complete request');

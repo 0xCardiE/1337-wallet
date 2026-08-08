@@ -71,6 +71,44 @@ export async function signTxWithLedger(params: {
   });
 }
 
+export async function signPersonalMessageWithLedger(params: {
+  derivationPath: string;
+  messageHex: string;
+}): Promise<{ r: Hex; s: Hex; v: number }> {
+  const { transport, eth } = await openLedgerEth();
+  try {
+    const sig = await eth.signPersonalMessage(
+      toLedgerPath(params.derivationPath),
+      params.messageHex.replace(/^0x/i, ''),
+    );
+    return { r: ensureHex(sig.r), s: ensureHex(sig.s), v: sig.v };
+  } catch (err) {
+    throw new Error(formatLedgerError(err));
+  } finally {
+    await transport.close().catch(() => undefined);
+  }
+}
+
+export async function signEip712WithLedger(params: {
+  derivationPath: string;
+  typedData: {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{ name: string; type: string }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+  };
+}): Promise<{ r: Hex; s: Hex; v: number }> {
+  const { transport, eth } = await openLedgerEth();
+  try {
+    const sig = await eth.signEIP712Message(toLedgerPath(params.derivationPath), params.typedData);
+    return { r: ensureHex(sig.r), s: ensureHex(sig.s), v: sig.v };
+  } catch (err) {
+    throw new Error(formatLedgerError(err));
+  } finally {
+    await transport.close().catch(() => undefined);
+  }
+}
+
 function ensureHex(value: string): Hex {
   return (value.startsWith('0x') ? value : `0x${value}`) as Hex;
 }
