@@ -6,6 +6,7 @@ import {
   getActiveAccountMeta,
 } from '../lib/accountSession';
 import { accountKindLabel, shortAddress } from '../lib/accounts';
+import { AccountLabel } from './AccountLabel';
 import { switchActiveAccount } from '../lib/walletManager';
 import { PassportScoreBadge } from './PassportScoreBadge';
 
@@ -174,9 +175,11 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
                               copiedId === account.id ? ' w1337-acct-sheet-row__label--copied' : ''
                             }`}
                           >
-                            {copiedId === account.id
-                              ? 'Copied!'
-                              : account.label || shortAddress(account.address)}
+                            {copiedId === account.id ? (
+                              'Copied!'
+                            ) : (
+                              <AccountLabel account={account} />
+                            )}
                           </span>
                           <span className="w1337-acct-sheet-row__meta mono">
                             {accountKindLabel(account.kind)} · {shortAddress(account.address)}
@@ -224,7 +227,11 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
               copiedId === 'dock' ? ' w1337-acct-trigger__label--copied' : ''
             }`}
           >
-            {copiedId === 'dock' ? 'Copied!' : active.label || 'Account'}
+            {copiedId === 'dock' ? (
+              'Copied!'
+            ) : (
+              <AccountLabel account={active} fallback="Account" />
+            )}
           </span>
           <span className="w1337-acct-trigger__sub mono">
             {accountKindLabel(active.kind)} · {shortAddress(active.address)}

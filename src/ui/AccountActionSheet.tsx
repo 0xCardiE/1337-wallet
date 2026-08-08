@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { WalletAccount } from '../lib/accounts';
 import { accountKindLabel, shortAddress } from '../lib/accounts';
+import { accountLabelWithEns } from '../lib/ens';
+import { useEnsName } from '../lib/useEnsName';
 
 export type AccountAction =
   | { type: 'rename'; account: WalletAccount }
@@ -39,9 +41,14 @@ export function AccountActionSheet({
     return () => window.removeEventListener('keydown', onKey);
   }, [action, onCancel]);
 
+  const ensName = useEnsName(action?.account.address);
+
   if (!action || typeof document === 'undefined') return null;
 
-  const meta = `${accountKindLabel(action.account.kind)} · ${shortAddress(action.account.address)}`;
+  const labelWithEns = accountLabelWithEns(action.account, ensName);
+  const meta = `${accountKindLabel(action.account.kind)} · ${shortAddress(action.account.address)}${
+    ensName ? ` · ${ensName}` : ''
+  }`;
 
   return createPortal(
     <div className="w1337-acct-sheet-mount" role="dialog" aria-modal="true">
@@ -76,7 +83,7 @@ export function AccountActionSheet({
           ) : (
             <>
               <p className="w1337-acct-action-sheet__warn">
-                Remove <strong>{action.account.label}</strong>?
+                Remove <strong>{labelWithEns}</strong>?
               </p>
               <p className="muted w1337-acct-action-sheet__meta">{meta}</p>
               <p className="muted w1337-acct-action-sheet__hint">

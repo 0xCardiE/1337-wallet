@@ -22,6 +22,7 @@ import {
   switchActiveAccount,
 } from '../lib/walletManager';
 import { AccountActionSheet, type AccountAction } from './AccountActionSheet';
+import { AccountLabel } from './AccountLabel';
 import { PassportScoreBadge } from './PassportScoreBadge';
 import { Segment1337 } from './Select1337';
 
@@ -138,7 +139,7 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                   })
                 }
               >
-                <span>{account.label}</span>
+                <AccountLabel account={account} />
                 <span className="muted mono bfox-account-manage-meta">
                   {accountKindLabel(account.kind)} · {shortAddress(account.address)}
                 </span>
