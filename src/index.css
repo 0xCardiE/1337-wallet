@@ -861,6 +861,44 @@ button.bfox-account-manage-select:hover:not(:disabled) {
   gap: 4px;
 }
 
+.w1337-acct-action-sheet {
+  max-height: min(420px, 70vh);
+}
+
+.w1337-acct-action-sheet__body {
+  padding: 12px 16px 4px;
+}
+
+.w1337-acct-action-sheet__meta {
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+
+.w1337-acct-action-sheet__warn {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.w1337-acct-action-sheet__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.w1337-acct-action-sheet__actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.w1337-acct-action-sheet__actions .ghost,
+.w1337-acct-action-sheet__actions .primary,
+.w1337-acct-action-sheet__actions .danger {
+  flex: 1;
+}
+
 .bfox-main-header__addr,
 .w1337-main-header__addr {
   flex: 1;

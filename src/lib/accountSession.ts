@@ -3,6 +3,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import {
   getActiveAccount,
   isHardwareAccount,
+  isKeyBackedKind,
   type WalletAccount,
 } from './accounts';
 
@@ -80,7 +81,7 @@ export function activateAccount(accountId: string): WalletAccount {
   const meta = accounts.find(a => a.id === accountId);
   if (!meta) throw new Error('Account not found.');
   activeAccountId = accountId;
-  if (meta.kind === 'local') {
+  if (isKeyBackedKind(meta.kind)) {
     const pk = localKeys.get(accountId);
     if (!pk) throw new Error('Local key missing — unlock again.');
     setUnlockedAccount(privateKeyToAccount(pk), pk);

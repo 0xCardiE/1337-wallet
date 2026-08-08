@@ -4,6 +4,7 @@ import {
   createAccountId,
   defaultAccountLabel,
   DEFAULT_ETH_DERIVATION_PATH,
+  isKeyBackedKind,
   type AccountKind,
   type WalletAccount,
 } from './accounts';
@@ -91,7 +92,7 @@ function reconcileVaultKeys(
   }
 
   for (const account of accounts) {
-    if (account.kind !== 'local' || out[account.id]) continue;
+    if (!isKeyBackedKind(account.kind) || out[account.id]) continue;
 
     const byAddr = byAddress.get(account.address);
     if (byAddr) {
@@ -115,18 +116,18 @@ function resolveUnlockableActiveId(
   keys: Record<string, `0x${string}`>,
 ): string {
   const preferred = accounts.find(a => a.id === preferredId);
-  if (preferred?.kind === 'local') {
+  if (preferred && isKeyBackedKind(preferred.kind)) {
     if (keys[preferred.id]) return preferred.id;
   } else if (preferred) {
     return preferred.id;
   }
 
-  const firstLocal = accounts.find(a => a.kind === 'local' && keys[a.id]);
+  const firstLocal = accounts.find(a => isKeyBackedKind(a.kind) && keys[a.id]);
   if (firstLocal) return firstLocal.id;
 
   const firstAny = accounts[0];
   if (!firstAny) throw new Error('No accounts in vault.');
-  if (firstAny.kind === 'local' && !keys[firstAny.id]) {
+  if (isKeyBackedKind(firstAny.kind) && !keys[firstAny.id]) {
     throw new Error(
       'Local key missing for this account. Switch back to an account you fully unlocked, or restore from backup.',
     );
@@ -154,7 +155,7 @@ async function ensureLocalKeyForAccount(accountId: string): Promise<`0x${string}
 
   const meta = getAccountsMeta().find(a => a.id === accountId);
   if (!meta) throw new Error('Account not found.');
-  if (meta.kind !== 'local') throw new Error('Not a local account.');
+  if (!isKeyBackedKind(meta.kind)) throw new Error('Not a software account.');
 
   const password = getSessionPassword();
   if (password) {
@@ -230,7 +231,7 @@ export async function unlockWallet(password: string): Promise<void> {
 
   setAccountsMeta(accounts, activeAccountId);
   const active = activateAccount(activeAccountId ?? accounts[0]!.id);
-  if (active.kind === 'local') {
+  if (isKeyBackedKind(active.kind)) {
     const pk = getLocalKeys().get(active.id);
     if (pk) {
       await persistSessionPrivateKey(pk, password);
@@ -305,12 +306,12 @@ export async function importInitialWallet(
   }
   const pk = parseImportPrivateKey(secretInput);
   const address = normalizeAddress(accountFromPrivateKey(pk).address);
-  const id = createAccountId('local', address);
+  const id = createAccountId('imported', address);
   const account: WalletAccount = {
     id,
     address,
-    label: defaultAccountLabel('local', address),
-    kind: 'local',
+    label: defaultAccountLabel('imported', address),
+    kind: 'imported',
     createdAt: Date.now(),
   };
   const vault = await encryptVaultSecrets({ keys: { [id]: pk } }, password);
@@ -366,8 +367,10 @@ export async function addLocalAccount(opts: {
   const pk = opts.privateKeyInput
     ? parseImportPrivateKey(opts.privateKeyInput)
     : generateNewPrivateKey();
+  const imported = Boolean(opts.privateKeyInput);
+  const kind: AccountKind = imported ? 'imported' : 'local';
   const address = normalizeAddress(accountFromPrivateKey(pk).address);
-  const id = createAccountId('local', address);
+  const id = createAccountId(kind, address);
   const existing = getAccountsMeta();
   if (existing.some(a => a.address === address || a.id === id)) {
     throw new Error('That account is already imported.');
@@ -376,8 +379,8 @@ export async function addLocalAccount(opts: {
   const account: WalletAccount = {
     id,
     address,
-    label: opts.label?.trim() || defaultAccountLabel('local', address),
-    kind: 'local',
+    label: opts.label?.trim() || defaultAccountLabel(kind, address),
+    kind,
     createdAt: Date.now(),
   };
 
@@ -505,13 +508,13 @@ export async function switchActiveAccount(accountId: string): Promise<WalletAcco
   if (!meta) throw new Error('Account not found.');
 
   try {
-    if (meta.kind === 'local') {
+    if (isKeyBackedKind(meta.kind)) {
       await ensureLocalKeyForAccount(accountId);
     }
     await persistActiveAccountId(accountId);
     const activated = activateAccount(accountId);
     setAccountsMeta(getAccountsMeta(), accountId);
-    if (activated.kind === 'local') {
+    if (isKeyBackedKind(activated.kind)) {
       const pk = getLocalKeys().get(activated.id);
       if (!pk) throw new Error('Local key missing — unlock again.');
       const pwd = getSessionPassword();
@@ -547,8 +550,8 @@ export async function removeAccount(accountId: string): Promise<void> {
   const accounts = existing.filter(a => a.id !== accountId);
   const nextActive = accounts[0]!.id;
 
-  if (target.kind === 'local') {
-    if (!password) throw new Error('Unlock the wallet to remove a local account.');
+  if (isKeyBackedKind(target.kind)) {
+    if (!password) throw new Error('Unlock the wallet to remove a software account.');
     const nextKeys: Record<string, `0x${string}`> = Object.fromEntries(getLocalKeys());
     delete nextKeys[accountId];
     await persistLocalVault(nextKeys, accounts, nextActive);

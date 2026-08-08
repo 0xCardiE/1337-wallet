@@ -21,6 +21,10 @@ import {
   renameAccount,
   switchActiveAccount,
 } from '../lib/walletManager';
+import { AccountActionSheet, type AccountAction } from './AccountActionSheet';
+import { Segment1337 } from './Select1337';
+
+type AddMode = 'derive' | 'importKey' | 'import' | 'generate';
 
 export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
   const [importKey, setImportKey] = useState('');
@@ -29,11 +33,34 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [action, setAction] = useState<AccountAction | null>(null);
 
   const accounts = getAccountsMeta();
   const activeId = getActiveAccountId();
   const canAddLocal = Boolean(getSessionPassword());
   const hasSeed = hasSessionMnemonic();
+  const [addMode, setAddMode] = useState<AddMode>(hasSeed ? 'derive' : 'import');
+
+  const addModeOptions = hasSeed
+    ? [
+        { value: 'derive', label: 'From seed' },
+        { value: 'importKey', label: 'Import key' },
+        { value: 'generate', label: 'Generate' },
+      ]
+    : [
+        { value: 'import', label: 'Import' },
+        { value: 'generate', label: 'Generate' },
+      ];
+
+  const needsSecret = addMode === 'importKey' || addMode === 'import';
+  const addButtonLabel =
+    addMode === 'derive'
+      ? 'Add from seed'
+      : addMode === 'generate'
+        ? 'Generate key'
+        : addMode === 'importKey'
+          ? 'Import private key'
+          : 'Import';
 
   async function run(labelBusy: string, fn: () => Promise<void>) {
     setBusy(labelBusy);
@@ -48,6 +75,43 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function handleAddAccount() {
+    if (addMode === 'derive') {
+      await run('derive', async () => {
+        const account = await addDerivedSeedAccount(label || undefined);
+        setLabel('');
+        setMsg(`Derived ${account.label}`);
+      });
+      return;
+    }
+
+    if (addMode === 'generate') {
+      await run('create', async () => {
+        const account = await addLocalAccount({ label: label || undefined });
+        setImportKey('');
+        setLabel('');
+        setMsg(`Created ${account.label}`);
+      });
+      return;
+    }
+
+    if (!importKey.trim()) {
+      setErr(addMode === 'importKey' ? 'Enter a private key.' : 'Enter a seed phrase or private key.');
+      return;
+    }
+
+    await run('import', async () => {
+      const account = await addLocalAccount(
+        addMode === 'importKey' || !looksLikeMnemonic(importKey)
+          ? { privateKeyInput: importKey, label: label || undefined }
+          : { mnemonicInput: importKey, label: label || undefined },
+      );
+      setImportKey('');
+      setLabel('');
+      setMsg(`Imported ${account.label}`);
+    });
   }
 
   return (
@@ -83,14 +147,7 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                   type="button"
                   className="ghost"
                   style={{ padding: '6px 8px', fontSize: 11 }}
-                  onClick={() => {
-                    const next = window.prompt('Account label', account.label);
-                    if (next == null) return;
-                    void run('rename', async () => {
-                      await renameAccount(account.id, next);
-                      setMsg('Label updated.');
-                    });
-                  }}
+                  onClick={() => setAction({ type: 'rename', account })}
                 >
                   Edit
                 </button>
@@ -99,13 +156,7 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                   className="ghost"
                   style={{ padding: '6px 8px', fontSize: 11 }}
                   disabled={accounts.length <= 1 || busy != null}
-                  onClick={() => {
-                    if (!confirm(`Remove ${account.label}?`)) return;
-                    void run('remove', async () => {
-                      await removeAccount(account.id);
-                      setMsg('Account removed.');
-                    });
-                  }}
+                  onClick={() => setAction({ type: 'remove', account })}
                 >
                   ×
                 </button>
@@ -117,77 +168,51 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
 
       <div style={{ marginTop: 14 }}>
         <strong style={{ fontSize: 13 }}>Add local account</strong>
+        <div className="onboarding-segments" style={{ marginTop: 10, marginBottom: 10 }}>
+          <Segment1337
+            value={addMode}
+            onChange={v => setAddMode(v as AddMode)}
+            ariaLabel="How to add account"
+            options={addModeOptions}
+          />
+        </div>
         <input
           placeholder="Label (optional)"
           value={label}
           onChange={e => setLabel(e.target.value)}
-          style={{ marginTop: 8 }}
         />
-        <textarea
-          className="mono"
-          rows={3}
-          placeholder="Private key or seed phrase to import (leave empty to generate a key)"
-          value={importKey}
-          onChange={e => setImportKey(e.target.value)}
-          spellCheck={false}
-          style={{ marginTop: 8 }}
-        />
-        <div className="row" style={{ marginTop: 8, flexWrap: 'wrap' }}>
-          {hasSeed ? (
-            <button
-              type="button"
-              className="ghost"
-              disabled={busy != null || !canAddLocal}
-              onClick={() =>
-                void run('derive', async () => {
-                  const account = await addDerivedSeedAccount(label || undefined);
-                  setLabel('');
-                  setMsg(`Derived ${account.label}`);
-                })
-              }
-            >
-              {busy === 'derive' ? '…' : 'Add from seed'}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="ghost"
-            disabled={busy != null || !canAddLocal}
-            onClick={() =>
-              void run('create', async () => {
-                const account = await addLocalAccount({ label: label || undefined });
-                setImportKey('');
-                setLabel('');
-                setMsg(`Created ${account.label}`);
-              })
+        {needsSecret ? (
+          <textarea
+            className="mono"
+            rows={3}
+            placeholder={
+              addMode === 'importKey'
+                ? '0x… or 64 hex chars'
+                : 'Seed phrase (12–24 words) or private key'
             }
-          >
-            {busy === 'create' ? '…' : 'Generate key'}
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={busy != null || !importKey.trim() || !canAddLocal}
-            onClick={() =>
-              void run('import', async () => {
-                const account = await addLocalAccount(
-                  looksLikeMnemonic(importKey)
-                    ? { mnemonicInput: importKey, label: label || undefined }
-                    : { privateKeyInput: importKey, label: label || undefined },
-                );
-                setImportKey('');
-                setLabel('');
-                setMsg(`Imported ${account.label}`);
-              })
-            }
-          >
-            {busy === 'import' ? '…' : 'Import'}
-          </button>
-        </div>
+            value={importKey}
+            onChange={e => setImportKey(e.target.value)}
+            spellCheck={false}
+            style={{ marginTop: 8 }}
+          />
+        ) : null}
+        <button
+          type="button"
+          className="primary"
+          style={{ width: '100%', marginTop: 10 }}
+          disabled={busy != null || !canAddLocal || (needsSecret && !importKey.trim())}
+          onClick={() => void handleAddAccount()}
+        >
+          {busy === 'derive' || busy === 'create' || busy === 'import' ? 'Working…' : addButtonLabel}
+        </button>
         <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
-          {hasSeed
-            ? 'Seed phrase is in this vault — “Add from seed” derives the next HD account (m/44\'/60\'/0\'/0/n).'
-            : 'No seed in this vault yet. Import a 12–24 word phrase, or generate/import a single private key.'}
+          {addMode === 'derive'
+            ? 'Derives the next HD account from your vault seed (m/44\'/60\'/0\'/0/n).'
+            : addMode === 'importKey'
+              ? 'Imports a standalone private key alongside your seed accounts. Shows as Imported.'
+              : addMode === 'generate'
+                ? 'Creates a new random private key in this vault.'
+                : 'Import a seed phrase to set up HD accounts, or a private key for a single imported account.'}
           {!canAddLocal ? ' Unlock with your password this session to change local keys.' : ''}
         </p>
       </div>
@@ -244,6 +269,28 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
 
       {msg ? <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>{msg}</p> : null}
       {err ? <p className="error" style={{ marginTop: 8 }}>{err}</p> : null}
+
+      <AccountActionSheet
+        action={action}
+        busy={busy === 'rename' || busy === 'remove'}
+        onCancel={() => setAction(null)}
+        onRename={nextLabel =>
+          void run('rename', async () => {
+            if (!action || action.type !== 'rename') return;
+            await renameAccount(action.account.id, nextLabel);
+            setAction(null);
+            setMsg('Label updated.');
+          })
+        }
+        onRemove={() =>
+          void run('remove', async () => {
+            if (!action || action.type !== 'remove') return;
+            await removeAccount(action.account.id);
+            setAction(null);
+            setMsg('Account removed.');
+          })
+        }
+      />
     </section>
   );
 }

@@ -1,4 +1,4 @@
-export type AccountKind = 'local' | 'ledger' | 'trezor';
+export type AccountKind = 'local' | 'imported' | 'ledger' | 'trezor';
 
 export interface WalletAccount {
   id: string;
@@ -21,16 +21,26 @@ export function shortAddress(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
+export function isKeyBackedKind(kind: AccountKind): boolean {
+  return kind === 'local' || kind === 'imported';
+}
+
+export function isKeyBackedAccount(account: WalletAccount | null | undefined): boolean {
+  return account != null && isKeyBackedKind(account.kind);
+}
+
 export function defaultAccountLabel(kind: AccountKind, address: string): string {
   const short = shortAddress(address);
   if (kind === 'ledger') return `Ledger ${short}`;
   if (kind === 'trezor') return `Trezor ${short}`;
+  if (kind === 'imported') return `Imported ${short}`;
   return short;
 }
 
 export function accountKindLabel(kind: AccountKind): string {
   if (kind === 'ledger') return 'Ledger';
   if (kind === 'trezor') return 'Trezor';
+  if (kind === 'imported') return 'Imported';
   return 'Local';
 }
 
@@ -45,7 +55,7 @@ export function normalizeAccount(raw: unknown): WalletAccount | null {
   const address = row.address.trim().toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(address)) return null;
   const kind: AccountKind =
-    row.kind === 'ledger' || row.kind === 'trezor' || row.kind === 'local'
+    row.kind === 'ledger' || row.kind === 'trezor' || row.kind === 'local' || row.kind === 'imported'
       ? row.kind
       : 'local';
   const id =
@@ -59,7 +69,7 @@ export function normalizeAccount(raw: unknown): WalletAccount | null {
   const derivationPath =
     typeof row.derivationPath === 'string' && row.derivationPath.trim()
       ? row.derivationPath.trim()
-      : kind === 'local'
+      : isKeyBackedKind(kind)
         ? undefined
         : DEFAULT_ETH_DERIVATION_PATH;
   const createdAt =

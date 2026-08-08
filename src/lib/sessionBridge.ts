@@ -7,6 +7,7 @@ import {
   setUnlockedAccount,
 } from './accountSession';
 import type { AccountKind } from './accounts';
+import { isKeyBackedKind } from './accounts';
 import { loadPersisted, type ToolbarOpenMode } from './storageState';
 import { accountFromPrivateKey } from './walletCore';
 
@@ -83,7 +84,7 @@ export async function hydrateAccountFromBackground(): Promise<boolean> {
     const hex = res.privateKeyHex as `0x${string}`;
     const account = accountFromPrivateKey(hex);
     const match = persisted.accounts.find(
-      a => a.kind === 'local' && a.address.toLowerCase() === account.address.toLowerCase(),
+      a => isKeyBackedKind(a.kind) && a.address.toLowerCase() === account.address.toLowerCase(),
     );
     if (match) {
       if (!res.unlockPassword) {
