@@ -3729,6 +3729,22 @@ button.w1337-seg__btn--on:hover:not(:disabled) {
   font-weight: 700;
 }
 
+.onboarding-segments {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.onboarding-segments .w1337-seg {
+  width: 100%;
+}
+
+.onboarding-segments .w1337-seg__btn {
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
 .w1337-tx-mode-err {
   position: absolute;
   right: 0;

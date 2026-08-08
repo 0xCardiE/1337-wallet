@@ -6,6 +6,7 @@ import {
 } from '../lib/walletManager';
 import { PRODUCT_ONBOARDING_LEAD } from '../lib/productManifest';
 import { ScreenHeader } from './ScreenHeader';
+import { Segment1337 } from './Select1337';
 
 type Mode = 'create' | 'import';
 type CreateKind = 'seed' | 'privateKey';
@@ -134,58 +135,29 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
           {PRODUCT_ONBOARDING_LEAD}
         </p>
 
-        <div className="row" style={{ marginBottom: 14 }}>
-          <button
-            type="button"
-            className={mode === 'create' ? 'primary' : 'ghost'}
-            onClick={() => setMode('create')}
-          >
-            Create
-          </button>
-          <button
-            type="button"
-            className={mode === 'import' ? 'primary' : 'ghost'}
-            onClick={() => setMode('import')}
-          >
-            Import
-          </button>
+        <div className="onboarding-segments">
+          <Segment1337
+            value={mode}
+            onChange={v => setMode(v as Mode)}
+            ariaLabel="Create or import wallet"
+            options={[
+              { value: 'create', label: 'Create' },
+              { value: 'import', label: 'Import' },
+            ]}
+          />
+          <Segment1337
+            value={mode === 'create' ? createKind : importKind}
+            onChange={v => {
+              if (mode === 'create') setCreateKind(v as CreateKind);
+              else setImportKind(v as ImportKind);
+            }}
+            ariaLabel="Wallet type"
+            options={[
+              { value: 'seed', label: 'Seed phrase' },
+              { value: 'privateKey', label: 'Private key' },
+            ]}
+          />
         </div>
-
-        {mode === 'create' ? (
-          <div className="row" style={{ marginBottom: 14 }}>
-            <button
-              type="button"
-              className={createKind === 'seed' ? 'primary' : 'ghost'}
-              onClick={() => setCreateKind('seed')}
-            >
-              Seed phrase
-            </button>
-            <button
-              type="button"
-              className={createKind === 'privateKey' ? 'primary' : 'ghost'}
-              onClick={() => setCreateKind('privateKey')}
-            >
-              Private key
-            </button>
-          </div>
-        ) : (
-          <div className="row" style={{ marginBottom: 14 }}>
-            <button
-              type="button"
-              className={importKind === 'seed' ? 'primary' : 'ghost'}
-              onClick={() => setImportKind('seed')}
-            >
-              Seed phrase
-            </button>
-            <button
-              type="button"
-              className={importKind === 'privateKey' ? 'primary' : 'ghost'}
-              onClick={() => setImportKind('privateKey')}
-            >
-              Private key
-            </button>
-          </div>
-        )}
 
         <label htmlFor="pw">Password (encrypts local vault)</label>
         <input
