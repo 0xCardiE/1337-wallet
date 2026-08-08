@@ -21,13 +21,15 @@ export function addressFromPrivateKey(pk: `0x${string}`): `0x${string}` {
 
 export async function signPersonalMessage(
   pk: `0x${string}`,
-  message: string | Hex,
+  message: string | Hex | Uint8Array,
 ): Promise<Hex> {
-  const msg =
-    typeof message === 'string' && !message.startsWith('0x')
-      ? message
-      : (message as Hex);
-  return viemSignMessage({ privateKey: pk, message: msg });
+  if (message instanceof Uint8Array) {
+    return viemSignMessage({ privateKey: pk, message: { raw: message } });
+  }
+  if (typeof message === 'string' && !message.startsWith('0x')) {
+    return viemSignMessage({ privateKey: pk, message });
+  }
+  return viemSignMessage({ privateKey: pk, message: { raw: message as Hex } });
 }
 
 export async function signEip712(
