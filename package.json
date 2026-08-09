@@ -17,7 +17,9 @@
     "wallet-research:x-setup": "npm run x:setup --prefix wallet-research",
     "wallet-research:x-cookies": "npm run x:cookies --prefix wallet-research",
     "wallet-research:search": "npm run search --prefix wallet-research",
-    "wallet-research:export": "npm run export --prefix wallet-research"
+    "wallet-research:export": "npm run export --prefix wallet-research",
+    "website": "npm run dev --prefix website",
+    "website:build": "npm run build --prefix website"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
