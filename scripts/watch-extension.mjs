@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Watch-build popup/background (LavaMoat) and content/inpage bundles in parallel.
+ * Watch-build background (LavaMoat), popup UI, and content/inpage bundles in parallel.
  */
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -22,4 +22,5 @@ function run(config) {
 }
 
 run('webpack.config.cjs');
+run('webpack.ui.config.cjs');
 run('webpack.content.config.cjs');

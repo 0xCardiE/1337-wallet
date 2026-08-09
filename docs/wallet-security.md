@@ -24,15 +24,51 @@ MetaMask’s main end-user advantage is **separation + explicit review**: the da
 | Private key import | Yes | Yes |
 | Hardware | Ledger / Trezor | Ledger / Trezor |
 | Unlocked PK on disk | Typically memory-only | Active PK in `chrome.storage.session` |
+| Runtime supply chain | LavaMoat compartments (UI + background) | LavaMoat compartments (popup + background; inpage outside) |
 
 See the [full multi-type table](./wallet-comparison-metamask.md).
 
+## Supply chain & LavaMoat (what we have now)
+
+1337 uses [LavaMoat](https://lavamoat.github.io/) in two layers. This is the same open-source stack MetaMask builds on; we do not need MetaMask’s full multi-year webpack layering to get real compartment isolation.
+
+### Install time (`@lavamoat/allow-scripts`)
+
+- `.npmrc` sets `ignore-scripts=true` so dependency lifecycle scripts do not run by default.
+- Allowed scripts are listed under `lavamoat.allowScripts` in `package.json` (deny by default).
+- `postinstall` runs `allow-scripts run` so only allowlisted packages execute install scripts (today: `esbuild` via `esbuild-loader`).
+
+### Runtime (Webpack + `@lavamoat/webpack`)
+
+| Bundle | Build config | LavaMoat? | Why |
+|--------|--------------|-----------|-----|
+| Service worker (`background.js`) | `webpack.config.cjs` | Yes | Session key, signing, Trezor bridge — highest sensitivity |
+| Popup / side panel UI | `webpack.ui.config.cjs` | Yes | Vault UI and in-memory seed during unlock; React needs DOM endowments |
+| `content.js` / `inpage.js` | `webpack.content.config.cjs` | No | Runs in page MAIN / isolated worlds; SES lockdown would break dapps |
+
+**What compartments do:** each npm package in a LavaMoat-protected bundle runs in its own SES Compartment. Policy files decide which globals and which other packages it may touch. A compromised dependency cannot freely reach `chrome.storage`, `fetch`, or your vault code unless the policy allows it.
+
+**Policy files (commit after regenerating):**
+
+- Background: `lavamoat/webpack/policy.json` + `policy-override.json`
+- Popup UI: `lavamoat/webpack-ui/policy.json` + `policy-override.json` (includes React/DOM endowments such as `window` / `HTMLIFrameElement`)
+
+```bash
+npm run build:policy   # regenerate after dependency changes
+npm run build          # background → UI → content/inpage
+```
+
+**Not yet (MetaMask-parity extras):** global scuttling + `@lavamoat/snow`, webpack “unsafe vs safe” entry layers, and their full continuous policy-review process. Compartment isolation is the core Layer 3 control; those are further hardening steps we can add later.
+
+Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.json`).
+
 ## Remaining risks (even extension-only)
 
-- **Bug or malicious dependency** → exfiltrate session key / mnemonic from memory or sign malicious txs.
+- **Bug or malicious dependency** → compartments shrink the blast radius but do not replace review of policy overrides or hardware for high-value funds.
 - **Compromised developer machine / supply chain** when building or installing the unpacked extension.
 - **Physical access** to an **unlocked** browser profile → attacker may use local accounts until lock; hardware still needs the device.
 - **`<all_urls>` host permission** — trust your RPC and quote paths.
+- **Content/inpage scripts** are intentionally outside LavaMoat; keep them thin and review carefully.
 
 ## Ways to keep risk lower
 
@@ -41,7 +77,7 @@ See the [full multi-type table](./wallet-comparison-metamask.md).
 3. Prefer **Ledger/Trezor** for high-value funds or when you want device-backed signing.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).
-6. **Supply chain:** install scripts are allowlisted (`@lavamoat/allow-scripts`); popup and background bundles run inside [LavaMoat](https://lavamoat.github.io/) SES compartments (see `lavamoat/webpack/policy.json`).
+6. After adding or upgrading dependencies, run **`npm run build:policy`**, review policy diffs, and commit them with the lockfile.
 
 ## Related source files
 
@@ -50,3 +86,5 @@ See the [full multi-type table](./wallet-comparison-metamask.md).
 - `src/lib/accountSession.ts` — in-memory session
 - `src/lib/sessionBridge.ts` / `src/background.ts` — background session / lock
 - `src/lib/ledger.ts` / `src/lib/trezor.ts` — hardware signing
+- `webpack.config.cjs` / `webpack.ui.config.cjs` / `webpack.content.config.cjs` — LavaMoat vs plain bundles
+- `lavamoat/webpack*` — runtime policies

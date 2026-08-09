@@ -8,8 +8,8 @@
     "postinstall": "allow-scripts run",
     "dev": "node scripts/watch-extension.mjs",
     "dev:ext": "node scripts/watch-extension.mjs",
-    "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
-    "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs",
+    "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.ui.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
+    "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs && LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.ui.config.cjs",
     "build:watch": "npm run dev:ext",
     "preview": "npx serve dist",
     "icons": "node scripts/generate-extension-icons.mjs",
@@ -53,6 +53,9 @@
     "webpack-cli": "^7.2.2"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "overrides": {
+    "ses": "2.2.0"
+  },
   "lavamoat": {
     "allowScripts": {
       "@lavamoat/preinstall-always-fail#3.0.0": false,

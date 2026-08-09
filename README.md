@@ -37,19 +37,28 @@ Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpa
 
 ### LavaMoat policy
 
-Runtime compartments protect the **popup UI** and **service worker** (`background.js`). Content/inpage scripts stay outside LavaMoat because they run in web page contexts where SES lockdown would break dapps.
+| Bundle | Protection |
+|--------|------------|
+| `background.js` | LavaMoat SES compartments (session keys, signing) |
+| Popup UI (`index.html`) | LavaMoat SES compartments (React needs DOM endowments in `lavamoat/webpack-ui/policy-override.json`) |
+| `content.js` / `inpage.js` | Outside LavaMoat (page MAIN / isolated worlds — lockdown would break dapps) |
 
-After dependency changes, regenerate the webpack policy:
+After dependency changes, regenerate policies:
 
 ```bash
 npm run build:policy
 ```
 
-Review `lavamoat/webpack/policy.json` and `lavamoat/webpack/policy-override.json`, then commit both.
+Review and commit:
+- `lavamoat/webpack/policy.json` (+ override) — background
+- `lavamoat/webpack-ui/policy.json` (+ override) — popup
+
 
 ## Security
 
-Local keys are password-encrypted in extension storage. Ledger/Trezor accounts keep private keys on the device. See [docs/wallet-security.md](docs/wallet-security.md) and [MetaMask comparison](docs/wallet-comparison-metamask.md).
+Local keys are password-encrypted in extension storage. Ledger/Trezor accounts keep private keys on the device.
+
+**Supply chain:** install scripts are allowlisted; popup and background bundles run in LavaMoat SES compartments. Details: [docs/wallet-security.md](docs/wallet-security.md) (see “Supply chain & LavaMoat”). Also [MetaMask comparison](docs/wallet-comparison-metamask.md).
 
 ## Wallet pain research tool
 

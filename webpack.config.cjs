@@ -1,14 +1,8 @@
 // @ts-check
-/**
- * LavaMoat-protected extension bundles: popup UI + MV3 service worker.
- * Content/inpage scripts are built separately (page contexts — see webpack.content.config.cjs).
- */
+/** LavaMoat-protected MV3 service worker (session keys, signing, Trezor bridge). */
 const path = require('node:path');
 const webpack = require('webpack');
 const LavaMoatPlugin = require('@lavamoat/webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -18,15 +12,12 @@ module.exports = {
   target: 'web',
   devtool: false,
   entry: {
-    popup: './src/main.tsx',
     background: './src/background.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: (pathData) =>
-      pathData.chunk?.name === 'background' ? 'background.js' : 'assets/[name].[contenthash:8].js',
-    chunkFilename: 'assets/[name].[contenthash:8].js',
-    publicPath: './',
+    filename: '[name].js',
+    publicPath: 'auto',
     clean: true,
   },
   resolve: {
@@ -42,45 +33,18 @@ module.exports = {
       readableResourceIds: !isProd,
       runChecks: true,
       diagnosticsVerbosity: 1,
-      HtmlWebpackPluginInterop: true,
       inlineLockdown: /background\.js$/,
       lockdown: {
-        errorTaming: 'unsafe',
         consoleTaming: 'unsafe',
+        errorTaming: 'unsafe',
+        stackFiltering: 'verbose',
+        overrideTaming: 'severe',
+        localeTaming: 'unsafe',
+        errorTrapping: 'none',
+        reporting: 'none',
       },
       scuttleGlobalThis: {
-        enabled: true,
-        exceptions: [
-          'chrome',
-          'browser',
-          'self',
-          'globalThis',
-          'console',
-          'performance',
-          'setTimeout',
-          'clearTimeout',
-          'setInterval',
-          'clearInterval',
-          'queueMicrotask',
-          'structuredClone',
-          'atob',
-          'btoa',
-          'crypto',
-          'fetch',
-          'Response',
-          'Request',
-          'Headers',
-          'URL',
-          'URLSearchParams',
-          'TextEncoder',
-          'TextDecoder',
-          'AbortController',
-          'AbortSignal',
-          'BroadcastChannel',
-          'importScripts',
-          /Uint[0-9]+Array/,
-          'Proxy',
-        ],
+        enabled: false,
       },
     }),
     new webpack.DefinePlugin({
@@ -88,25 +52,6 @@ module.exports = {
     }),
     new webpack.ProvidePlugin({
       Buffer: ['buffer', 'Buffer'],
-    }),
-    new MiniCssExtractPlugin({
-      filename: 'assets/[name].[contenthash:8].css',
-    }),
-    new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, 'webpack/index.html'),
-      filename: 'index.html',
-      chunks: ['popup'],
-      inject: 'body',
-      scriptLoading: 'blocking',
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: 'public',
-          to: '.',
-          globOptions: { ignore: ['**/.DS_Store'] },
-        },
-      ],
     }),
   ],
   module: {
@@ -121,23 +66,10 @@ module.exports = {
           },
         ],
       },
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', LavaMoatPlugin.exclude],
-        sideEffects: true,
-      },
-      {
-        test: /\.(png|jpg|jpeg|gif|svg|woff2?)$/i,
-        type: 'asset/resource',
-        generator: { filename: 'assets/[name].[hash:8][ext]' },
-      },
     ],
   },
   optimization: {
     minimize: false,
-    splitChunks: {
-      chunks: (chunk) => chunk.name === 'popup',
-    },
   },
   performance: {
     hints: false,
