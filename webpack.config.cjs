@@ -3,6 +3,10 @@
 const path = require('node:path');
 const webpack = require('webpack');
 const LavaMoatPlugin = require('@lavamoat/webpack');
+const {
+  lockdown,
+  backgroundScuttleExceptions,
+} = require('./webpack/lavamoat-options.cjs');
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -34,17 +38,10 @@ module.exports = {
       runChecks: true,
       diagnosticsVerbosity: 1,
       inlineLockdown: /background\.js$/,
-      lockdown: {
-        consoleTaming: 'unsafe',
-        errorTaming: 'unsafe',
-        stackFiltering: 'verbose',
-        overrideTaming: 'severe',
-        localeTaming: 'unsafe',
-        errorTrapping: 'none',
-        reporting: 'none',
-      },
+      lockdown,
       scuttleGlobalThis: {
-        enabled: false,
+        enabled: true,
+        exceptions: backgroundScuttleExceptions,
       },
     }),
     new webpack.DefinePlugin({

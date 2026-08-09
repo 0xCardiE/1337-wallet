@@ -48,6 +48,8 @@ See the [full multi-type table](./wallet-comparison-metamask.md).
 
 **What compartments do:** each npm package in a LavaMoat-protected bundle runs in its own SES Compartment. Policy files decide which globals and which other packages it may touch. A compromised dependency cannot freely reach `chrome.storage`, `fetch`, or your vault code unless the policy allows it.
 
+**Scuttling (`scuttleGlobalThis`):** after endowments are copied into compartments, the real `globalThis` is stripped of most properties so a leaked reference is mostly useless. Exception lists live in `webpack/lavamoat-options.cjs` (background vs popup). Dangerous APIs like `eval` stay scuttled.
+
 **Policy files (commit after regenerating):**
 
 - Background: `lavamoat/webpack/policy.json` + `policy-override.json`
@@ -55,10 +57,13 @@ See the [full multi-type table](./wallet-comparison-metamask.md).
 
 ```bash
 npm run build:policy   # regenerate after dependency changes
+npm run lavamoat:check # regenerate + fail if lavamoat/ is dirty (CI)
 npm run build          # background → UI → content/inpage
 ```
 
-**Not yet (MetaMask-parity extras):** global scuttling + `@lavamoat/snow`, webpack “unsafe vs safe” entry layers, and their full continuous policy-review process. Compartment isolation is the core Layer 3 control; those are further hardening steps we can add later.
+CI: `.github/workflows/lavamoat-policy.yml` runs `lavamoat:check` and a production build on push/PR.
+
+**Not yet (optional MetaMask extras):** `@lavamoat/snow` (DOM lockdown helper MetaMask pairs with UI scuttling) and webpack “unsafe vs safe” entry layers for a split SW bootstrap. Compartments + scuttling cover the main Layer 3 controls.
 
 Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.json`).
 
@@ -77,7 +82,7 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 3. Prefer **Ledger/Trezor** for high-value funds or when you want device-backed signing.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).
-6. After adding or upgrading dependencies, run **`npm run build:policy`**, review policy diffs, and commit them with the lockfile.
+6. After adding or upgrading dependencies, run **`npm run lavamoat:check`** (or `build:policy`), review policy diffs, and commit them with the lockfile.
 
 ## Related source files
 
@@ -87,4 +92,7 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 - `src/lib/sessionBridge.ts` / `src/background.ts` — background session / lock
 - `src/lib/ledger.ts` / `src/lib/trezor.ts` — hardware signing
 - `webpack.config.cjs` / `webpack.ui.config.cjs` / `webpack.content.config.cjs` — LavaMoat vs plain bundles
+- `webpack/lavamoat-options.cjs` — shared lockdown + scuttle exception lists
 - `lavamoat/webpack*` — runtime policies
+- `scripts/check-lavamoat-policy.mjs` — CI policy freshness check
+- `.github/workflows/lavamoat-policy.yml` — GitHub Actions policy + build

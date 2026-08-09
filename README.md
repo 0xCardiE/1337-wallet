@@ -39,14 +39,15 @@ Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpa
 
 | Bundle | Protection |
 |--------|------------|
-| `background.js` | LavaMoat SES compartments (session keys, signing) |
-| Popup UI (`index.html`) | LavaMoat SES compartments (React needs DOM endowments in `lavamoat/webpack-ui/policy-override.json`) |
+| `background.js` | LavaMoat compartments + globalThis scuttling |
+| Popup UI (`index.html`) | LavaMoat compartments + scuttling (DOM/chrome exceptions in `webpack/lavamoat-options.cjs`) |
 | `content.js` / `inpage.js` | Outside LavaMoat (page MAIN / isolated worlds — lockdown would break dapps) |
 
-After dependency changes, regenerate policies:
+After dependency changes, regenerate and verify policies:
 
 ```bash
 npm run build:policy
+npm run lavamoat:check   # fails if lavamoat/ would change
 ```
 
 Review and commit:

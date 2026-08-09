@@ -10,6 +10,7 @@
     "dev:ext": "node scripts/watch-extension.mjs",
     "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.ui.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
     "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs && LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.ui.config.cjs",
+    "lavamoat:check": "node scripts/check-lavamoat-policy.mjs",
     "build:watch": "npm run dev:ext",
     "preview": "npx serve dist",
     "icons": "node scripts/generate-extension-icons.mjs",

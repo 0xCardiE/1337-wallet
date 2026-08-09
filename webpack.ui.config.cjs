@@ -9,6 +9,10 @@ const LavaMoatPlugin = require('@lavamoat/webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const {
+  lockdown,
+  popupScuttleExceptions,
+} = require('./webpack/lavamoat-options.cjs');
 
 const isProd = process.env.NODE_ENV === 'production';
 const generatePolicy = process.env.LAVAMOAT_GENERATE_POLICY === '1';
@@ -44,20 +48,10 @@ module.exports = {
       HtmlWebpackPluginInterop: true,
       // Single popup chunk — SES must run before LavaMoat runtime.
       inlineLockdown: /assets\/popup\.[a-f0-9]+\.js$/,
-      // Match MetaMask's lockdown options for extension UI pages.
-      lockdown: {
-        consoleTaming: 'unsafe',
-        errorTaming: 'unsafe',
-        stackFiltering: 'verbose',
-        overrideTaming: 'severe',
-        localeTaming: 'unsafe',
-        errorTrapping: 'none',
-        reporting: 'none',
-      },
-      // Compartment isolation without scuttling first — scuttling needs a long
-      // MetaMask-style exception list (+ often @lavamoat/snow) for React/DOM.
+      lockdown,
       scuttleGlobalThis: {
-        enabled: false,
+        enabled: true,
+        exceptions: popupScuttleExceptions,
       },
     }),
     new webpack.DefinePlugin({
