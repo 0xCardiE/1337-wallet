@@ -23,7 +23,6 @@ export const ETH_REGISTRAR_CONTROLLER_ABI = parseAbi([
   'function makeCommitment(string name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] data, bool reverseRecord, uint16 ownerControlledFuses) external pure returns (bytes32)',
   'function rentPrice(string name, uint256 duration) external view returns (uint256)',
   'function available(string name) external view returns (bool)',
-  'function commitments(bytes32 commitment) external view returns (uint256)',
   'function MIN_REGISTRATION_DURATION() external view returns (uint256)',
 ]);
 

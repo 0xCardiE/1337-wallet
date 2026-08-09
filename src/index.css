@@ -4458,6 +4458,73 @@ button.w1337-token-row--action:hover:not(:disabled) {
   gap: 8px;
 }
 
+.w1337-ens-register-feedback {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.w1337-ens-register-feedback--success {
+  border-color: rgba(34, 197, 94, 0.55);
+  background: var(--accent-soft);
+}
+
+.w1337-ens-register-feedback--success .w1337-ens-register-feedback__message {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.w1337-ens-register-feedback--info {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.w1337-ens-register-feedback--error {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.w1337-ens-register-feedback__message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.w1337-ens-register-feedback__tx {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.w1337-ens-confirm {
+  margin: 10px 0 0;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  background: var(--accent-soft);
+}
+
+.w1337-ens-confirm__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.w1337-ens-confirm__detail {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.w1337-ens-confirm__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 /* Gas Station (Tools) */
 .w1337-gas-station .w1337-dd {
   margin-bottom: 10px;

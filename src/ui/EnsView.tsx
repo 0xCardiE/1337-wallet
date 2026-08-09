@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Hex } from 'viem';
 import { getUnlockedAccount, getActiveAccountMeta } from '../lib/accountSession';
 import { isHardwareAccount } from '../lib/accounts';
@@ -10,6 +10,7 @@ import {
 import {
   checkEthNameAvailable,
   commitEthNameRegistration,
+  enrichEnsDomainOnChain,
   ensNameExpiresSoon,
   fetchEnsPortfolio,
   fetchRegistrationPriceEth,
@@ -23,11 +24,74 @@ import {
 } from '../lib/ensPortfolio';
 import { DEFAULT_CHAIN_ID } from '../lib/constants';
 import { describeError } from '../lib/utils';
+import { RpcExhaustedError } from '../lib/rpcHealth';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
 import type { AppSettings } from '../lib/storageState';
+import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
 import { RefreshIconButton } from './RefreshIconButton';
 
-type RegisterStep = 'idle' | 'committing' | 'waiting' | 'registering' | 'done';
+type RegisterStep = 'idle' | 'committing' | 'waiting' | 'ready' | 'registering' | 'done';
+
+type EnsTxPrompt = {
+  /** Where to render the confirm card (next to the button that opened it). */
+  anchor: 'register' | `domain:${string}`;
+  title: string;
+  detail: string;
+  run: () => Promise<void>;
+};
+
+type RegisterFeedback = {
+  type: 'success' | 'info' | 'error';
+  message: string;
+  txHash?: string;
+};
+
+function EnsTxConfirm({
+  prompt,
+  onCancel,
+  onConfirm,
+  confirmRef,
+}: {
+  prompt: EnsTxPrompt;
+  onCancel: () => void;
+  onConfirm: () => void;
+  confirmRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div className="w1337-ens-confirm" ref={confirmRef}>
+      <p className="w1337-ens-confirm__title">{prompt.title}</p>
+      <p className="muted w1337-ens-confirm__detail">{prompt.detail}</p>
+      <div className="w1337-ens-confirm__actions">
+        <button type="button" className="ghost" onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="button" className="primary" onClick={onConfirm}>
+          Confirm
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EnsRegisterFeedback({ feedback }: { feedback: RegisterFeedback }) {
+  const txUrl = feedback.txHash
+    ? transactionExplorerUrl(DEFAULT_CHAIN_ID, feedback.txHash)
+    : undefined;
+
+  return (
+    <div
+      className={`w1337-ens-register-feedback w1337-ens-register-feedback--${feedback.type}`}
+      role="status"
+    >
+      <p className="w1337-ens-register-feedback__message">{feedback.message}</p>
+      {txUrl ? (
+        <p className="w1337-ens-register-feedback__tx">
+          <ExternalLink href={txUrl}>View transaction ↗</ExternalLink>
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -37,24 +101,42 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
   );
 }
 
+function formatEnsLoadError(err: unknown): string {
+  if (err instanceof RpcExhaustedError) {
+    return `${err.message} Try Networks → Ethereum to pick another RPC, or wait a minute and refresh.`;
+  }
+  return describeError(err);
+}
+
 function DomainRow({
   domain,
   busy,
+  txPrompt,
+  onConfirmTx,
+  onCancelTx,
   onRenew,
   onSaveContent,
   onSaveUrl,
+  onDomainUpdated,
 }: {
   domain: EnsDomainRecord;
   busy: boolean;
-  onRenew: (name: string) => Promise<void>;
-  onSaveContent: (name: string, value: string) => Promise<void>;
-  onSaveUrl: (name: string, value: string) => Promise<void>;
+  txPrompt: EnsTxPrompt | null;
+  onConfirmTx: () => void;
+  onCancelTx: () => void;
+  onRenew: (name: string) => void;
+  onSaveContent: (name: string, value: string) => void;
+  onSaveUrl: (name: string, value: string) => void;
+  onDomainUpdated: (domain: EnsDomainRecord) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [contentDraft, setContentDraft] = useState(domain.contentHash.uri ?? '');
   const [urlDraft, setUrlDraft] = useState(domain.urlText ?? '');
-  const [rowErr, setRowErr] = useState<string | null>(null);
-  const [rowBusy, setRowBusy] = useState(false);
+  const [onChainLoaded, setOnChainLoaded] = useState(false);
+  const [onChainLoading, setOnChainLoading] = useState(false);
+  const [onChainErr, setOnChainErr] = useState<string | null>(null);
+  const confirmRef = useRef<HTMLDivElement>(null);
+  const showConfirm = txPrompt?.anchor === `domain:${domain.name}` && !busy;
 
   const gateway = contentHashGatewayUrl(domain.contentHash);
   const expiring = ensNameExpiresSoon(domain.expiryDate);
@@ -62,19 +144,27 @@ function DomainRow({
   useEffect(() => {
     setContentDraft(domain.contentHash.uri ?? '');
     setUrlDraft(domain.urlText ?? '');
+    if (domain.contentHash.uri || domain.urlText) setOnChainLoaded(true);
   }, [domain.contentHash.uri, domain.urlText, domain.name]);
 
-  async function run(action: () => Promise<void>) {
-    setRowErr(null);
-    setRowBusy(true);
-    try {
-      await action();
-    } catch (e) {
-      setRowErr(describeError(e));
-    } finally {
-      setRowBusy(false);
-    }
-  }
+  useEffect(() => {
+    if (!open || onChainLoaded || onChainLoading) return;
+    setOnChainLoading(true);
+    setOnChainErr(null);
+    void enrichEnsDomainOnChain(domain)
+      .then(updated => {
+        onDomainUpdated(updated);
+        setOnChainLoaded(true);
+      })
+      .catch(e => setOnChainErr(formatEnsLoadError(e)))
+      .finally(() => setOnChainLoading(false));
+  }, [open, onChainLoaded, onChainLoading, domain, onDomainUpdated]);
+
+  useEffect(() => {
+    if (!showConfirm) return;
+    setOpen(true);
+    confirmRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [showConfirm]);
 
   return (
     <li className={`w1337-ens-row${open ? ' w1337-ens-row--open' : ''}`}>
@@ -111,12 +201,17 @@ function DomainRow({
             {domain.resolver ? ` · resolver ${domain.resolver.slice(0, 10)}…` : ' · no resolver'}
           </p>
 
+          {onChainLoading ? (
+            <p className="muted w1337-ens-row__hint">Loading on-chain records…</p>
+          ) : null}
+          {onChainErr ? <p className="error">{onChainErr}</p> : null}
+
           <div className="w1337-ens-row__field">
             <label htmlFor={`content-${domain.name}`}>Content hash</label>
             <input
               id={`content-${domain.name}`}
               value={contentDraft}
-              disabled={busy || rowBusy}
+              disabled={busy}
               placeholder="ipfs://… or bzz://…"
               onChange={e => setContentDraft(e.target.value)}
             />
@@ -138,12 +233,8 @@ function DomainRow({
             <button
               type="button"
               className="ghost"
-              disabled={busy || rowBusy || !contentDraft.trim()}
-              onClick={() =>
-                void run(async () => {
-                  await onSaveContent(domain.name, contentDraft);
-                })
-              }
+              disabled={busy || !contentDraft.trim()}
+              onClick={() => onSaveContent(domain.name, contentDraft)}
             >
               Save content hash
             </button>
@@ -154,7 +245,7 @@ function DomainRow({
             <input
               id={`url-${domain.name}`}
               value={urlDraft}
-              disabled={busy || rowBusy}
+              disabled={busy}
               placeholder="https://…"
               onChange={e => setUrlDraft(e.target.value)}
             />
@@ -164,12 +255,8 @@ function DomainRow({
             <button
               type="button"
               className="ghost"
-              disabled={busy || rowBusy || !urlDraft.trim()}
-              onClick={() =>
-                void run(async () => {
-                  await onSaveUrl(domain.name, urlDraft);
-                })
-              }
+              disabled={busy || !urlDraft.trim()}
+              onClick={() => onSaveUrl(domain.name, urlDraft)}
             >
               Save URL
             </button>
@@ -179,14 +266,21 @@ function DomainRow({
             <button
               type="button"
               className="primary"
-              disabled={busy || rowBusy}
-              onClick={() => void run(async () => onRenew(domain.name))}
+              disabled={busy}
+              onClick={() => onRenew(domain.name)}
             >
               Extend 1 year
             </button>
           ) : null}
 
-          {rowErr ? <p className="error">{rowErr}</p> : null}
+          {showConfirm && txPrompt ? (
+            <EnsTxConfirm
+              prompt={txPrompt}
+              confirmRef={confirmRef}
+              onCancel={onCancelTx}
+              onConfirm={onConfirmTx}
+            />
+          ) : null}
         </div>
       ) : null}
     </li>
@@ -211,7 +305,15 @@ export function EnsView({ settings }: { settings: AppSettings }) {
   const [registerAvailable, setRegisterAvailable] = useState<boolean | null>(null);
   const [registerPrice, setRegisterPrice] = useState<string | null>(null);
   const [registerSecret, setRegisterSecret] = useState<Hex | null>(null);
+  const [registerRpcErr, setRegisterRpcErr] = useState<string | null>(null);
+  const [registerFeedback, setRegisterFeedback] = useState<RegisterFeedback | null>(null);
+  const [commitReadyAt, setCommitReadyAt] = useState<number | null>(null);
   const [waitSeconds, setWaitSeconds] = useState(COMMIT_WAIT_SECONDS);
+  const [txPrompt, setTxPrompt] = useState<EnsTxPrompt | null>(null);
+  const registerConfirmRef = useRef<HTMLDivElement>(null);
+
+  const needsConfirm = shouldConfirmInWalletSend(settings);
+  const showRegisterConfirm = txPrompt?.anchor === 'register' && !busy;
 
   const reload = useCallback(async () => {
     if (!addr) return;
@@ -221,7 +323,7 @@ export function EnsView({ settings }: { settings: AppSettings }) {
       const rows = await fetchEnsPortfolio(addr, { theGraphApiKey });
       setDomains(rows);
     } catch (e) {
-      setErr(describeError(e));
+      setErr(formatEnsLoadError(e));
       setDomains([]);
     } finally {
       setLoading(false);
@@ -234,15 +336,21 @@ export function EnsView({ settings }: { settings: AppSettings }) {
 
   useEffect(() => {
     const label = registerLabel.trim().toLowerCase().replace(/\.eth$/i, '');
-    if (!label || registerStep !== 'idle') {
-      setRegisterAvailable(null);
-      setRegisterPrice(null);
+    if (
+      !label ||
+      (registerStep !== 'idle' && registerStep !== 'waiting' && registerStep !== 'ready')
+    ) {
+      if (registerStep === 'idle') {
+        setRegisterAvailable(null);
+        setRegisterPrice(null);
+      }
       return;
     }
 
     const timer = window.setTimeout(() => {
       void (async () => {
         try {
+          setRegisterRpcErr(null);
           const available = await checkEthNameAvailable(label);
           setRegisterAvailable(available);
           if (available) {
@@ -251,9 +359,10 @@ export function EnsView({ settings }: { settings: AppSettings }) {
           } else {
             setRegisterPrice(null);
           }
-        } catch {
+        } catch (e) {
           setRegisterAvailable(null);
           setRegisterPrice(null);
+          setRegisterRpcErr(formatEnsLoadError(e));
         }
       })();
     }, 400);
@@ -262,17 +371,26 @@ export function EnsView({ settings }: { settings: AppSettings }) {
   }, [registerLabel, registerStep]);
 
   useEffect(() => {
-    if (registerStep !== 'waiting') return;
-    setWaitSeconds(COMMIT_WAIT_SECONDS);
-    const started = Date.now();
-    const id = window.setInterval(() => {
-      const elapsed = Math.floor((Date.now() - started) / 1000);
-      const left = Math.max(0, COMMIT_WAIT_SECONDS - elapsed);
+    if (commitReadyAt == null || registerStep !== 'waiting') return;
+
+    const tick = () => {
+      const left = Math.max(
+        0,
+        COMMIT_WAIT_SECONDS - Math.floor((Date.now() - commitReadyAt) / 1000),
+      );
       setWaitSeconds(left);
-      if (left <= 0) window.clearInterval(id);
-    }, 500);
+      if (left <= 0) setRegisterStep('ready');
+    };
+
+    tick();
+    const id = window.setInterval(tick, 500);
     return () => window.clearInterval(id);
-  }, [registerStep]);
+  }, [commitReadyAt, registerStep]);
+
+  useEffect(() => {
+    if (!showRegisterConfirm) return;
+    registerConfirmRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [showRegisterConfirm]);
 
   if (!account || !meta) {
     return <p className="w1337-tools-empty muted">Unlock wallet to manage ENS names.</p>;
@@ -289,19 +407,47 @@ export function EnsView({ settings }: { settings: AppSettings }) {
     );
   }
 
-  async function runGlobal(action: () => Promise<void>) {
+  async function runGlobal(action: () => Promise<void>, opts?: { register?: boolean }) {
     setBusy(true);
     setErr(null);
     setMsg(null);
-    setLastTx(null);
+    if (opts?.register) {
+      setRegisterFeedback(null);
+    } else {
+      setLastTx(null);
+    }
     try {
       await action();
       await reload();
     } catch (e) {
-      setErr(describeError(e));
+      const message = formatEnsLoadError(e);
+      if (opts?.register) {
+        setRegisterFeedback({ type: 'error', message });
+      } else {
+        setErr(message);
+      }
+      throw e;
     } finally {
       setBusy(false);
     }
+  }
+
+  function requestTx(prompt: EnsTxPrompt) {
+    setErr(null);
+    const isRegister = prompt.anchor === 'register';
+    if (needsConfirm) {
+      setTxPrompt(prompt);
+      return;
+    }
+    void runGlobal(prompt.run, { register: isRegister });
+  }
+
+  function confirmPendingTx() {
+    if (!txPrompt) return;
+    const run = txPrompt.run;
+    const isRegister = txPrompt.anchor === 'register';
+    setTxPrompt(null);
+    void runGlobal(run, { register: isRegister });
   }
 
   async function handleCommit() {
@@ -309,14 +455,21 @@ export function EnsView({ settings }: { settings: AppSettings }) {
     const label = registerLabel.trim();
     if (!label) throw new Error('Enter a .eth name.');
     setRegisterStep('committing');
+    setCommitReadyAt(null);
     try {
       const { txHash, secret } = await commitEthNameRegistration({ label, owner: addr });
       setRegisterSecret(secret);
-      setLastTx(txHash);
+      setCommitReadyAt(Date.now());
+      setWaitSeconds(COMMIT_WAIT_SECONDS);
       setRegisterStep('waiting');
-      setMsg(`Commit sent. Wait ${COMMIT_WAIT_SECONDS}s, then complete registration.`);
+      setRegisterFeedback({
+        type: 'info',
+        message: `Commit sent — wait ${COMMIT_WAIT_SECONDS}s, then tap Register & pay.`,
+        txHash,
+      });
     } catch (e) {
       setRegisterStep('idle');
+      setCommitReadyAt(null);
       throw e;
     }
   }
@@ -325,18 +478,37 @@ export function EnsView({ settings }: { settings: AppSettings }) {
     if (!addr || !registerSecret) throw new Error('Missing registration secret.');
     const label = registerLabel.trim();
     setRegisterStep('registering');
-    const { wei } = await fetchRegistrationPriceEth(label);
-    const txHash = await registerEthName({
-      label,
-      owner: addr,
-      secret: registerSecret,
-      rentWei: wei,
-    });
-    setLastTx(txHash);
-    setRegisterStep('done');
+    try {
+      const { wei } = await fetchRegistrationPriceEth(label);
+      const txHash = await registerEthName({
+        label,
+        owner: addr,
+        secret: registerSecret,
+        rentWei: wei,
+      });
+      const name = label.endsWith('.eth') ? label : `${label}.eth`;
+      setRegisterStep('done');
+      setRegisterSecret(null);
+      setCommitReadyAt(null);
+      setRegisterLabel('');
+      setRegisterFeedback({
+        type: 'success',
+        message: `${name} is yours`,
+        txHash,
+      });
+    } catch (e) {
+      setRegisterStep('ready');
+      throw e;
+    }
+  }
+
+  function cancelRegistrationFlow() {
+    setRegisterStep('idle');
     setRegisterSecret(null);
-    setRegisterLabel('');
-    setMsg(`Registered ${label.endsWith('.eth') ? label : `${label}.eth`}!`);
+    setCommitReadyAt(null);
+    setWaitSeconds(COMMIT_WAIT_SECONDS);
+    setTxPrompt(null);
+    setRegisterFeedback(null);
   }
 
   const txUrl = lastTx ? transactionExplorerUrl(DEFAULT_CHAIN_ID, lastTx) : undefined;
@@ -345,9 +517,9 @@ export function EnsView({ settings }: { settings: AppSettings }) {
     <div className="w1337-ens">
       <div className="w1337-ens-head">
         <p className="muted w1337-ens-intro">
-          Manage Ethereum Name Service on <strong>mainnet</strong>. Names are discovered via the{' '}
-          <ExternalLink href="https://docs.ens.domains/web/subgraph">ENS subgraph</ExternalLink>{' '}
-          (indexed on-chain events); content hash and renewals are read/written directly on-chain.
+          Manage Ethereum Name Service on <strong>mainnet</strong>. Names load from the{' '}
+          <ExternalLink href="https://docs.ens.domains/web/subgraph">ENS subgraph</ExternalLink>
+          ; content hash and renewals are read/written on-chain when you open a name.
         </p>
         <RefreshIconButton busy={loading} ariaLabel="Refresh ENS names" onClick={() => void reload()} />
       </div>
@@ -387,30 +559,53 @@ export function EnsView({ settings }: { settings: AppSettings }) {
                 key={domain.name}
                 domain={domain}
                 busy={busy}
+                txPrompt={txPrompt}
+                onConfirmTx={confirmPendingTx}
+                onCancelTx={() => setTxPrompt(null)}
+                onDomainUpdated={updated =>
+                  setDomains(prev =>
+                    prev.map(row => (row.name === updated.name ? updated : row)),
+                  )
+                }
                 onRenew={name =>
-                  runGlobal(async () => {
-                    const { wei, eth } = await fetchRenewPriceEth(name);
-                    setMsg(`Renewing ${name} for ~${eth} ETH…`);
-                    const txHash = await renewEthName({ label: name, rentWei: wei });
-                    setLastTx(txHash);
-                    setMsg(`Extended ${name}.`);
+                  requestTx({
+                    anchor: `domain:${name}`,
+                    title: 'Extend ENS name',
+                    detail: `Renew ${name} for 1 year on Ethereum mainnet.`,
+                    run: async () => {
+                      const { wei, eth } = await fetchRenewPriceEth(name);
+                      setMsg(`Renewing ${name} for ~${eth} ETH…`);
+                      const txHash = await renewEthName({ label: name, rentWei: wei });
+                      setLastTx(txHash);
+                      setMsg(`Extended ${name}.`);
+                    },
                   })
                 }
                 onSaveContent={(name, value) =>
-                  runGlobal(async () => {
-                    const hash = encodeContentHashInput(value);
-                    setMsg(`Updating content hash for ${name}…`);
-                    const txHash = await setDomainContentHash({ name, contentHash: hash });
-                    setLastTx(txHash);
-                    setMsg(`Content hash updated for ${name}.`);
+                  requestTx({
+                    anchor: `domain:${name}`,
+                    title: 'Update content hash',
+                    detail: `Set decentralized content for ${name} on mainnet.`,
+                    run: async () => {
+                      const hash = encodeContentHashInput(value);
+                      setMsg(`Updating content hash for ${name}…`);
+                      const txHash = await setDomainContentHash({ name, contentHash: hash });
+                      setLastTx(txHash);
+                      setMsg(`Content hash updated for ${name}.`);
+                    },
                   })
                 }
                 onSaveUrl={(name, value) =>
-                  runGlobal(async () => {
-                    setMsg(`Updating URL for ${name}…`);
-                    const txHash = await setDomainUrlText({ name, url: value });
-                    setLastTx(txHash);
-                    setMsg(`URL updated for ${name}.`);
+                  requestTx({
+                    anchor: `domain:${name}`,
+                    title: 'Update URL record',
+                    detail: `Set url text record for ${name} on mainnet.`,
+                    run: async () => {
+                      setMsg(`Updating URL for ${name}…`);
+                      const txHash = await setDomainUrlText({ name, url: value });
+                      setLastTx(txHash);
+                      setMsg(`URL updated for ${name}.`);
+                    },
                   })
                 }
               />
@@ -423,6 +618,11 @@ export function EnsView({ settings }: { settings: AppSettings }) {
         <strong>Register a .eth name</strong>
         <p className="muted w1337-ens-row__hint">
           Commit → wait {COMMIT_WAIT_SECONDS}s → register (standard ENS controller flow).
+          {needsConfirm
+            ? ' Normal mode asks you to confirm each mainnet transaction here.'
+            : ' Turbo mode signs immediately.'}
+          {' '}
+          Refreshing the wallet restarts an in-progress registration — commit again to retry.
         </p>
         <label htmlFor="ens-register-label">Name</label>
         <div className="w1337-ens-register__input">
@@ -433,7 +633,9 @@ export function EnsView({ settings }: { settings: AppSettings }) {
             placeholder="myname"
             onChange={e => {
               setRegisterLabel(e.target.value);
-              if (registerStep === 'done') setRegisterStep('idle');
+              if (registerStep === 'done' || registerStep === 'waiting' || registerStep === 'ready') {
+                cancelRegistrationFlow();
+              }
             }}
           />
           <span className="muted">.eth</span>
@@ -442,6 +644,8 @@ export function EnsView({ settings }: { settings: AppSettings }) {
           <p className="muted">Available · ~{registerPrice} ETH / year</p>
         ) : registerAvailable === false ? (
           <p className="error">Not available</p>
+        ) : registerRpcErr ? (
+          <p className="error">{registerRpcErr}</p>
         ) : null}
 
         <div className="w1337-ens-register__actions">
@@ -449,30 +653,60 @@ export function EnsView({ settings }: { settings: AppSettings }) {
             <button
               type="button"
               className="primary"
-              disabled={busy || !registerLabel.trim() || registerAvailable !== true}
-              onClick={() => void runGlobal(handleCommit)}
+              disabled={busy || !registerLabel.trim() || registerAvailable !== true || !!txPrompt}
+              onClick={() =>
+                requestTx({
+                  anchor: 'register',
+                  title: 'Commit registration',
+                  detail: `Commit ${registerLabel.trim()}.eth on Ethereum mainnet (step 1 of 2). No ETH fee beyond gas.`,
+                  run: handleCommit,
+                })
+              }
             >
-              {busy ? 'Working…' : '1. Commit'}
+              {busy ? 'Signing…' : '1. Commit'}
             </button>
           ) : null}
           {registerStep === 'waiting' ? (
+            <p className="muted">
+              Commit confirmed — waiting {waitSeconds}s before you can register…
+            </p>
+          ) : null}
+          {registerStep === 'ready' || registerStep === 'registering' ? (
             <>
-              <p className="muted">
-                Waiting {waitSeconds}s before register…
-              </p>
+              {registerStep === 'ready' ? (
+                <p className="muted">Commit wait complete — register and pay to finish.</p>
+              ) : (
+                <p className="muted">Signing registration on Ethereum mainnet…</p>
+              )}
               <button
                 type="button"
                 className="primary"
-                disabled={busy || waitSeconds > 0}
-                onClick={() => void runGlobal(handleRegister)}
+                disabled={busy || registerStep === 'registering' || !!txPrompt}
+                onClick={() =>
+                  requestTx({
+                    anchor: 'register',
+                    title: 'Register name',
+                    detail: `Register ${registerLabel.trim()}.eth and pay ~${registerPrice ?? '?'} ETH for 1 year.`,
+                    run: handleRegister,
+                  })
+                }
               >
                 2. Register & pay
               </button>
             </>
           ) : null}
-          {registerStep === 'committing' || registerStep === 'registering' ? (
-            <p className="muted">Confirm in wallet…</p>
+          {registerStep === 'committing' ? (
+            <p className="muted">Signing commit on Ethereum mainnet…</p>
           ) : null}
+          {showRegisterConfirm && txPrompt ? (
+            <EnsTxConfirm
+              prompt={txPrompt}
+              confirmRef={registerConfirmRef}
+              onCancel={() => setTxPrompt(null)}
+              onConfirm={confirmPendingTx}
+            />
+          ) : null}
+          {registerFeedback ? <EnsRegisterFeedback feedback={registerFeedback} /> : null}
         </div>
       </section>
     </div>

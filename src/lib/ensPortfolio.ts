@@ -13,6 +13,12 @@ import { getEnsResolver } from 'viem/actions';
 import { healthyRpcUrlsFor } from './chainRpcRegistry';
 import { DEFAULT_CHAIN_ID } from './constants';
 import {
+  classifyRpcFailure,
+  recordRpcFailure,
+  recordRpcSuccess,
+  RpcExhaustedError,
+} from './rpcHealth';
+import {
   ENS_PUBLIC_RESOLVER,
   ENS_REGISTRY,
   ENS_REGISTRY_ABI,
@@ -28,6 +34,15 @@ import {
   type SubgraphDomainRow,
 } from './ensSubgraph';
 import { sendTransactionRequest } from './ethereum';
+
+/** Skip slow eth_estimateGas for known ENS controller/resolver calls. */
+const ENS_GAS = {
+  commit: 120_000,
+  register: 450_000,
+  renew: 250_000,
+  setContenthash: 120_000,
+  setText: 100_000,
+} as const;
 
 const RPC_TIMEOUT_MS = 10_000;
 const MAX_RPC_ATTEMPTS = 5;
@@ -61,18 +76,39 @@ function getMainnetClient() {
   return mainnetClient;
 }
 
-async function withMainnetFallback<T>(fn: (rpc: string) => Promise<T>): Promise<T> {
-  const rpcs = healthyRpcUrlsFor(DEFAULT_CHAIN_ID).slice(0, MAX_RPC_ATTEMPTS);
-  if (rpcs.length === 0) throw new Error('No Ethereum mainnet RPC configured.');
+async function withMainnetFallback<T>(
+  fn: (rpc: string) => Promise<T>,
+  method = 'ENS read',
+): Promise<T> {
+  const tried: string[] = [];
   let lastErr: unknown = null;
-  for (const rpc of rpcs) {
+
+  for (let attempt = 0; attempt < MAX_RPC_ATTEMPTS; attempt++) {
+    const rpc = healthyRpcUrlsFor(DEFAULT_CHAIN_ID).find(u => !tried.includes(u));
+    if (!rpc) break;
+    tried.push(rpc);
+
+    const t0 = performance.now();
     try {
-      return await fn(rpc);
+      const result = await fn(rpc);
+      recordRpcSuccess(DEFAULT_CHAIN_ID, rpc, Math.round(performance.now() - t0));
+      return result;
     } catch (e) {
       lastErr = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      const cls = classifyRpcFailure(e);
+      if (cls.demote) {
+        recordRpcFailure(DEFAULT_CHAIN_ID, rpc, msg, {
+          hard: cls.hard,
+          latencyMs: Math.round(performance.now() - t0),
+        });
+      }
+      if (!cls.retryOtherRpc) throw e;
     }
   }
-  throw lastErr instanceof Error ? lastErr : new Error('Mainnet RPC failed');
+
+  const lastMsg = lastErr instanceof Error ? lastErr.message : String(lastErr ?? 'Mainnet RPC failed');
+  throw new RpcExhaustedError(DEFAULT_CHAIN_ID, tried, lastMsg, method);
 }
 
 async function readResolverAddress(name: string): Promise<Address | null> {
@@ -94,7 +130,7 @@ async function readResolverAddress(name: string): Promise<Address | null> {
   });
 }
 
-async function enrichDomain(row: SubgraphDomainRow): Promise<EnsDomainRecord> {
+function subgraphRowToRecord(row: SubgraphDomainRow): EnsDomainRecord {
   const normalizedName = normalize(row.name);
   const isSubdomain = normalizedName.split('.').length > 2;
   const canRenew = normalizedName.endsWith('.eth') && !isSubdomain;
@@ -108,48 +144,6 @@ async function enrichDomain(row: SubgraphDomainRow): Promise<EnsDomainRecord> {
       resolver = null;
     }
   }
-  if (!resolver) {
-    try {
-      resolver = await readResolverAddress(normalizedName);
-    } catch {
-      resolver = null;
-    }
-  }
-
-  let contentHash: DecodedContentHash = { kind: 'empty', uri: null, raw: null };
-  let urlText: string | null = null;
-
-  if (resolver) {
-    try {
-      const node = namehash(normalizedName);
-      const [rawHash, url] = await withMainnetFallback(async rpc => {
-        const client = createPublicClient({
-          chain: mainnet,
-          transport: http(rpc, { timeout: RPC_TIMEOUT_MS }),
-        });
-        return Promise.all([
-          client.readContract({
-            address: resolver!,
-            abi: ENS_RESOLVER_ABI,
-            functionName: 'contenthash',
-            args: [node],
-          }) as Promise<Hex>,
-          client
-            .readContract({
-              address: resolver!,
-              abi: ENS_RESOLVER_ABI,
-              functionName: 'text',
-              args: [node, 'url'],
-            })
-            .catch(() => '') as Promise<string>,
-        ]);
-      });
-      contentHash = decodeContentHash(rawHash);
-      urlText = url?.trim() || null;
-    } catch {
-      // resolver read failed — keep subgraph metadata
-    }
-  }
 
   const expiryDate = row.expiryDate ? Number(row.expiryDate) : null;
 
@@ -158,11 +152,58 @@ async function enrichDomain(row: SubgraphDomainRow): Promise<EnsDomainRecord> {
     normalizedName,
     expiryDate: Number.isFinite(expiryDate) ? expiryDate : null,
     resolver,
-    contentHash,
-    urlText,
+    contentHash: { kind: 'empty', uri: null, raw: null },
+    urlText: null,
     isSubdomain,
     canRenew,
   };
+}
+
+/** Load resolver / content hash / url text from mainnet (lazy, per domain). */
+export async function enrichEnsDomainOnChain(record: EnsDomainRecord): Promise<EnsDomainRecord> {
+  const normalizedName = record.normalizedName;
+  let resolver = record.resolver;
+
+  if (!resolver) {
+    try {
+      resolver = await readResolverAddress(normalizedName);
+    } catch {
+      resolver = null;
+    }
+  }
+
+  let contentHash = record.contentHash;
+  let urlText = record.urlText;
+
+  if (resolver) {
+    const node = namehash(normalizedName);
+    const [rawHash, url] = await withMainnetFallback(async rpc => {
+      const client = createPublicClient({
+        chain: mainnet,
+        transport: http(rpc, { timeout: RPC_TIMEOUT_MS }),
+      });
+      return Promise.all([
+        client.readContract({
+          address: resolver!,
+          abi: ENS_RESOLVER_ABI,
+          functionName: 'contenthash',
+          args: [node],
+        }) as Promise<Hex>,
+        client
+          .readContract({
+            address: resolver!,
+            abi: ENS_RESOLVER_ABI,
+            functionName: 'text',
+            args: [node, 'url'],
+          })
+          .catch(() => '') as Promise<string>,
+      ]);
+    }, `ENS records for ${record.name}`);
+    contentHash = decodeContentHash(rawHash);
+    urlText = url?.trim() || null;
+  }
+
+  return { ...record, resolver, contentHash, urlText };
 }
 
 /** Second-level `.eth` name a subdomain depends on (e.g. beesnap.swarmtools.eth → swarmtools.eth). */
@@ -196,7 +237,7 @@ function applyParentExpiry(records: EnsDomainRecord[]): EnsDomainRecord[] {
   });
 }
 
-/** List ENS names for `ownerAddress` (subgraph discovery + on-chain record reads). */
+/** List ENS names for `ownerAddress` (subgraph discovery; on-chain records load lazily). */
 export async function fetchEnsPortfolio(
   ownerAddress: string,
   opts?: { theGraphApiKey?: string },
@@ -217,15 +258,15 @@ export async function fetchEnsPortfolio(
     merged.set(row.name.toLowerCase(), row);
   }
 
-  const enriched: EnsDomainRecord[] = [];
+  const records: EnsDomainRecord[] = [];
   for (const row of merged.values()) {
     try {
-      enriched.push(await enrichDomain(row));
+      records.push(subgraphRowToRecord(row));
     } catch {
-      // Skip names that fail normalization or on-chain reads
+      // Skip names that fail normalization
     }
   }
-  const withExpiry = applyParentExpiry(enriched);
+  const withExpiry = applyParentExpiry(records);
   return withExpiry.sort((a, b) => {
     const aExp = a.expiryDate ?? 0;
     const bExp = b.expiryDate ?? 0;
@@ -317,6 +358,7 @@ export async function commitEthNameRegistration(params: {
     to: ETH_REGISTRAR_CONTROLLER,
     data,
     value: '0x0',
+    gasLimit: String(ENS_GAS.commit),
   });
 
   return { txHash, secret, commitment };
@@ -343,6 +385,7 @@ export async function registerEthName(params: {
     to: ETH_REGISTRAR_CONTROLLER,
     data,
     value: `0x${params.rentWei.toString(16)}`,
+    gasLimit: String(ENS_GAS.register),
   });
 }
 
@@ -364,6 +407,7 @@ export async function renewEthName(params: {
     to: ETH_REGISTRAR_CONTROLLER,
     data,
     value: `0x${params.rentWei.toString(16)}`,
+    gasLimit: String(ENS_GAS.renew),
   });
 }
 
@@ -391,6 +435,7 @@ export async function setDomainContentHash(params: {
     to: resolver,
     data,
     value: '0x0',
+    gasLimit: String(ENS_GAS.setContenthash),
   });
 }
 
@@ -413,6 +458,7 @@ export async function setDomainUrlText(params: {
     to: resolver,
     data,
     value: '0x0',
+    gasLimit: String(ENS_GAS.setText),
   });
 }
 
