@@ -1,0 +1,447 @@
+{
+  "resources": {
+    "@ledgerhq/hw-app-eth>@ethersproject/abi": {
+      "globals": {
+        "console.log": true
+      },
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/address": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/constants": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/hash": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/properties": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/strings": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/address": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/rlp": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@lifi/sdk>@solana/web3.js>bn.js": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/constants": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/hash": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/strings": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256>js-sha3": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": {
+      "globals": {
+        "console": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/properties": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/rlp": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/properties": true,
+        "@lifi/sdk>@solana/web3.js>bn.js": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/strings": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/transactions": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/address": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/constants": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/properties": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/rlp": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key": true
+      }
+    },
+    "@ledgerhq/hw-transport-webhid>@ledgerhq/devices": {
+      "packages": {
+        "@ledgerhq/hw-transport-webhid>@ledgerhq/devices>semver": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/domain-service": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ledgerhq/logs": true,
+        "@ledgerhq/hw-app-eth>axios": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/errors": {
+      "globals": {
+        "console.warn": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools": {
+      "globals": {
+        "Intl.DateTimeFormat": true
+      },
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/constants": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/hash": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools>@ledgerhq/live-env": true,
+        "@ledgerhq/hw-app-eth>axios": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools>crypto-js": true
+      }
+    },
+    "@ledgerhq/hw-app-eth": {
+      "globals": {
+        "Buffer.alloc": true,
+        "Buffer.concat": true,
+        "Buffer.from": true,
+        "RLP": true,
+        "console.warn": true
+      },
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/rlp": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/transactions": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/domain-service": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/errors": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/logs": true,
+        "@ledgerhq/hw-app-eth>axios": true,
+        "@ledgerhq/hw-app-eth>bignumber.js": true,
+        "buffer": true,
+        "@ledgerhq/hw-app-eth>semver": true
+      }
+    },
+    "@ledgerhq/hw-transport-webhid": {
+      "globals": {
+        "Buffer.alloc": true,
+        "Buffer.concat": true,
+        "Buffer.from": true,
+        "navigator": true
+      },
+      "packages": {
+        "@ledgerhq/hw-transport-webhid>@ledgerhq/devices": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/errors": true,
+        "@ledgerhq/hw-transport-webhid>@ledgerhq/hw-transport": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/logs": true,
+        "buffer": true
+      }
+    },
+    "@ledgerhq/hw-transport-webhid>@ledgerhq/hw-transport": {
+      "globals": {
+        "Buffer.alloc": true,
+        "Buffer.concat": true,
+        "Buffer.from": true,
+        "clearTimeout": true,
+        "console.warn": true,
+        "setTimeout": true
+      },
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ledgerhq/errors": true,
+        "@ledgerhq/hw-app-eth>@ledgerhq/logs": true,
+        "buffer": true,
+        "webpack>events": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools>@ledgerhq/live-env": {
+      "globals": {
+        "console.warn": true
+      },
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ledgerhq/types-live>rxjs": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/logs": {
+      "globals": {
+        "__ledgerLogsListen": "write",
+        "console.error": true
+      }
+    },
+    "@lifi/sdk": {
+      "globals": {
+        "URL": true,
+        "URLSearchParams": true,
+        "console.warn": true,
+        "fetch": true,
+        "process.env.NODE_ENV": true,
+        "setTimeout": true
+      },
+      "packages": {
+        "@lifi/sdk>@lifi/types": true
+      }
+    },
+    "viem>@noble/curves": {
+      "globals": {
+        "TextEncoder": true
+      },
+      "packages": {
+        "viem>@noble/hashes": true
+      }
+    },
+    "viem>@noble/hashes": {
+      "globals": {
+        "TextDecoder": true,
+        "TextEncoder": true,
+        "crypto": true
+      }
+    },
+    "viem>@scure/bip32>@scure/base": {
+      "globals": {
+        "TextDecoder": true,
+        "TextEncoder": true
+      }
+    },
+    "viem>@scure/bip32": {
+      "packages": {
+        "viem>@noble/curves": true,
+        "viem>@noble/hashes": true,
+        "viem>@scure/bip32>@scure/base": true
+      }
+    },
+    "viem>@scure/bip39": {
+      "packages": {
+        "viem>@noble/hashes": true,
+        "viem>@scure/bip32>@scure/base": true
+      }
+    },
+    "@trezor/connect-webextension": {
+      "globals": {
+        "AbortController": true,
+        "UI_EVENT": true,
+        "URLSearchParams": true,
+        "WebSocket": true,
+        "__TREZOR_CONNECT_SRC": true,
+        "addEventListener": true,
+        "chrome": true,
+        "clearInterval": true,
+        "clearTimeout": true,
+        "console": true,
+        "define": true,
+        "document.body": true,
+        "document.createElement": true,
+        "document.getElementById": true,
+        "location.origin": true,
+        "location.search": true,
+        "navigator": true,
+        "open": true,
+        "origin": true,
+        "postMessage": true,
+        "setInterval": true,
+        "setTimeout": true,
+        "urlToOnion": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>axios": {
+      "globals": {
+        "AbortController": true,
+        "Blob": true,
+        "Buffer.from": true,
+        "FormData": true,
+        "ReadableStream": true,
+        "URL": true,
+        "URLSearchParams": true,
+        "WorkerGlobalScope": true,
+        "XMLHttpRequest": true,
+        "btoa": true,
+        "clearTimeout": true,
+        "console.warn": true,
+        "document": true,
+        "fetch": true,
+        "importScripts": true,
+        "location.href": true,
+        "navigator": true,
+        "process": true,
+        "queueMicrotask": true,
+        "setImmediate": true,
+        "setTimeout": true
+      },
+      "packages": {
+        "buffer": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>bignumber.js": {
+      "globals": {
+        "crypto": true
+      }
+    },
+    "@lifi/sdk>@solana/web3.js>bn.js": {
+      "globals": {
+        "Buffer": true
+      },
+      "packages": {
+        "buffer": true
+      }
+    },
+    "buffer": {
+      "globals": {
+        "console": true
+      },
+      "packages": {
+        "buffer>base64-js": true,
+        "buffer>ieee754": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/evm-tools>crypto-js": {
+      "globals": {
+        "crypto": true,
+        "define": true,
+        "msCrypto": true
+      }
+    },
+    "webpack>events": {
+      "globals": {
+        "console": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js": {
+      "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js>inherits": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js>minimalistic-assert": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256>js-sha3": {
+      "globals": {
+        "define": true,
+        "process": true
+      }
+    },
+    "viem>ox": {
+      "globals": {
+        "TextDecoder": true,
+        "TextEncoder": true,
+        "crypto.getRandomValues": true
+      },
+      "packages": {
+        "viem>ox>@adraffy/ens-normalize": true,
+        "viem>@noble/curves": true,
+        "viem>@noble/hashes": true,
+        "viem>abitype": true
+      }
+    },
+    "react": {
+      "globals": {
+        "process.env.NODE_ENV": true
+      }
+    },
+    "react-dom": {
+      "globals": {
+        "MSApp": true,
+        "__REACT_DEVTOOLS_GLOBAL_HOOK__": true,
+        "addEventListener": true,
+        "clearTimeout": true,
+        "clipboardData": true,
+        "console.error": true,
+        "document": true,
+        "event": true,
+        "process.env.NODE_ENV": true,
+        "queueMicrotask": true,
+        "removeEventListener": true,
+        "reportError": true,
+        "setTimeout": true
+      },
+      "packages": {
+        "react": true,
+        "react-dom>scheduler": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>@ledgerhq/types-live>rxjs": {
+      "globals": {
+        "clearTimeout": true,
+        "setTimeout.apply": true
+      },
+      "packages": {
+        "tslib": true
+      }
+    },
+    "react-dom>scheduler": {
+      "globals": {
+        "MessageChannel": true,
+        "clearTimeout": true,
+        "console.error": true,
+        "navigator": true,
+        "performance": true,
+        "process.env.NODE_ENV": true,
+        "setImmediate": true,
+        "setTimeout": true
+      }
+    },
+    "@ledgerhq/hw-transport-webhid>@ledgerhq/devices>semver": {
+      "globals": {
+        "console.error": true,
+        "process": true
+      }
+    },
+    "@ledgerhq/hw-app-eth>semver": {
+      "globals": {
+        "console.error": true,
+        "process": true
+      }
+    },
+    "tslib": {
+      "globals": {
+        "AsyncIterator": true,
+        "Iterator": true,
+        "SuppressedError": true
+      }
+    },
+    "viem": {
+      "globals": {
+        "AbortController": true,
+        "Image": true,
+        "Request": true,
+        "TextDecoder": true,
+        "TextEncoder": true,
+        "URL": true,
+        "atob": true,
+        "btoa": true,
+        "clearTimeout": true,
+        "fetch": true,
+        "setTimeout": true
+      },
+      "packages": {
+        "viem>@noble/curves": true,
+        "viem>@noble/hashes": true,
+        "viem>@scure/bip32": true,
+        "viem>@scure/bip39": true,
+        "viem>abitype": true,
+        "viem>ox": true
+      }
+    }
+  }
+}

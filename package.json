@@ -5,11 +5,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:ext": "vite build --watch",
-    "build": "vite build",
-    "build:watch": "vite build --watch",
-    "preview": "vite preview",
+    "postinstall": "allow-scripts run",
+    "dev": "node scripts/watch-extension.mjs",
+    "dev:ext": "node scripts/watch-extension.mjs",
+    "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
+    "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs",
+    "build:watch": "npm run dev:ext",
+    "preview": "npx serve dist",
     "icons": "node scripts/generate-extension-icons.mjs",
     "update-chain-dex-ranks": "node scripts/fetch-defillama-chain-dex-volume.mjs",
     "wallet-research": "npm run dev --prefix wallet-research",
@@ -34,13 +36,39 @@
     "viem": "^2.25.0"
   },
   "devDependencies": {
+    "@lavamoat/allow-scripts": "^5.1.0",
+    "@lavamoat/preinstall-always-fail": "^3.0.0",
+    "@lavamoat/webpack": "^2.2.4",
     "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.0.280",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "copy-webpack-plugin": "^14.0.0",
+    "css-loader": "^7.1.4",
+    "esbuild-loader": "^4.5.0",
+    "html-webpack-plugin": "^5.6.8",
+    "mini-css-extract-plugin": "^2.10.2",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "webpack": "^5.109.2",
+    "webpack-cli": "^7.2.2"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "lavamoat": {
+    "allowScripts": {
+      "@lavamoat/preinstall-always-fail#3.0.0": false,
+      "@ledgerhq/hw-app-eth>@ledgerhq/domain-service>eip55>keccak#3.0.4": false,
+      "@lifi/sdk>@solana/web3.js>jayson>ws>utf-8-validate#5.0.10": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/blockchain-link-utils>@trezor/protobuf>protobufjs#7.4.0": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/blockchain-link>@stellar/stellar-sdk#14.2.0": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/device-authenticity>@trezor/protobuf>protobufjs#7.4.0": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/protobuf>protobufjs#7.5.5": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/transport>usb#2.18.0": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/utxo-lib>blake-hash#2.0.0": false,
+      "@trezor/connect-webextension>@trezor/connect>@trezor/utxo-lib>tiny-secp256k1#1.1.7": false,
+      "viem>ws>bufferutil#4.1.0": false,
+      "viem>ws>utf-8-validate#6.0.6": false,
+      "esbuild-loader>esbuild#0.27.4": true,
+      "vite>esbuild#0.21.5": false
+    }
+  }
 }

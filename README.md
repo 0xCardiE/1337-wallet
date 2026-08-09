@@ -30,10 +30,22 @@ See [brand/product.manifest.json](brand/product.manifest.json) for the full mani
 ```bash
 npm install
 npm run icons   # generate PNG icons from SVG
-npm run build
+npm run build   # Webpack + LavaMoat (popup, background) + content scripts
 ```
 
 Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpacked).
+
+### LavaMoat policy
+
+Runtime compartments protect the **popup UI** and **service worker** (`background.js`). Content/inpage scripts stay outside LavaMoat because they run in web page contexts where SES lockdown would break dapps.
+
+After dependency changes, regenerate the webpack policy:
+
+```bash
+npm run build:policy
+```
+
+Review `lavamoat/webpack/policy.json` and `lavamoat/webpack/policy-override.json`, then commit both.
 
 ## Security
 

@@ -41,6 +41,7 @@ See the [full multi-type table](./wallet-comparison-metamask.md).
 3. Prefer **Ledger/Trezor** for high-value funds or when you want device-backed signing.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).
+6. **Supply chain:** install scripts are allowlisted (`@lavamoat/allow-scripts`); popup and background bundles run inside [LavaMoat](https://lavamoat.github.io/) SES compartments (see `lavamoat/webpack/policy.json`).
 
 ## Related source files
 

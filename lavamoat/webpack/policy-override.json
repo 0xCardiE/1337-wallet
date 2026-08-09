@@ -1,0 +1,18 @@
+{
+  "resources": {
+    "buffer>base64-js": {},
+    "buffer>ieee754": {},
+    "viem>abitype": {},
+    "viem>ox>@adraffy/ens-normalize": {},
+    "@lifi/sdk>@lifi/types": {},
+    "@fontsource-variable/inter": {},
+    "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js>inherits": {},
+    "@ledgerhq/hw-app-eth>@ethersproject/transactions>@ethersproject/signing-key>hash.js>minimalistic-assert": {},
+    "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256>js-sha3": {
+      "globals": {
+        "define": true,
+        "process": true
+      }
+    }
+  }
+}
