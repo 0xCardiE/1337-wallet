@@ -13,7 +13,7 @@ export function initTrezorConnect(): Promise<void> {
           manifest: {
             email: '1337-wallet@proton.me',
             appName: '1337 Wallet',
-            appUrl: 'https://github.com/0xCardiE/BurningFox',
+            appUrl: 'https://github.com/0xCardiE/1337-wallet',
           },
           connectSrc: TREZOR_CONNECT_SRC,
           _extendWebextensionLifetime: true,
