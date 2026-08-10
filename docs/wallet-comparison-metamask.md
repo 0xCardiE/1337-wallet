@@ -28,7 +28,7 @@ Sources for 1337: `src/lib/vault.ts`, `src/lib/walletCore.ts`, `src/lib/walletMa
 | **Multi-account** | HD accounts from SRP | HD accounts via “Add from seed” | One key per account; generate/import more | Multiple device paths / accounts | Path field + multiple hardware accounts |
 | **While unlocked** | Decrypted material in extension memory | Keys (+ mnemonic) in UI memory; **active PK plaintext in `chrome.storage.session`** | Same session model | MM session for UI; signatures on device | Same; **no PK in session** for hardware — address + path only |
 | **Signing location** | Extension (software) | Extension (viem) | Extension (viem) | Device (MM prompts device) | Device (Ledger WebHID / Trezor Connect) |
-| **dApp confirm default** | Confirm every request | **Turbo** auto-sign when unlocked (Normal = confirm) | Same | Confirm in MM + on device | Hardware always needs device confirm; Normal/Turbo queues UI then device |
+| **dApp confirm default** | Confirm every request | **Normal** confirm (Turbo = auto-sign opt-in) | Same | Confirm in MM + on device | Hardware always needs device confirm; Normal/Turbo queues UI then device |
 | **Auto-lock default** | User setting | **Off** by default | Same | Same as MM software session | Same 1337 auto-lock (session metadata) |
 | **Close UI = locked?** | No | No | No | No | No |
 | **Browser restart** | Relock; vault remains | Relock; vault remains | Same | Relock MM; device unchanged | Relock 1337; device unchanged |
@@ -46,7 +46,7 @@ Sources for 1337: `src/lib/vault.ts`, `src/lib/walletCore.ts`, `src/lib/walletMa
 - Password encrypts the vault at rest; unlocked session is the main hot-wallet risk.
 - Default UX: **review every** dApp sign/send in the extension.
 
-**1337 local seed** matches this *model* (create/import phrase, derive `m/44'/60'/0'/0/n`) but keeps 1337’s **speed defaults**: Turbo auto-sign, optional auto-lock off, and plaintext **active** private key in `chrome.storage.session` while unlocked.
+**1337 local seed** matches this *model* (create/import phrase, derive `m/44'/60'/0'/0/n`) but keeps 1337’s **session convenience**: Normal confirm by default, optional Turbo auto-sign, auto-lock off by default, and plaintext **active** private key in `chrome.storage.session` while unlocked.
 
 ### 2. 1337 local seed (HD)
 
@@ -105,10 +105,10 @@ Sources for 1337: `src/lib/vault.ts`, `src/lib/walletCore.ts`, `src/lib/walletMa
 | Key never in browser | Ledger / Trezor (1337 or MM) | Best for value |
 | Familiar HD recovery | MetaMask SRP ≈ 1337 local seed | 1337 seed is newer; verify backups |
 | Disposable account | 1337 private key | No phrase to leak across accounts |
-| Default signing safety | MetaMask | 1337 Turbo is convenience-first |
+| Default signing safety | MetaMask ≈ 1337 Normal | 1337 Turbo is opt-in convenience |
 | Unlocked session on disk | MetaMask (typically memory) | 1337 stores active PK in session storage |
 
-For material holdings: **hardware wallet + confirm-on-device**, whether through MetaMask or 1337. Treat 1337 software accounts as **hot burners** unless you consciously harden (Normal mode, auto-lock, strong password, separate browser profile).
+For material holdings: **hardware wallet + confirm-on-device**, whether through MetaMask or 1337. Treat 1337 software accounts as **hot burners** unless you consciously harden (keep Normal, enable auto-lock, strong password, separate browser profile); avoid Turbo with real funds.
 
 ---
 

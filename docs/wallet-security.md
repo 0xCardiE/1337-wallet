@@ -10,16 +10,16 @@ This note describes how signing works in 1337 and how to keep risk lower in prac
 - **Hardware accounts** — Ledger (WebHID) and Trezor Connect; only address + path are stored. Signing uses the device SDK.
 - After unlock, local signing uses a **Viem account** and **`eth_sendRawTransaction`** over your RPC (`src/lib/ethereum.ts`).
 - A full **EIP-1193 provider** is injected (`window.ethereum`), with optional MetaMask replacement.
-- **Turbo mode (default):** dApp sign/send requests execute automatically while a **local** account is unlocked. **Normal mode:** each request is queued in `TxApprovalSheet`. **Hardware** always requires device confirmation (and UI approval for dApp txs).
+- **Normal mode (default):** each dApp sign/send request is queued in `TxApprovalSheet`. **Turbo mode:** requests execute automatically while a **local** account is unlocked. **Hardware** always requires device confirmation (and UI approval for dApp txs).
 - The unlocked **active private key** (local only) is kept in the MV3 **service worker** and as **plaintext in `chrome.storage.session`**. Seed phrase (if any) stays in UI memory for the unlock session, not in session storage. **Lock** / **auto-lock** clears the session.
 
 ## Compared to MetaMask (short)
 
-MetaMask’s main end-user advantage is **separation + explicit review**: the dapp is untrusted, and the wallet UI confirms every sign/send by default. 1337 defaults to **speed** — stay unlocked, persist session across UI close, and auto-sign dApp traffic in Turbo mode. Both are **hot software wallets** for local accounts; hardware accounts keep keys on device.
+MetaMask’s main end-user advantage is **separation + explicit review**: the dapp is untrusted, and the wallet UI confirms every sign/send by default. 1337 matches that for signing (Normal by default) while still favoring session convenience — stay unlocked and persist across UI close; opt into Turbo for auto-sign. Both are **hot software wallets** for local accounts; hardware accounts keep keys on device.
 
 | | MetaMask | 1337 |
 |---|----------|------|
-| Software default | Confirm every request | Turbo auto-sign |
+| Software default | Confirm every request | Confirm every request (Turbo opt-in) |
 | HD seed | Yes (SRP) | Yes (optional; create default) |
 | Private key import | Yes | Yes |
 | Hardware | Ledger / Trezor | Ledger / Trezor |
@@ -78,7 +78,7 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 ## Ways to keep risk lower
 
 1. **Use Lock** when you step away; enable **auto-lock** (off by default).
-2. Switch dApp mode to **Normal** for MetaMask-style per-request confirmation.
+2. Keep **Normal** (default) for MetaMask-style per-request confirmation; only enable Turbo when you want speed.
 3. Prefer **Ledger/Trezor** for high-value funds or when you want device-backed signing.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).

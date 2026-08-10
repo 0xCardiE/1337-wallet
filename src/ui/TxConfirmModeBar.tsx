@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Segment1337 } from './Select1337';
 import {
   effectiveTxConfirmMode,
   patchSettings,
@@ -7,10 +6,8 @@ import {
   type TxConfirmMode,
 } from '../lib/storageState';
 
-const MODE_HINTS: Record<TxConfirmMode, string> = {
-  speed: 'Sign dapp requests and in-wallet sends immediately.',
-  normal: 'Confirm dapp requests and in-wallet sends before signing.',
-};
+const INSTANT_HINT =
+  'When on, sign dapp requests and in-wallet sends immediately. Off (default) confirms each request first.';
 
 export function TxConfirmModeToggle({
   settings,
@@ -26,9 +23,10 @@ export function TxConfirmModeToggle({
     setMode(effectiveTxConfirmMode(settings));
   }, [settings.txConfirmMode]);
 
-  async function onChange(next: string) {
-    const nextMode = next as TxConfirmMode;
-    if (nextMode === mode) return;
+  const instantOn = mode === 'speed';
+
+  async function toggleInstant() {
+    const nextMode: TxConfirmMode = instantOn ? 'normal' : 'speed';
     const prev = mode;
     setMode(nextMode);
     setErr(null);
@@ -43,16 +41,16 @@ export function TxConfirmModeToggle({
 
   return (
     <>
-      <Segment1337
-        className="w1337-seg--compact"
-        value={mode}
-        onChange={onChange}
-        ariaLabel="Transaction confirmation mode"
-        options={[
-          { value: 'speed', label: 'Turbo', title: MODE_HINTS.speed },
-          { value: 'normal', label: 'Normal', title: MODE_HINTS.normal },
-        ]}
-      />
+      <button
+        type="button"
+        className={`w1337-instant-toggle${instantOn ? ' w1337-instant-toggle--on' : ''}`}
+        aria-pressed={instantOn}
+        aria-label={instantOn ? 'Instant signing on' : 'Instant signing off — confirm before signing'}
+        title={INSTANT_HINT}
+        onClick={() => void toggleInstant()}
+      >
+        Instant
+      </button>
       {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>
   );

@@ -49,7 +49,7 @@ export interface AppSettings {
   explorerApiKey?: string;
   /** Optional The Graph API key for ENS subgraph (100k free queries/mo). */
   theGraphApiKey?: string;
-  /** Dapp signing mode — defaults to speed (auto-confirm). */
+  /** Dapp signing mode — defaults to normal (confirm before sign). */
   txConfirmMode?: TxConfirmMode;
 }
 
@@ -311,7 +311,7 @@ function normalizeToolbarOpenMode(
 function normalizeTxConfirmMode(
   v: string | undefined | null,
 ): TxConfirmMode {
-  return v === 'normal' ? 'normal' : 'speed';
+  return v === 'speed' ? 'speed' : 'normal';
 }
 
 export function effectiveSlippagePercent(settings: AppSettings): number {

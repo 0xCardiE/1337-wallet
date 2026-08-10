@@ -619,8 +619,8 @@ export function EnsView({ settings }: { settings: AppSettings }) {
         <p className="muted w1337-ens-row__hint">
           Commit → wait {COMMIT_WAIT_SECONDS}s → register (standard ENS controller flow).
           {needsConfirm
-            ? ' Normal mode asks you to confirm each mainnet transaction here.'
-            : ' Turbo mode signs immediately.'}
+            ? ' Confirm mode asks you to review each mainnet transaction here.'
+            : ' Instant mode signs immediately.'}
           {' '}
           Refreshing the wallet restarts an in-progress registration — commit again to retry.
         </p>
