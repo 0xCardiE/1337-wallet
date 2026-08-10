@@ -4,6 +4,7 @@ import {
   fetchDappConnectionStatus,
   type DappConnectionStatus,
 } from '../lib/dappConnectionBridge';
+import { shortAddress } from '../lib/accounts';
 import { chainById } from '../lib/chainCatalog';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import { isUnlocked } from '../lib/accountSession';
@@ -49,10 +50,13 @@ export function DappConnectionBar({
     void refresh();
     const id = window.setInterval(() => void refresh(), 2500);
     const onFocus = () => void refresh();
+    const onAccountChanged = () => void refresh();
     window.addEventListener('focus', onFocus);
+    window.addEventListener('1337-account-changed', onAccountChanged);
     return () => {
       window.clearInterval(id);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('1337-account-changed', onAccountChanged);
     };
   }, [refresh]);
 
@@ -87,6 +91,7 @@ export function DappConnectionBar({
   const tab = status?.tab;
   const connected = status?.connected === true;
   const canConnect = status?.canConnect === true;
+  const connectedShort = status?.connectedAddress ? shortAddress(status.connectedAddress) : null;
 
   return (
     <div className={`w1337-dapp-bar${embedded ? ' w1337-dapp-bar--embedded' : ''}`} aria-label="Website connection">
@@ -98,6 +103,7 @@ export function DappConnectionBar({
               <span className="w1337-dapp-bar__host">{tab.hostname}</span>
               <span className="w1337-dapp-bar__sub">
                 Connected
+                {connectedShort ? ` · ${connectedShort}` : ''}
                 {chainName ? ` · ${chainName}` : ''}
               </span>
             </span>
@@ -105,13 +111,20 @@ export function DappConnectionBar({
         ) : canConnect && tab ? (
           <>
             <span className="w1337-dapp-bar__icon-wrap w1337-dapp-bar__icon-wrap--idle">
-              <span className="w1337-dapp-bar__icon w1337-dapp-bar__icon--fallback">
-                {tab.hostname.charAt(0).toUpperCase()}
-              </span>
+              {tab.favIconUrl ? (
+                <img className="w1337-dapp-bar__icon" src={tab.favIconUrl} alt="" draggable={false} />
+              ) : (
+                <span className="w1337-dapp-bar__icon w1337-dapp-bar__icon--fallback">
+                  {tab.hostname.charAt(0).toUpperCase()}
+                </span>
+              )}
             </span>
             <span className="w1337-dapp-bar__meta">
-              <span className="w1337-dapp-bar__host">Not connected</span>
-              <span className="w1337-dapp-bar__sub">{tab.title || tab.hostname}</span>
+              <span className="w1337-dapp-bar__host">{tab.hostname}</span>
+              <span className="w1337-dapp-bar__sub">
+                Not connected
+                {chainName ? ` · ${chainName}` : ''}
+              </span>
             </span>
           </>
         ) : (

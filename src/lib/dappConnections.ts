@@ -1,33 +1,98 @@
-const CONNECTED_ORIGINS_KEY = '1337_connected_origins';
+const CONNECTED_ACCOUNTS_KEY = '1337_connected_accounts';
+/** @deprecated session-only legacy; migrated away on read */
+const LEGACY_ORIGINS_KEY = '1337_connected_origins';
 
-export async function getConnectedOrigins(): Promise<Set<string>> {
-  try {
-    const data = await chrome.storage.session.get([CONNECTED_ORIGINS_KEY]);
-    const list = data[CONNECTED_ORIGINS_KEY];
-    if (!Array.isArray(list)) return new Set();
-    return new Set(list.filter((o): o is string => typeof o === 'string' && o.length > 0));
-  } catch {
-    return new Set();
+type ConnectedMap = Record<string, string[]>;
+
+function normalizeAddress(address: string): string {
+  return address.toLowerCase();
+}
+
+function sanitizeMap(raw: unknown): ConnectedMap {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: ConnectedMap = {};
+  for (const [origin, list] of Object.entries(raw as Record<string, unknown>)) {
+    if (!origin || !Array.isArray(list)) continue;
+    const addrs = [
+      ...new Set(
+        list
+          .filter((a): a is string => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a))
+          .map(normalizeAddress),
+      ),
+    ];
+    if (addrs.length > 0) out[origin] = addrs;
   }
+  return out;
+}
+
+async function getConnectedMap(): Promise<ConnectedMap> {
+  try {
+    const data = await chrome.storage.session.get([CONNECTED_ACCOUNTS_KEY, LEGACY_ORIGINS_KEY]);
+    if (Array.isArray(data[LEGACY_ORIGINS_KEY])) {
+      // Old model was origin-only; drop it so each address must reconnect explicitly.
+      await chrome.storage.session.remove([LEGACY_ORIGINS_KEY]);
+    }
+    return sanitizeMap(data[CONNECTED_ACCOUNTS_KEY]);
+  } catch {
+    return {};
+  }
+}
+
+async function setConnectedMap(map: ConnectedMap): Promise<void> {
+  await chrome.storage.session.set({ [CONNECTED_ACCOUNTS_KEY]: map });
+}
+
+/** Origins that have at least one authorized address (for chainChanged broadcast). */
+export async function getConnectedOrigins(): Promise<Set<string>> {
+  const map = await getConnectedMap();
+  return new Set(Object.keys(map));
+}
+
+export async function getConnectedAddresses(origin: string): Promise<string[]> {
+  if (!origin) return [];
+  const map = await getConnectedMap();
+  return map[origin] ?? [];
 }
 
 export async function isOriginConnected(origin: string): Promise<boolean> {
   if (!origin) return false;
-  return (await getConnectedOrigins()).has(origin);
+  return (await getConnectedAddresses(origin)).length > 0;
 }
 
-export async function connectOrigin(origin: string): Promise<void> {
-  if (!origin) return;
-  const set = await getConnectedOrigins();
-  set.add(origin);
-  await chrome.storage.session.set({ [CONNECTED_ORIGINS_KEY]: [...set] });
+export async function isAddressConnected(origin: string, address: string): Promise<boolean> {
+  if (!origin || !address) return false;
+  const list = await getConnectedAddresses(origin);
+  return list.includes(normalizeAddress(address));
 }
 
+export async function connectAddress(origin: string, address: string): Promise<void> {
+  if (!origin || !address || !/^0x[0-9a-fA-F]{40}$/.test(address)) return;
+  const map = await getConnectedMap();
+  const key = normalizeAddress(address);
+  const existing = map[origin] ?? [];
+  if (existing.includes(key)) return;
+  map[origin] = [...existing, key];
+  await setConnectedMap(map);
+}
+
+export async function disconnectAddress(origin: string, address: string): Promise<void> {
+  if (!origin || !address) return;
+  const map = await getConnectedMap();
+  const list = map[origin];
+  if (!list?.length) return;
+  const next = list.filter(a => a !== normalizeAddress(address));
+  if (next.length === 0) delete map[origin];
+  else map[origin] = next;
+  await setConnectedMap(map);
+}
+
+/** Revoke every address for an origin. */
 export async function disconnectOrigin(origin: string): Promise<void> {
   if (!origin) return;
-  const set = await getConnectedOrigins();
-  set.delete(origin);
-  await chrome.storage.session.set({ [CONNECTED_ORIGINS_KEY]: [...set] });
+  const map = await getConnectedMap();
+  if (!(origin in map)) return;
+  delete map[origin];
+  await setConnectedMap(map);
 }
 
 export function originFromUrl(url: string | undefined): string | null {

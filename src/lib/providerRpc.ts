@@ -23,9 +23,10 @@ import {
 } from './storageState';
 import { shouldQueueDappApproval } from './txConfirmMode';
 import {
-  connectOrigin,
+  connectAddress,
+  disconnectAddress,
   disconnectOrigin,
-  isOriginConnected,
+  isAddressConnected,
 } from './dappConnections';
 import { chainJsonRpcCall } from './ethereum';
 import { reportProviderRpcFailure } from './devErrorReport';
@@ -140,7 +141,7 @@ export async function handleProviderRpc(
     }
 
     if (method === 'wallet_getPermissions') {
-      if (!sessionAddr || !origin || !(await isOriginConnected(origin))) {
+      if (!sessionAddr || !origin || !(await isAddressConnected(origin, sessionAddr))) {
         return { id, ok: true, result: [] };
       }
       return {
@@ -165,7 +166,7 @@ export async function handleProviderRpc(
       if (!requested || typeof requested !== 'object' || !('eth_accounts' in requested)) {
         throw Object.assign(new Error('Unsupported permission requested'), { code: 4200 });
       }
-      if (origin) await connectOrigin(origin);
+      if (origin) await connectAddress(origin, sessionAddr);
       return { id, ok: true, result: ethAccountsPermission(sessionAddr) };
     }
 
@@ -174,7 +175,8 @@ export async function handleProviderRpc(
       if (!requested || typeof requested !== 'object' || !('eth_accounts' in requested)) {
         throw Object.assign(new Error('Unsupported permission requested'), { code: 4200 });
       }
-      if (origin) await disconnectOrigin(origin);
+      if (origin && sessionAddr) await disconnectAddress(origin, sessionAddr);
+      else if (origin) await disconnectOrigin(origin);
       return { id, ok: true, result: null, disconnected: true };
     }
 
@@ -188,10 +190,10 @@ export async function handleProviderRpc(
         return { id, ok: true, result: [] };
       }
       if (method === 'eth_requestAccounts') {
-        if (origin) await connectOrigin(origin);
+        if (origin) await connectAddress(origin, sessionAddr);
         return { id, ok: true, result: [sessionAddr] };
       }
-      if (origin && !(await isOriginConnected(origin))) {
+      if (origin && !(await isAddressConnected(origin, sessionAddr))) {
         return { id, ok: true, result: [] };
       }
       return { id, ok: true, result: [sessionAddr] };

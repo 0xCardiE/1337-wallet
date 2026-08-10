@@ -3,11 +3,12 @@
  * action popup closes; the service worker + chrome.storage.session survive.
  */
 import {
-  connectOrigin,
+  connectAddress,
+  disconnectAddress,
   disconnectOrigin,
   faviconForTab,
   getConnectedOrigins,
-  isOriginConnected,
+  isAddressConnected,
   originFromUrl,
   queryActiveBrowserTab,
 } from './lib/dappConnections';
@@ -203,6 +204,7 @@ async function buildDappConnectionStatus(): Promise<{
     favIconUrl?: string;
   } | null;
   connected: boolean;
+  connectedAddress: string | null;
   canConnect: boolean;
   reason?: string;
 }> {
@@ -212,6 +214,7 @@ async function buildDappConnectionStatus(): Promise<{
       ok: true,
       tab: null,
       connected: false,
+      connectedAddress: null,
       canConnect: false,
       reason: 'No active browser tab',
     };
@@ -222,12 +225,14 @@ async function buildDappConnectionStatus(): Promise<{
       ok: true,
       tab: null,
       connected: false,
+      connectedAddress: null,
       canConnect: false,
       reason: 'Open an http(s) dapp tab to connect',
     };
   }
   const hostname = new URL(tab.url).hostname;
-  const connected = await isOriginConnected(origin);
+  const addr = await sessionAddress();
+  const connected = Boolean(addr && (await isAddressConnected(origin, addr)));
   return {
     ok: true,
     tab: {
@@ -239,8 +244,31 @@ async function buildDappConnectionStatus(): Promise<{
       favIconUrl: faviconForTab(tab),
     },
     connected,
+    connectedAddress: connected && addr ? addr : null,
     canConnect: true,
   };
+}
+
+/** Tell connected dapp tabs which accounts the active wallet exposes for their origin. */
+async function broadcastAccountsChanged(activeAddress: `0x${string}` | null): Promise<void> {
+  try {
+    const origins = await getConnectedOrigins();
+    if (origins.size === 0) return;
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id == null) continue;
+      const origin = originFromUrl(tab.url);
+      if (!origin || !origins.has(origin)) continue;
+      const authorized =
+        Boolean(activeAddress) && (await isAddressConnected(origin, activeAddress!));
+      await emitToTab(tab.id, {
+        type: 'accountsChanged',
+        accounts: authorized && activeAddress ? [activeAddress] : [],
+      });
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 type Msg =
@@ -364,6 +392,7 @@ async function maybeAutoLockExpired(): Promise<void> {
         HW_SESSION_KEY,
         ACTIVITY_KEY,
       ]);
+      void broadcastAccountsChanged(null);
     }
   } catch {
     /* ignore */
@@ -577,6 +606,7 @@ chrome.runtime.onMessage.addListener(
             ok: false,
             tab: null,
             connected: false,
+            connectedAddress: null,
             canConnect: false,
             reason: 'Could not read active tab',
           });
@@ -599,7 +629,7 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ ok: false, error: status.reason ?? 'No connectable tab' });
             return;
           }
-          await connectOrigin(status.tab.origin);
+          await connectAddress(status.tab.origin, addr);
           const { settings } = await loadPersisted();
           const chainId = toHexChainId(effectiveActiveChainId(settings));
           await emitToTab(status.tab.tabId, { type: 'connect', chainId });
@@ -623,7 +653,9 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ ok: false, error: status.reason ?? 'No active dapp tab' });
             return;
           }
-          await disconnectOrigin(status.tab.origin);
+          const addr = await sessionAddress();
+          if (addr) await disconnectAddress(status.tab.origin, addr);
+          else await disconnectOrigin(status.tab.origin);
           await emitToTab(status.tab.tabId, { type: 'disconnect' });
           await emitToTab(status.tab.tabId, { type: 'accountsChanged', accounts: [] });
           sendResponse({ ok: true });
@@ -697,6 +729,7 @@ chrome.runtime.onMessage.addListener(
         void chrome.storage.session.set({ [SESSION_KEY]: memoryPk });
         void chrome.storage.session.remove([HW_SESSION_KEY]);
         void touchActivity();
+        void broadcastAccountsChanged(addressFromPrivateKey(memoryPk as `0x${string}`));
         sendResponse({ ok: true });
         return;
       }
@@ -706,6 +739,7 @@ chrome.runtime.onMessage.addListener(
         void chrome.storage.session.set({ [HW_SESSION_KEY]: memoryHw });
         void chrome.storage.session.remove([SESSION_KEY, UNLOCK_PASSWORD_KEY]);
         void touchActivity();
+        void broadcastAccountsChanged(getAddress(memoryHw.address));
         sendResponse({ ok: true });
         return;
       }
@@ -730,6 +764,7 @@ chrome.runtime.onMessage.addListener(
         HW_SESSION_KEY,
         ACTIVITY_KEY,
       ]);
+      void broadcastAccountsChanged(null);
       sendResponse({ ok: true });
     }
   },

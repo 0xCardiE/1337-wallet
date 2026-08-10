@@ -11,6 +11,8 @@ export type DappConnectionStatus = {
   ok: boolean;
   tab: DappTabInfo | null;
   connected: boolean;
+  /** Active account address when that account is connected to the tab origin. */
+  connectedAddress?: string | null;
   canConnect: boolean;
   reason?: string;
 };
@@ -22,7 +24,14 @@ export async function fetchDappConnectionStatus(): Promise<DappConnectionStatus>
   } catch {
     /* ignore */
   }
-  return { ok: false, tab: null, connected: false, canConnect: false, reason: 'Extension unavailable' };
+  return {
+    ok: false,
+    tab: null,
+    connected: false,
+    connectedAddress: null,
+    canConnect: false,
+    reason: 'Extension unavailable',
+  };
 }
 
 export async function connectActiveTab(): Promise<{ ok: boolean; error?: string }> {
