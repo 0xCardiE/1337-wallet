@@ -11,12 +11,39 @@ import { isUnlocked } from '../lib/accountSession';
 import { useCallback, useEffect, useState } from 'react';
 import { TxConfirmModeToggle } from './TxConfirmModeBar';
 
-function SiteIcon({ favIconUrl, label, connected }: { favIconUrl?: string; label: string; connected: boolean }) {
+/**
+ * Site favicon from the active tab (or Google s2 fallback). Falls back to a
+ * letter avatar when missing, local/dev, or the image fails to load — common
+ * for localhost icons that render as a black disc on dark UI.
+ */
+function SiteIcon({
+  favIconUrl,
+  label,
+  connected,
+}: {
+  favIconUrl?: string;
+  label: string;
+  connected: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
   const letter = label.trim().charAt(0).toUpperCase() || '?';
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [favIconUrl]);
+
+  const showImg = Boolean(favIconUrl) && !imgFailed;
+
   return (
-    <span className="w1337-dapp-bar__icon-wrap">
-      {favIconUrl ? (
-        <img className="w1337-dapp-bar__icon" src={favIconUrl} alt="" draggable={false} />
+    <span className={`w1337-dapp-bar__icon-wrap${connected ? '' : ' w1337-dapp-bar__icon-wrap--idle'}`}>
+      {showImg ? (
+        <img
+          className="w1337-dapp-bar__icon"
+          src={favIconUrl}
+          alt=""
+          draggable={false}
+          onError={() => setImgFailed(true)}
+        />
       ) : (
         <span className="w1337-dapp-bar__icon w1337-dapp-bar__icon--fallback">{letter}</span>
       )}
@@ -110,15 +137,7 @@ export function DappConnectionBar({
           </>
         ) : canConnect && tab ? (
           <>
-            <span className="w1337-dapp-bar__icon-wrap w1337-dapp-bar__icon-wrap--idle">
-              {tab.favIconUrl ? (
-                <img className="w1337-dapp-bar__icon" src={tab.favIconUrl} alt="" draggable={false} />
-              ) : (
-                <span className="w1337-dapp-bar__icon w1337-dapp-bar__icon--fallback">
-                  {tab.hostname.charAt(0).toUpperCase()}
-                </span>
-              )}
-            </span>
+            <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected={false} />
             <span className="w1337-dapp-bar__meta">
               <span className="w1337-dapp-bar__host">{tab.hostname}</span>
               <span className="w1337-dapp-bar__sub">

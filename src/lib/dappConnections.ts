@@ -115,9 +115,24 @@ export function hostnameFromUrl(url: string | undefined): string | null {
   }
 }
 
+/** Local/dev hosts rarely have a readable favicon on dark UI — prefer letter fallback. */
+export function isLocalDevHost(hostname: string | null | undefined): boolean {
+  if (!hostname) return false;
+  const h = hostname.toLowerCase();
+  return (
+    h === 'localhost' ||
+    h === '127.0.0.1' ||
+    h === '[::1]' ||
+    h === '0.0.0.0' ||
+    h.endsWith('.localhost') ||
+    h.endsWith('.local')
+  );
+}
+
 export function faviconForTab(tab: chrome.tabs.Tab | null | undefined): string | undefined {
-  if (tab?.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) return tab.favIconUrl;
   const host = hostnameFromUrl(tab?.url);
+  if (isLocalDevHost(host)) return undefined;
+  if (tab?.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) return tab.favIconUrl;
   if (!host) return undefined;
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`;
 }
