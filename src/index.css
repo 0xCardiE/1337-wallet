@@ -3920,7 +3920,10 @@ button.w1337-seg__btn--on:hover:not(:disabled) {
 button.w1337-instant-toggle {
   margin: 0;
   flex: none;
-  padding: 5px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
   min-height: 28px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-strong);
@@ -3932,6 +3935,11 @@ button.w1337-instant-toggle {
   box-shadow: none;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+button.w1337-instant-toggle .w1337-instant-toggle__icon {
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 button.w1337-instant-toggle:hover:not(:disabled) {
@@ -3946,6 +3954,10 @@ button.w1337-instant-toggle--on {
   color: #1a1000;
   border-color: #f59e0b;
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35), 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+
+button.w1337-instant-toggle--on .w1337-instant-toggle__icon {
+  opacity: 1;
 }
 
 button.w1337-instant-toggle--on:hover:not(:disabled) {

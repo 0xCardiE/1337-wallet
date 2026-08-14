@@ -9,6 +9,21 @@ import {
 const INSTANT_HINT =
   'When on, sign ordinary dapp requests immediately. Risk gates in Settings still pause Instant for unlimited approvals, SIWE mismatch, and similar.';
 
+function ThunderIcon() {
+  return (
+    <svg
+      className="w1337-instant-toggle__icon"
+      width={12}
+      height={12}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M13 2 4.8 13.6c-.4.6 0 1.4.7 1.4H11l-1 7 8.2-11.6c.4-.6 0-1.4-.7-1.4H13l0-7z" />
+    </svg>
+  );
+}
+
 export function TxConfirmModeToggle({
   settings,
   onSaved,
@@ -49,7 +64,8 @@ export function TxConfirmModeToggle({
         title={INSTANT_HINT}
         onClick={() => void toggleInstant()}
       >
-        Instant
+        <ThunderIcon />
+        {instantOn ? 'Instant On' : 'Instant Off'}
       </button>
       {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>
