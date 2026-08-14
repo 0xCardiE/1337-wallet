@@ -81,6 +81,7 @@ export function SettingsView({
     String(effectiveHighValueNative(settings)),
   );
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [instantOpen, setInstantOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -204,6 +205,94 @@ export function SettingsView({
             </div>
           ) : null}
 
+          <div className="w1337-settings-link-card">
+            <div>
+              <strong>Instant signing gates</strong>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
+                {instantFullyUngated
+                  ? 'Fully ungated — Instant auto-signs every dapp request.'
+                  : `${INSTANT_GATE_IDS.filter(id => instantGated[id]).length} of ${INSTANT_GATE_IDS.length} risks still pause Instant.`}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="ghost"
+              aria-expanded={instantOpen}
+              onClick={() => setInstantOpen(v => !v)}
+            >
+              {instantOpen ? 'Close' : 'Open'}
+            </button>
+          </div>
+
+          {instantOpen ? (
+            <div className="w1337-settings-gates">
+              <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
+                Instant auto-signs ordinary dapp requests. Checked items still pause Instant and
+                open the approval sheet. Uncheck to ungate that risk. Does not apply in Normal
+                mode.
+              </p>
+
+              {INSTANT_GATE_IDS.map(id => (
+                <div key={id} className="w1337-settings-gate-row">
+                  <input
+                    id={`instant-gate-${id}`}
+                    className="w1337-settings-gate-row__box"
+                    type="checkbox"
+                    checked={instantGated[id]}
+                    disabled={instantFullyUngated}
+                    onChange={e =>
+                      setInstantGated(prev => ({ ...prev, [id]: e.target.checked }))
+                    }
+                  />
+                  <label htmlFor={`instant-gate-${id}`} className="w1337-settings-gate-row__copy">
+                    <strong>{INSTANT_GATE_META[id].title}</strong>
+                    <span className="muted">{INSTANT_GATE_META[id].description}</span>
+                  </label>
+                </div>
+              ))}
+
+              <label htmlFor="high-value-native" style={{ marginTop: 14 }}>
+                High-value threshold (native token)
+              </label>
+              <input
+                id="high-value-native"
+                type="number"
+                min={0}
+                step={0.01}
+                value={highValueStr}
+                disabled={instantFullyUngated || !instantGated.highValue}
+                onChange={e => setHighValueStr(e.target.value)}
+              />
+              <p className="muted" style={{ fontSize: 12 }}>
+                Pause Instant when a transaction sends at least this much native token (default{' '}
+                {DEFAULT_HIGH_VALUE_NATIVE}).
+              </p>
+
+              <div className="w1337-settings-gate-row w1337-settings-gate-row--danger">
+                <input
+                  id="instant-fully-ungated"
+                  className="w1337-settings-gate-row__box"
+                  type="checkbox"
+                  checked={instantFullyUngated}
+                  onChange={e => setInstantFullyUngated(e.target.checked)}
+                />
+                <label htmlFor="instant-fully-ungated" className="w1337-settings-gate-row__copy">
+                  <strong>Fully ungate Instant</strong>
+                  <span className="muted">
+                    Auto-sign every dapp request while unlocked, including unlimited approvals
+                    and mismatched SIWE. Hardware accounts still confirm on the device.
+                  </span>
+                </label>
+              </div>
+              {instantFullyUngated ? (
+                <p className="settings-callout settings-callout--warn">
+                  Fully ungated Instant signs without reviewing risky requests. Only use this on
+                  sites you already trust.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           <label htmlFor="slip" style={{ marginTop: 16 }}>
             Slippage (%)
           </label>
@@ -321,70 +410,6 @@ export function SettingsView({
             When enabled, sites that offer MetaMask will connect to 1337 instead. Reload open
             tabs after changing this.
           </p>
-
-          <div className="w1337-settings-gates">
-            <strong>Instant signing gates</strong>
-            <p className="muted" style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.45 }}>
-              Instant (toolbar toggle) auto-signs ordinary dapp requests. Checked items still
-              pause Instant and open the approval sheet. Uncheck to ungate that risk. Does not
-              apply in Normal mode, where every request is confirmed.
-            </p>
-
-            {INSTANT_GATE_IDS.map(id => (
-              <label key={id} className="w1337-settings-check">
-                <input
-                  type="checkbox"
-                  checked={instantGated[id]}
-                  disabled={instantFullyUngated}
-                  onChange={e =>
-                    setInstantGated(prev => ({ ...prev, [id]: e.target.checked }))
-                  }
-                />
-                <span>
-                  {INSTANT_GATE_META[id].title}
-                  <span className="muted">{INSTANT_GATE_META[id].description}</span>
-                </span>
-              </label>
-            ))}
-
-            <label htmlFor="high-value-native" style={{ marginTop: 12 }}>
-              High-value threshold (native token)
-            </label>
-            <input
-              id="high-value-native"
-              type="number"
-              min={0}
-              step={0.01}
-              value={highValueStr}
-              disabled={instantFullyUngated || !instantGated.highValue}
-              onChange={e => setHighValueStr(e.target.value)}
-            />
-            <p className="muted" style={{ fontSize: 12 }}>
-              Pause Instant when a transaction sends at least this much native token (default{' '}
-              {DEFAULT_HIGH_VALUE_NATIVE}).
-            </p>
-
-            <label className="w1337-settings-check w1337-settings-check--danger">
-              <input
-                type="checkbox"
-                checked={instantFullyUngated}
-                onChange={e => setInstantFullyUngated(e.target.checked)}
-              />
-              <span>
-                Fully ungate Instant
-                <span className="muted">
-                  Auto-sign every dapp request while unlocked, including unlimited approvals and
-                  mismatched SIWE. Hardware accounts still confirm on the device.
-                </span>
-              </span>
-            </label>
-            {instantFullyUngated ? (
-              <p className="settings-callout settings-callout--warn">
-                Fully ungated Instant signs without reviewing risky requests. Only use this on
-                sites you already trust.
-              </p>
-            ) : null}
-          </div>
 
           <div
             className="muted"
