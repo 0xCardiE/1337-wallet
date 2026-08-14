@@ -1328,6 +1328,20 @@ button.bfox-main-header__addr:hover:not(:disabled) {
   opacity: 0.94;
 }
 
+/* Side panel is tall — float brand + password toward vertical center above the footer art */
+html.w1337-surface--side-panel .unlock-screen {
+  padding-top: 24px;
+}
+
+html.w1337-surface--side-panel .unlock-brand {
+  margin-top: auto;
+  margin-bottom: 28px;
+}
+
+html.w1337-surface--side-panel .unlock-form {
+  margin-bottom: 12px;
+}
+
 /* ── LEET swap card ─────────────────────────────────────────────── */
 .w1337.wallet-shell {
   background:
