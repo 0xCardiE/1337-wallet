@@ -10,6 +10,7 @@ import {
 import { chainById } from './chainCatalog';
 import { bytesToHexMessage, parseTypedDataParam } from './backgroundSign';
 import type { ProviderRequest } from '../provider/types';
+import { classifyRequest, parseDomainChainId, type TxRiskReport } from './txRisk';
 
 export type ApprovalDetailField = {
   label: string;
@@ -37,6 +38,8 @@ export type TxGasPreview = {
 const KNOWN_SELECTORS: Record<string, string> = {
   '0xa9059cbb': 'transfer(address,uint256)',
   '0x095ea7b3': 'approve(address,uint256)',
+  '0x39509351': 'increaseAllowance(address,uint256)',
+  '0xa22cb465': 'setApprovalForAll(address,bool)',
   '0x23b872dd': 'transferFrom(address,address,uint256)',
   '0x42842e0e': 'safeTransferFrom(address,address,uint256)',
   '0xb88d4fde': 'safeTransferFrom(address,address,uint256,bytes)',
@@ -67,6 +70,16 @@ const DECODE_ABIS = [
           { name: 'amount', type: 'uint256' },
         ],
         name: 'approve',
+        outputs: [{ type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { name: 'spender', type: 'address' },
+          { name: 'addedValue', type: 'uint256' },
+        ],
+        name: 'increaseAllowance',
         outputs: [{ type: 'bool' }],
         stateMutability: 'nonpayable',
         type: 'function',
@@ -194,7 +207,11 @@ function messageFields(method: string, params: unknown[]): ApprovalDetailField[]
   return fields;
 }
 
-function typedDataSections(params: unknown[], method: string): ApprovalDetailSection[] {
+function typedDataSections(
+  params: unknown[],
+  method: string,
+  walletChainId?: number,
+): ApprovalDetailSection[] {
   let typedRaw = params[1] ?? params[0];
   if (method === 'eth_signTypedData_v3' || method === 'eth_signTypedData_v4') {
     typedRaw = params[1];
@@ -205,7 +222,16 @@ function typedDataSections(params: unknown[], method: string): ApprovalDetailSec
     const domainFields: ApprovalDetailField[] = [];
     for (const [k, v] of Object.entries(typed.domain)) {
       if (v == null || v === '') continue;
-      domainFields.push(field(k, String(v), { mono: typeof v === 'string' && k.includes('Contract') }));
+      const isChain = k === 'chainId';
+      const domainChain = isChain ? parseDomainChainId(v) : null;
+      const chainMismatch =
+        isChain && domainChain != null && walletChainId != null && domainChain !== walletChainId;
+      domainFields.push(
+        field(k, String(v), {
+          mono: typeof v === 'string' && k.includes('Contract'),
+          warn: chainMismatch,
+        }),
+      );
     }
 
     const messageFieldsList: ApprovalDetailField[] = [];
@@ -219,7 +245,38 @@ function typedDataSections(params: unknown[], method: string): ApprovalDetailSec
         defs.map(d => field(name, `${d.name}: ${d.type}`, { mono: true })),
       );
 
+    const domainChainId = parseDomainChainId(typed.domain.chainId);
+    const chainMismatch =
+      domainChainId != null && walletChainId != null && domainChainId !== walletChainId;
+    const walletChainName = walletChainId != null ? chainById(walletChainId)?.name : undefined;
+    const typedChainName = domainChainId != null ? chainById(domainChainId)?.name : undefined;
+
     return [
+      ...(chainMismatch
+        ? [
+            {
+              id: 'typed-chain-warn',
+              title: 'Chain ID mismatch',
+              defaultOpen: true,
+              fields: [
+                field(
+                  'Typed data chain',
+                  typedChainName
+                    ? `${typedChainName} (${domainChainId})`
+                    : String(domainChainId),
+                  { warn: true },
+                ),
+                field(
+                  'Wallet chain',
+                  walletChainName
+                    ? `${walletChainName} (${walletChainId})`
+                    : String(walletChainId),
+                  { warn: true },
+                ),
+              ],
+            },
+          ]
+        : []),
       {
         id: 'typed-overview',
         title: 'Typed data',
@@ -268,7 +325,6 @@ function transactionSections(
   walletAddress?: string,
 ): ApprovalDetailSection[] {
   const tx = (request.params?.[0] ?? {}) as Record<string, unknown>;
-  const sym = chainById(chainId)?.nativeCurrency.symbol ?? 'ETH';
   const value = hexBigInt(tx.value) ?? 0n;
   const data = typeof tx.data === 'string' ? tx.data : undefined;
   const selector = data ? selectorFromData(data) : undefined;
@@ -373,6 +429,7 @@ export function buildApprovalDetailSections(
   request: ProviderRequest,
   chainId: number,
   walletAddress?: string,
+  origin?: string,
 ): ApprovalDetailSection[] {
   const { method, params = [] } = request;
 
@@ -380,12 +437,44 @@ export function buildApprovalDetailSections(
     return transactionSections(request, chainId, walletAddress);
   }
 
-  if (method === 'personal_sign' || method === 'eth_sign') {
-    return [
+  if (method === 'personal_sign') {
+    const risk = classifyRequest(request, { chainId, origin });
+    const siwe = risk.siwe;
+    const sections: ApprovalDetailSection[] = [];
+    if (siwe) {
+      const mismatch = siwe.domainMismatch || siwe.uriMismatch || siwe.chainMismatch;
+      sections.push({
+        id: 'siwe',
+        title: mismatch ? 'Sign-In with Ethereum — mismatch' : 'Sign-In with Ethereum',
+        defaultOpen: true,
+        fields: [
+          field('Claimed domain', siwe.domain, { mono: true, warn: siwe.domainMismatch }),
+          ...(origin
+            ? [field('Page origin', origin, { mono: true, warn: siwe.domainMismatch })]
+            : []),
+          ...(siwe.uri
+            ? [field('URI', siwe.uri, { mono: true, warn: siwe.uriMismatch })]
+            : []),
+          ...(siwe.chainId != null
+            ? [
+                field(
+                  'SIWE chain ID',
+                  `${siwe.chainId}${siwe.chainMismatch ? ` (wallet is ${chainId})` : ''}`,
+                  { warn: siwe.chainMismatch },
+                ),
+              ]
+            : []),
+          ...(siwe.address
+            ? [field('Account', siwe.address, { mono: true, copyable: true })]
+            : []),
+        ],
+      });
+    }
+    sections.push(
       {
         id: 'msg',
         title: 'Message',
-        defaultOpen: true,
+        defaultOpen: !siwe,
         fields: [
           field('Method', method, { mono: true }),
           ...messageFields(method, params),
@@ -398,10 +487,11 @@ export function buildApprovalDetailSections(
           field('Params', JSON.stringify(params, null, 2), { mono: true, copyable: true }),
         ],
       },
-    ];
+    );
+    return sections;
   }
 
-  return typedDataSections(params, method);
+  return typedDataSections(params, method, chainId);
 }
 
 export type FunctionSignatureLookup =
@@ -425,7 +515,7 @@ export function resolveLikelyFunctionSignature(
     return sigLookup.signatures[0];
   }
 
-  return undefined;
+  return decoded;
 }
 
 export function txContractAddress(request: ProviderRequest): `0x${string}` | undefined {
@@ -527,12 +617,23 @@ export function mergeGasPreview(
   return sections;
 }
 
-export function approvalTitle(request: ProviderRequest): string {
+export function approvalTitle(request: ProviderRequest, risk?: TxRiskReport): string {
+  if (risk?.tokenApproval?.kind === 'setApprovalForAll') {
+    return risk.tokenApproval.approved ? 'Approve operator for all NFTs' : 'Revoke NFT operator';
+  }
+  if (risk?.tokenApproval) {
+    return risk.tokenApproval.unlimited ? 'Grant unlimited token access' : 'Grant token access';
+  }
+  if (risk?.permit) return 'Sign token permit';
+  if (risk?.siwe) {
+    const bad =
+      risk.siwe.domainMismatch || risk.siwe.uriMismatch || risk.siwe.chainMismatch;
+    return bad ? 'Sign-in request — check domain' : 'Sign in with Ethereum';
+  }
   switch (request.method) {
     case 'eth_sendTransaction':
       return 'Confirm transaction';
     case 'personal_sign':
-    case 'eth_sign':
       return 'Sign message';
     default:
       return 'Sign typed data';

@@ -24,9 +24,9 @@ Tracking ideas from [Rabby](https://github.com/RabbyHub/Rabby) and [Ambire](http
 
 | Done | Item | Source | Effort | Notes |
 |------|------|--------|--------|-------|
-| [ ] | Action-type approval components | Rabby | Medium | Refactor `TxApprovalSheet` / `approvalDetails.ts` into action views: Send, Approve, Swap, Unknown. Extend `KNOWN_SELECTORS`. |
+| [~] | Action-type approval components | Rabby | Medium | Approve / Permit action cards exist in `TxApprovalSheet`. Remaining: Send, Swap, Unknown dedicated views. |
 | [ ] | Opt-in tx simulation / balance preview | Rabby | Medium | Show predicted balance changes in Normal mode. **Opt-in** if using DeBank/Rabby API (privacy). Alternative: local `eth_call` heuristics for common patterns. |
-| [ ] | Risk-gated Turbo mode | 1337 + Rabby | Medium | Keep Turbo default for dev speed; force Normal + preview for unlimited approvals, unknown contracts, high value, permit2. See `src/lib/txConfirmMode.ts`, `providerRpc.ts`. |
+| [x] | Risk-gated Instant mode | 1337 + Rabby | Medium | Instant pauses on unlimited approvals, unknown contracts, high value, permit, EIP-712 chain mismatch, SIWE mismatch. Fully ungate or per-gate in Settings. `instantGates.ts`, `txRisk.ts`, `txConfirmMode.ts`. |
 | [ ] | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `launchPersistentContext` + `--load-extension`; seed storage via service worker to skip onboarding. |
 | [ ] | Secrets-leak E2E test | Ambire | Low | Scan network/request bodies for mnemonics, private keys, session material during tests. |
 | [ ] | Lightweight tx humanizer (local) | Ambire | Medium | Modular decoders for ERC-20/721, common routers; embed in approval UI. Start in `src/lib/approvalDetails.ts` or new `src/lib/humanizer/`. |
@@ -40,10 +40,10 @@ Tracking ideas from [Rabby](https://github.com/RabbyHub/Rabby) and [Ambire](http
 |------|------|--------|--------|-------|
 | [ ] | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts`. |
 | [ ] | Connect-time security hints | Rabby | Medium | On dapp connect, show origin reputation / basic rules (new site, suspicious domain). Lighter than full Rabby security engine. |
-| [ ] | Typed data explainer UI | Rabby | Medium | Human-readable EIP-712 in `TxApprovalSheet` (domain, types, message) instead of raw JSON. |
+| [~] | Typed data explainer UI | Rabby | Medium | Domain / types / message + chainId mismatch warning done. Remaining: consumer-readable Permit/login copy beyond the action cards. |
 | [ ] | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts. |
 | [ ] | Four-byte + contract source in approval (expand) | 1337 + Rabby | Low | Already partial via `fourByteDirectory.ts`, `explorerContractSource.ts` — expand coverage and surface in action UI. |
-| [ ] | Architectural security review skill/checklist | Rabby | Low | Agent/human checklist for consent boundaries, Turbo paths, cross-context messaging. Optional `skills/` or `docs/`. |
+| [ ] | Architectural security review skill/checklist | Rabby | Low | Agent/human checklist for consent boundaries, Instant gates, cross-context messaging. Optional `skills/` or `docs/`. |
 
 ---
 
@@ -78,11 +78,11 @@ Use this when choosing between items in the same sprint.
 
 | Dimension | Rabby-heavy items | Ambire-heavy items | 1337-native items |
 |-----------|-------------------|--------------------|--------------------|
-| **User-visible UX** | Simulation, action UI, security badges | Humanizer, Benzin decode | Turbo, multi-RPC, side panel |
-| **Security engineering** | Rule engine, preExec, SecSDK | Unsafe-layer, E2E secrets leak, CI gates | LavaMoat, Turbo vs Normal, session model |
+| **User-visible UX** | Simulation, action UI, security badges | Humanizer, Benzin decode | Instant, multi-RPC, side panel |
+| **Security engineering** | Rule engine, preExec, SecSDK | Unsafe-layer, E2E secrets leak, CI gates | LavaMoat, Instant gates, session model |
 | **Privacy fit** | ⚠️ DeBank API needs opt-in | ⚠️ 4337/bundler needs opt-in | ✅ No telemetry, local-first |
 | **Dev audience fit** | Tx explain, contract decode | AccountOp, 7702, debugging | Speed, RPC doctor, LiFi, hardware |
-| **Effort vs impact** | Medium effort, high UX for Normal mode | Low–medium for infra; high for smart accounts | Low for docs/gates; medium for risk-gated Turbo |
+| **Effort vs impact** | Medium effort, high UX for Normal mode | Low–medium for infra; high for smart accounts | Low for docs/gates; medium for risk-gated Instant |
 
 ---
 
@@ -95,40 +95,38 @@ Use this when choosing between items in the same sprint.
 
 ---
 
----
-
 ## Security audit — MetaMask-style checklist
 
 Benchmark from MetaMask security analysis (Dapp Permissions, Intent Verification, Physical Access, Threat Prevention). **1337 score is our implementation status**, not MetaMask's.
 
 **Status key:** `[x]` implemented · `[~]` partial · `[ ]` missing
 
-**1337 posture:** speed-first — Turbo auto-sign is default; many controls only apply in Normal mode or are absent entirely.
+**1337 posture:** Normal (confirm every request) is default. Instant auto-signs ordinary requests but is **gated by default**; Settings can fully ungate or ungate individual risks.
 
 ### Dapp Permissions (MetaMask ref: 35/35)
 
 | Done | Feature | Weight | 1337 status | Notes / target |
 |------|---------|--------|-------------|----------------|
-| [~] | User confirmation before processing requests | 8.7 | Partial | Normal mode queues in `TxApprovalSheet`; **Turbo (default) auto-signs**. Hardware always confirms. `txConfirmMode.ts`, `providerRpc.ts` |
-| [~] | User consent for dApp access | 7.7 | Partial | Manual connect via `DappConnectionBar` requires click; **`eth_requestAccounts` silently connects** with no dialog. `providerRpc.ts` |
+| [~] | User confirmation before processing requests | 8.7 | Partial | Normal mode queues in `TxApprovalSheet`; Instant auto-signs ordinary requests, gated risks still confirm. Hardware always confirms. `txConfirmMode.ts` |
+| [~] | User consent for dApp access | 7.7 | Partial | Manual connect via `DappConnectionBar` requires click; **`eth_requestAccounts` silently connects** with no dialog. Kept by design (site stays connected). `providerRpc.ts` |
 | [x] | Wallet unlock before requests | 5.6 | Done | Locked wallet returns `4100`; unlock UI opens on account request. `providerRpc.ts`, `background.ts` |
-| [ ] | Mismatching EIP-712 chainId detection | 3.5 | Missing | Typed data parsed/displayed but **`domain.chainId` never compared** to active chain. `approvalDetails.ts` |
-| [ ] | `eth_sign` method disabled | 3.3 | Missing | **`eth_sign` enabled** and treated like `personal_sign`. `providerRpc.ts`, `pendingApprovals.ts` |
-| [ ] | Mismatching SIWE domain detection | 1.8 | Missing | No SIWE parser; no domain/uri vs page-origin check |
+| [x] | Mismatching EIP-712 chainId detection | 3.5 | Done | Warns in approval UI; Instant pauses unless ungated. `txRisk.ts`, `approvalDetails.ts` |
+| [x] | `eth_sign` method disabled | 3.3 | Done | Rejected with `4200`. Use `personal_sign` / `eth_signTypedData_v4`. `providerRpc.ts` |
+| [x] | Mismatching SIWE domain detection | 1.8 | Done | Parses EIP-4361; domain/URI/chain vs page origin. Instant pauses unless ungated. `siwe.ts` |
 | [~] | Connected dApp management | 1.5 | Partial | Per-origin connect/disconnect + `wallet_revokePermissions`; **no full connected-sites list** or per-site settings. `dappConnections.ts` |
 | [x] | Token approval management | 1.5 | Done | Scan, view, revoke in Tools → Approvals. `ApprovalsPanel.tsx`, `tokenApprovals.ts` |
-| [ ] | User confirmation before switching chains | 1.1 | Missing | `wallet_switchEthereumChain` / `wallet_addEthereumChain` apply immediately. `providerRpc.ts` |
+| [-] | User confirmation before switching chains | 1.1 | Deferred | Auto-switch kept (MetaMask also stays connected / switches without reconnect). |
 
 ### Intent Verification (MetaMask ref: 15.6/25)
 
 | Done | Feature | Weight | 1337 status | Notes / target |
 |------|---------|--------|-------------|----------------|
 | [~] | Transaction simulation | 6.7 | Partial | DApp RPC proxy + gas estimate in approval UI; **no balance-change / outcome preview**. See P1 "Opt-in tx simulation" |
-| [~] | Clear message signing dialog | 3.8 | Partial | Normal mode shows decoded fields; **dev-oriented UI**, skipped in Turbo. `TxApprovalSheet.tsx` |
+| [~] | Clear message signing dialog | 3.8 | Partial | SIWE + permit + token-approval cards; remaining views still developer-oriented. `TxApprovalSheet.tsx` |
 | [x] | EIP-712 message parsing | 2.4 | Done | Domain, types, message fields, raw JSON. `approvalDetails.ts` |
 | [~] | Invalid address checksum detection | 2.2 | Partial | Viem `getAddress()` validates on parse; **no explicit checksum warning** in approval/send UI |
-| [~] | Clear token approval dialog | 6.7 | Partial | `approve()` decoded in tx overview; unlimited allowance warned in Approvals panel; **no dedicated approval action view**. See P1 "Action-type approval components" |
-| [~] | Mandatory message review | 2.1 | Partial | Required in Normal mode only; **Turbo skips review entirely (default)**. `txConfirmMode.ts` |
+| [x] | Clear token approval dialog | 6.7 | Done | Dedicated Approve / Permit cards with spender, amount, unlimited warning. Instant still auto-signs unless that gate is on. |
+| [~] | Mandatory message review | 2.1 | Partial | Required in Normal mode; Instant skips ordinary requests but not gated risks (default). `txConfirmMode.ts` |
 | [x] | Links to blockchain explorers | 1.2 | Done | Address/tx/contract links across approvals, history, gas, swap. `explorerUrls.ts`, `tokenApprovals.ts` |
 
 ### Physical Access (MetaMask ref: 11.7/20)
@@ -158,21 +156,21 @@ Benchmark from MetaMask security analysis (Dapp Permissions, Intent Verification
 
 | Category | Done | Partial | Missing |
 |----------|------|---------|---------|
-| Dapp Permissions | 2 | 3 | 4 |
-| Intent Verification | 2 | 5 | 0 |
+| Dapp Permissions | 5 | 3 | 0 (1 deferred) |
+| Intent Verification | 3 | 4 | 0 |
 | Physical Access | 1 | 4 | 2 |
 | Threat Prevention | 0 | 3 | 4 |
-| **Total (29 items)** | **5** | **15** | **10** |
+| **Total (29 items)** | **9** | **14** | **5** (+1 deferred) |
 
 ### Recommended security sprint (ordered by weight × gap)
 
-1. **[ ] Disable or gate `eth_sign`** — high phishing risk; block by default, opt-in for devs
-2. **[ ] EIP-712 chainId mismatch warning** — block or warn when `domain.chainId ≠ active chain`
-3. **[ ] SIWE domain/uri mismatch detection** — parse SIWE messages, compare to page origin
-4. **[ ] Connect consent dialog** — require explicit approval on `eth_requestAccounts` (not just manual bar)
-5. **[ ] Chain switch confirmation** — approval sheet for `wallet_switchEthereumChain` / add chain
-6. **[ ] Clear token approval action UI** — dedicated Approve view with spender, amount, unlimited flag
-7. **[ ] Risk-gated Turbo** — force Normal + preview for unlimited approvals, unknown contracts, high value (see P1)
+1. **[x] Disable `eth_sign`** — rejected with 4200
+2. **[x] EIP-712 chainId mismatch warning** — warn + Instant gate
+3. **[x] SIWE domain/uri mismatch detection** — warn + Instant gate
+4. **[-] Connect consent dialog** — deferred; silent connect kept (site stays connected)
+5. **[-] Chain switch confirmation** — deferred; auto-switch kept
+6. **[x] Clear token approval action UI** — Approve / Permit cards; Instant still turbo unless gated
+7. **[x] Risk-gated Instant** — default gated; Settings: fully ungate or per-option
 8. **[ ] Phishing / malicious address checks** — local blocklist or opt-in Rabby/DeBank API
 9. **[ ] dApp access disclosure dialog** — explain permissions on first connect
 10. **[ ] Clipboard hygiene** — auto-clear copied secrets, warn on seed/key copy
@@ -188,5 +186,6 @@ Benchmark from MetaMask security analysis (Dapp Permissions, Intent Verification
 
 | Date | Change |
 |------|--------|
+| 2026-08-14 | Security sprint: disable eth_sign; EIP-712 chainId + SIWE checks; token approval cards; Instant gates in Settings |
 | 2026-08-09 | MetaMask-style security audit checklist (29 items) |
 | 2026-08-09 | Initial list from Rabby + Ambire repo analysis |

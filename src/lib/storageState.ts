@@ -14,6 +14,11 @@ import {
   resolveActiveAccountId,
   type WalletAccount,
 } from './accounts';
+import {
+  normalizeHighValueNative,
+  normalizeInstantUngatedGates,
+  type InstantGateId,
+} from './instantGates';
 
 export type { WalletAccount } from './accounts';
 export {
@@ -51,6 +56,15 @@ export interface AppSettings {
   theGraphApiKey?: string;
   /** Dapp signing mode — defaults to normal (confirm before sign). */
   txConfirmMode?: TxConfirmMode;
+  /**
+   * Instant fully ungated: auto-sign every dapp request while unlocked.
+   * Default is false — Instant still pauses on configured gates.
+   */
+  instantFullyUngated?: boolean;
+  /** Gate ids that Instant may auto-sign through (unchecked in Settings). */
+  instantUngatedGates?: InstantGateId[];
+  /** Native-token amount at or above which Instant pauses (when highValue gate is on). */
+  instantHighValueNative?: number;
 }
 
 export interface PersistedState {
@@ -219,6 +233,11 @@ export async function loadPersisted(): Promise<PersistedState> {
               ? row.settings.theGraphApiKey.trim()
               : undefined,
           txConfirmMode: normalizeTxConfirmMode(row.settings?.txConfirmMode),
+          instantFullyUngated: row.settings?.instantFullyUngated === true ? true : undefined,
+          instantUngatedGates: normalizeInstantUngatedGates(row.settings?.instantUngatedGates),
+          instantHighValueNative: normalizeHighValueNativeStored(
+            row.settings?.instantHighValueNative,
+          ),
           ...(tm ? { toolbarOpenMode: tm } : {}),
         },
       };
@@ -281,6 +300,15 @@ export async function patchSettings(patch: AppSettings): Promise<void> {
   if (patch.txConfirmMode !== undefined) {
     merged.txConfirmMode = normalizeTxConfirmMode(patch.txConfirmMode);
   }
+  if (patch.instantFullyUngated !== undefined) {
+    merged.instantFullyUngated = patch.instantFullyUngated ? true : undefined;
+  }
+  if (patch.instantUngatedGates !== undefined) {
+    merged.instantUngatedGates = normalizeInstantUngatedGates(patch.instantUngatedGates);
+  }
+  if (patch.instantHighValueNative !== undefined) {
+    merged.instantHighValueNative = normalizeHighValueNativeStored(patch.instantHighValueNative);
+  }
   applyRpcPreferences(merged);
   await savePersisted({
     ...cur,
@@ -312,6 +340,12 @@ function normalizeTxConfirmMode(
   v: string | undefined | null,
 ): TxConfirmMode {
   return v === 'speed' ? 'speed' : 'normal';
+}
+
+function normalizeHighValueNativeStored(v: unknown): number | undefined {
+  if (v == null || v === '') return undefined;
+  const n = normalizeHighValueNative(v);
+  return n;
 }
 
 export function effectiveSlippagePercent(settings: AppSettings): number {

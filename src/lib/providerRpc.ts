@@ -48,9 +48,9 @@ export async function executeSignRequest(
     return signAndSendTransaction(pk, chainId, merged as never, signOpts);
   }
 
-  if (method === 'personal_sign' || method === 'eth_sign') {
-    const msgParam = method === 'personal_sign' ? params[0] : params[1];
-    const addrParam = method === 'personal_sign' ? params[1] : params[0];
+  if (method === 'personal_sign') {
+    const msgParam = params[0];
+    const addrParam = params[1];
     const addr = addressFromPrivateKey(pk);
     if (typeof addrParam === 'string' && getAddress(addrParam) !== addr) {
       throw new Error('Signer address mismatch');
@@ -205,6 +205,13 @@ export async function handleProviderRpc(
       });
     }
 
+    if (method === 'eth_sign') {
+      throw Object.assign(
+        new Error('eth_sign is disabled. Use personal_sign or eth_signTypedData_v4.'),
+        { code: 4200 },
+      );
+    }
+
     if (method === 'wallet_switchEthereumChain') {
       const p = params[0] as { chainId?: string } | undefined;
       const next = parseChainIdParam(p?.chainId);
@@ -290,6 +297,9 @@ export async function handleProviderRpc(
       const mustConfirm = shouldQueueDappApproval(settings, {
         hardware: opts?.hardware,
         hasLocalKey: Boolean(pk),
+        request,
+        chainId,
+        origin,
       });
       if (mustConfirm) {
         const approval = await queueApprovalRequest({
@@ -310,6 +320,11 @@ export async function handleProviderRpc(
           });
         }
         return approval;
+      }
+      if (!pk) {
+        throw Object.assign(new Error('1337 is locked. Unlock the extension first.'), {
+          code: 4100,
+        });
       }
       const result = await executeSignRequest(pk, chainId, method, params);
       return { id, ok: true, result };

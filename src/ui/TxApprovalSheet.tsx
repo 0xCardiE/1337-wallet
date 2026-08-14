@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getAddress } from 'viem';
 import {
-  applyGasOverrides,
   computeAutoGasEstimate,
   computeDisplayFeeEstimate,
   formatFeeEstimate,
@@ -10,7 +9,7 @@ import {
   validateGasOverrides,
 } from '../lib/gasOverrides';
 import { getActiveAccountMeta, getUnlockedAccount } from '../lib/accountSession';
-import { isHardwareAccount } from '../lib/accounts';
+import { isHardwareAccount, shortAddress } from '../lib/accounts';
 import {
   approvalTitle,
   buildApprovalDetailSections,
@@ -31,7 +30,21 @@ import { addressExplorerLink } from '../lib/tokenApprovals';
 import { chainById } from '../lib/chainCatalog';
 import { chainJsonRpcCall } from '../lib/ethereum';
 import { executeHardwareSignRequest } from '../lib/hardwareSign';
-import type { AppSettings } from '../lib/storageState';
+import { effectiveTxConfirmMode, type AppSettings } from '../lib/storageState';
+import {
+  effectiveActiveInstantGates,
+  effectiveHighValueNative,
+  INSTANT_GATE_META,
+} from '../lib/instantGates';
+import {
+  classifyRequest,
+  fetchErc20Meta,
+  formatApprovalAmount,
+  type PermitAction,
+  type TokenApprovalAction,
+  type TokenMeta,
+  type TxRiskReport,
+} from '../lib/txRisk';
 import {
   completePendingApproval,
   fetchPendingApprovals,
@@ -68,6 +81,208 @@ function DetailField({ f }: { f: ApprovalDetailField }) {
         {f.copyable ? <CopyBtn text={f.value} /> : null}
       </dd>
     </div>
+  );
+}
+
+function ExplorerAddr({
+  chainId,
+  address,
+}: {
+  chainId: number;
+  address: string;
+}) {
+  const url = addressExplorerLink(chainId, address);
+  const label = shortAddress(address);
+  if (!url) {
+    return <span className="w1337-tx-approval__mono">{label}</span>;
+  }
+  return (
+    <a
+      className="w1337-tx-approval__fn-source-link"
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+    >
+      {label}
+      <ExternalLinkIcon />
+    </a>
+  );
+}
+
+function TokenMetaLine({
+  chainId,
+  token,
+  meta,
+}: {
+  chainId: number;
+  token: `0x${string}`;
+  meta: TokenMeta | null;
+}) {
+  const label = meta?.symbol || meta?.name || shortAddress(token);
+  return (
+    <span>
+      {label} · <ExplorerAddr chainId={chainId} address={token} />
+    </span>
+  );
+}
+
+function TokenApprovalCard({
+  chainId,
+  action,
+  meta,
+}: {
+  chainId: number;
+  action: TokenApprovalAction;
+  meta: TokenMeta | null;
+}) {
+  const tokenLabel = meta?.symbol ?? 'token';
+  let headline = `Allow spender to use your ${tokenLabel}`;
+  if (action.kind === 'setApprovalForAll') {
+    headline = action.approved
+      ? `Allow operator to transfer all of this NFT collection`
+      : `Revoke operator access to this NFT collection`;
+  } else if (action.unlimited) {
+    headline = `Grant unlimited ${tokenLabel} spending`;
+  } else if (action.kind === 'increaseAllowance') {
+    headline = `Increase ${tokenLabel} allowance`;
+  }
+
+  const amountLabel =
+    action.kind === 'setApprovalForAll'
+      ? action.approved
+        ? 'All tokens in collection'
+        : 'Revoke'
+      : formatApprovalAmount(action.amount, meta?.decimals ?? 18);
+
+  return (
+    <div
+      className={`w1337-tx-approval__action${action.unlimited ? ' w1337-tx-approval__action--warn' : ''}`}
+    >
+      <p className="w1337-tx-approval__action-kicker">Token approval</p>
+      <h3 className="w1337-tx-approval__action-title">{headline}</h3>
+      {action.unlimited ? (
+        <p className="w1337-tx-approval__action-warn">
+          Unlimited allowance lets this contract spend your {tokenLabel} at any time until you
+          revoke it.
+        </p>
+      ) : null}
+      <dl className="w1337-tx-approval__action-dl">
+        <div>
+          <dt>Token</dt>
+          <dd>
+            <TokenMetaLine chainId={chainId} token={action.token} meta={meta} />
+          </dd>
+        </div>
+        <div>
+          <dt>{action.kind === 'setApprovalForAll' ? 'Operator' : 'Spender'}</dt>
+          <dd>
+            <ExplorerAddr chainId={chainId} address={action.spender} />
+          </dd>
+        </div>
+        <div>
+          <dt>{action.kind === 'increaseAllowance' ? 'Increase by' : 'Amount'}</dt>
+          <dd className={action.unlimited ? 'w1337-tx-approval__action-unlimited' : undefined}>
+            {amountLabel}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function PermitCard({
+  chainId,
+  permit,
+  meta,
+}: {
+  chainId: number;
+  permit: PermitAction;
+  meta: TokenMeta | null;
+}) {
+  return (
+    <div
+      className={`w1337-tx-approval__action${permit.unlimited ? ' w1337-tx-approval__action--warn' : ''}`}
+    >
+      <p className="w1337-tx-approval__action-kicker">Permit signature</p>
+      <h3 className="w1337-tx-approval__action-title">
+        {permit.unlimited
+          ? 'Gasless unlimited token permit'
+          : `Sign ${permit.primaryType} for token spending`}
+      </h3>
+      {permit.unlimited ? (
+        <p className="w1337-tx-approval__action-warn">
+          This signature can grant spending rights without sending a transaction.
+        </p>
+      ) : null}
+      <dl className="w1337-tx-approval__action-dl">
+        {permit.token ? (
+          <div>
+            <dt>Token</dt>
+            <dd>
+              <TokenMetaLine chainId={chainId} token={permit.token} meta={meta} />
+            </dd>
+          </div>
+        ) : null}
+        {permit.spender ? (
+          <div>
+            <dt>Spender</dt>
+            <dd>
+              <ExplorerAddr chainId={chainId} address={permit.spender} />
+            </dd>
+          </div>
+        ) : null}
+        {permit.amount != null ? (
+          <div>
+            <dt>Amount</dt>
+            <dd className={permit.unlimited ? 'w1337-tx-approval__action-unlimited' : undefined}>
+              {formatApprovalAmount(permit.amount, meta?.decimals ?? 18)}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
+function InstantPausedBanner({
+  hits,
+}: {
+  hits: TxRiskReport['hits'];
+}) {
+  if (hits.length === 0) return null;
+  const labels = hits.map(id => INSTANT_GATE_META[id].title);
+  return (
+    <p className="w1337-tx-approval__gate-banner">
+      Instant paused · {labels.join(' · ')}
+    </p>
+  );
+}
+
+function SiweWarnBanner({ risk }: { risk: TxRiskReport }) {
+  const siwe = risk.siwe;
+  if (!siwe) return null;
+  if (!siwe.domainMismatch && !siwe.uriMismatch && !siwe.chainMismatch) return null;
+  const parts: string[] = [];
+  if (siwe.domainMismatch) {
+    parts.push(`This login claims to be from ${siwe.domain}, which does not match this page.`);
+  }
+  if (siwe.uriMismatch && siwe.uri) {
+    parts.push(`URI ${siwe.uri} does not match the requesting site.`);
+  }
+  if (siwe.chainMismatch) {
+    parts.push(`SIWE chain ID ${siwe.chainId} does not match the active network.`);
+  }
+  return <p className="w1337-tx-approval__danger-banner">{parts.join(' ')} Do not sign unless you trust this.</p>;
+}
+
+function Eip712ChainBanner({ risk }: { risk: TxRiskReport }) {
+  const check = risk.eip712Chain;
+  if (!check?.mismatch) return null;
+  return (
+    <p className="w1337-tx-approval__danger-banner">
+      This signature is for chain {check.domainChainId}, but the wallet is on chain{' '}
+      {check.walletChainId}. Signing may be replayed on the wrong network.
+    </p>
   );
 }
 
@@ -462,24 +677,34 @@ function ApprovalContent({
   settings,
   gasOverrides,
   onGasOverridesChange,
+  risk,
 }: {
   pending: PendingApproval;
   settings: AppSettings;
   gasOverrides: GasOverrideInput;
   onGasOverridesChange: (next: GasOverrideInput) => void;
+  risk: TxRiskReport;
 }) {
   const account = getUnlockedAccount();
   const walletAddress = account ? getAddress(account.address) : undefined;
   const chain = chainById(pending.chainId);
   const [gasPreview, setGasPreview] = useState<TxGasPreview | null>(null);
   const [sigLookup, setSigLookup] = useState<FunctionSignatureLookup | null>(null);
+  const [tokenMeta, setTokenMeta] = useState<TokenMeta | null>(null);
   const explorerApiKey = settings.explorerApiKey?.trim();
+  const tokenForMeta = risk.tokenApproval?.token ?? risk.permit?.token;
+
+  const instantOn = effectiveTxConfirmMode(settings) === 'speed';
+  const pausedHits = instantOn
+    ? risk.hits.filter(id => effectiveActiveInstantGates(settings).has(id))
+    : [];
 
   const sections = useMemo(() => {
     let built = buildApprovalDetailSections(
       pending.request,
       pending.chainId,
       walletAddress,
+      pending.origin,
     );
     if (gasPreview) {
       built = mergeGasPreview(built, gasPreview, pending.chainId);
@@ -488,7 +713,7 @@ function ApprovalContent({
       built = mergeFunctionSignatureLookup(built, sigLookup);
     }
     return built;
-  }, [pending.request, pending.chainId, walletAddress, gasPreview, sigLookup]);
+  }, [pending.request, pending.chainId, pending.origin, walletAddress, gasPreview, sigLookup]);
 
   const functionSignature = useMemo(
     () => resolveLikelyFunctionSignature(pending.request, sigLookup),
@@ -551,6 +776,20 @@ function ApprovalContent({
     };
   }, [pending.id, pending.request]);
 
+  useEffect(() => {
+    if (!tokenForMeta) {
+      setTokenMeta(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchErc20Meta(pending.chainId, tokenForMeta).then(meta => {
+      if (!cancelled) setTokenMeta(meta);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pending.id, pending.chainId, tokenForMeta]);
+
   const hostname = pending.summary.hostname;
 
   return (
@@ -568,6 +807,21 @@ function ApprovalContent({
           <p className="w1337-tx-approval__chain muted">
             Network · {chain.name} (chainId {pending.chainId})
           </p>
+        ) : null}
+
+        <InstantPausedBanner hits={pausedHits} />
+        <SiweWarnBanner risk={risk} />
+        <Eip712ChainBanner risk={risk} />
+
+        {risk.tokenApproval ? (
+          <TokenApprovalCard
+            chainId={pending.chainId}
+            action={risk.tokenApproval}
+            meta={tokenMeta}
+          />
+        ) : null}
+        {risk.permit ? (
+          <PermitCard chainId={pending.chainId} permit={risk.permit} meta={tokenMeta} />
         ) : null}
 
         {pending.request.method === 'eth_sendTransaction' ? (
@@ -638,7 +892,17 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
 
   if (!pending) return null;
 
-  const title = approvalTitle(pending.request);
+  const risk = classifyRequest(pending.request, {
+    chainId: pending.chainId,
+    origin: pending.origin,
+    highValueNative: effectiveHighValueNative(settings),
+  });
+  const title = approvalTitle(pending.request, risk);
+  const confirmLabel = risk.tokenApproval
+    ? 'Approve'
+    : risk.siwe
+      ? 'Sign in'
+      : 'Confirm';
   const confirmBlocked =
     pending.request.method === 'eth_sendTransaction' &&
     gasOverrides.mode === 'custom' &&
@@ -730,6 +994,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
           key={pending.id}
           pending={pending}
           settings={settings}
+          risk={risk}
           gasOverrides={gasOverrides}
           onGasOverridesChange={setGasOverrides}
         />
@@ -755,7 +1020,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
               ? 'Confirming…'
               : getActiveAccountMeta() && isHardwareAccount(getActiveAccountMeta())
                 ? `Confirm on ${getActiveAccountMeta()?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
-                : 'Confirm'}
+                : confirmLabel}
           </button>
         </div>
       </div>

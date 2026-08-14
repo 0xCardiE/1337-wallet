@@ -210,9 +210,13 @@ export async function executeHardwareSignRequest(params: {
     return signAndSendWithHardware({ account, chainId, tx });
   }
 
-  if (method === 'personal_sign' || method === 'eth_sign') {
-    const msgParam = method === 'personal_sign' ? requestParams[0] : requestParams[1];
-    const addrParam = method === 'personal_sign' ? requestParams[1] : requestParams[0];
+  if (method === 'eth_sign') {
+    throw new Error('eth_sign is disabled. Use personal_sign or eth_signTypedData_v4.');
+  }
+
+  if (method === 'personal_sign') {
+    const msgParam = requestParams[0];
+    const addrParam = requestParams[1];
     assertSignerAddress(account, addrParam);
     return signPersonalMessageWithHardware(account, msgParam);
   }

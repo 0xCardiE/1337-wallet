@@ -7,7 +7,7 @@ import {
 } from '../lib/storageState';
 
 const INSTANT_HINT =
-  'When on, sign dapp requests and in-wallet sends immediately. Off (default) confirms each request first.';
+  'When on, sign ordinary dapp requests immediately. Risk gates in Settings still pause Instant for unlimited approvals, SIWE mismatch, and similar.';
 
 export function TxConfirmModeToggle({
   settings,

@@ -14,6 +14,13 @@ import {
   type AppSettings,
   type ToolbarOpenMode,
 } from '../lib/storageState';
+import {
+  DEFAULT_HIGH_VALUE_NATIVE,
+  INSTANT_GATE_IDS,
+  INSTANT_GATE_META,
+  effectiveHighValueNative,
+  type InstantGateId,
+} from '../lib/instantGates';
 import { describeError } from '../lib/utils';
 import {
   PRODUCT_SETTINGS_PRIVACY_HEADING,
@@ -22,6 +29,15 @@ import {
 } from '../lib/productManifest';
 import { ScreenHeader } from './ScreenHeader';
 import { SimpleSelect1337 } from './Select1337';
+
+function gateChecksFromSettings(settings: AppSettings): Record<InstantGateId, boolean> {
+  const ungated = new Set(settings.instantUngatedGates ?? []);
+  const out = {} as Record<InstantGateId, boolean>;
+  for (const id of INSTANT_GATE_IDS) {
+    out[id] = !ungated.has(id);
+  }
+  return out;
+}
 
 export function SettingsView({
   settings,
@@ -55,6 +71,15 @@ export function SettingsView({
   );
   const [explorerApiKey, setExplorerApiKey] = useState(() => settings.explorerApiKey ?? '');
   const [theGraphApiKey, setTheGraphApiKey] = useState(() => settings.theGraphApiKey ?? '');
+  const [instantFullyUngated, setInstantFullyUngated] = useState(
+    () => settings.instantFullyUngated === true,
+  );
+  const [instantGated, setInstantGated] = useState<Record<InstantGateId, boolean>>(() =>
+    gateChecksFromSettings(settings),
+  );
+  const [highValueStr, setHighValueStr] = useState(() =>
+    String(effectiveHighValueNative(settings)),
+  );
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -67,6 +92,9 @@ export function SettingsView({
     setReplaceMetaMask(settings.replaceMetaMask !== false);
     setExplorerApiKey(settings.explorerApiKey ?? '');
     setTheGraphApiKey(settings.theGraphApiKey ?? '');
+    setInstantFullyUngated(settings.instantFullyUngated === true);
+    setInstantGated(gateChecksFromSettings(settings));
+    setHighValueStr(String(effectiveHighValueNative(settings)));
   }, [
     settings.slippagePercent,
     settings.autoLockMinutes,
@@ -74,6 +102,9 @@ export function SettingsView({
     settings.replaceMetaMask,
     settings.explorerApiKey,
     settings.theGraphApiKey,
+    settings.instantFullyUngated,
+    settings.instantUngatedGates,
+    settings.instantHighValueNative,
     sidePanelSupported,
   ]);
 
@@ -91,6 +122,12 @@ export function SettingsView({
       const allowedLock = [0, 5, 15, 30, 60];
       const autoLockMinutes =
         allowedLock.includes(lockMin) && lockMin > 0 ? lockMin : undefined;
+      const highParsed = Number(highValueStr.trim().replace(',', '.'));
+      if (!Number.isFinite(highParsed) || highParsed < 0) {
+        setErr('Enter a valid high-value native threshold (0 or greater).');
+        return;
+      }
+      const instantUngatedGates = INSTANT_GATE_IDS.filter(id => !instantGated[id]);
       await patchSettings({
         slippagePercent: slipParsed,
         autoLockMinutes,
@@ -98,6 +135,9 @@ export function SettingsView({
         replaceMetaMask,
         explorerApiKey: explorerApiKey.trim() || undefined,
         theGraphApiKey: theGraphApiKey.trim() || undefined,
+        instantFullyUngated,
+        instantUngatedGates,
+        instantHighValueNative: highParsed,
       });
       await syncToolbarOpenModeNow();
       onSaved();
@@ -281,6 +321,70 @@ export function SettingsView({
             When enabled, sites that offer MetaMask will connect to 1337 instead. Reload open
             tabs after changing this.
           </p>
+
+          <div className="w1337-settings-gates">
+            <strong>Instant signing gates</strong>
+            <p className="muted" style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.45 }}>
+              Instant (toolbar toggle) auto-signs ordinary dapp requests. Checked items still
+              pause Instant and open the approval sheet. Uncheck to ungate that risk. Does not
+              apply in Normal mode, where every request is confirmed.
+            </p>
+
+            {INSTANT_GATE_IDS.map(id => (
+              <label key={id} className="w1337-settings-check">
+                <input
+                  type="checkbox"
+                  checked={instantGated[id]}
+                  disabled={instantFullyUngated}
+                  onChange={e =>
+                    setInstantGated(prev => ({ ...prev, [id]: e.target.checked }))
+                  }
+                />
+                <span>
+                  {INSTANT_GATE_META[id].title}
+                  <span className="muted">{INSTANT_GATE_META[id].description}</span>
+                </span>
+              </label>
+            ))}
+
+            <label htmlFor="high-value-native" style={{ marginTop: 12 }}>
+              High-value threshold (native token)
+            </label>
+            <input
+              id="high-value-native"
+              type="number"
+              min={0}
+              step={0.01}
+              value={highValueStr}
+              disabled={instantFullyUngated || !instantGated.highValue}
+              onChange={e => setHighValueStr(e.target.value)}
+            />
+            <p className="muted" style={{ fontSize: 12 }}>
+              Pause Instant when a transaction sends at least this much native token (default{' '}
+              {DEFAULT_HIGH_VALUE_NATIVE}).
+            </p>
+
+            <label className="w1337-settings-check w1337-settings-check--danger">
+              <input
+                type="checkbox"
+                checked={instantFullyUngated}
+                onChange={e => setInstantFullyUngated(e.target.checked)}
+              />
+              <span>
+                Fully ungate Instant
+                <span className="muted">
+                  Auto-sign every dapp request while unlocked, including unlimited approvals and
+                  mismatched SIWE. Hardware accounts still confirm on the device.
+                </span>
+              </span>
+            </label>
+            {instantFullyUngated ? (
+              <p className="settings-callout settings-callout--warn">
+                Fully ungated Instant signs without reviewing risky requests. Only use this on
+                sites you already trust.
+              </p>
+            ) : null}
+          </div>
 
           <div
             className="muted"

@@ -3211,6 +3211,98 @@ html.w1337-surface--popup .wallet-shell.w1337--main:has(.w1337-tx-approval) {
   border: 1px solid var(--border);
 }
 
+.w1337-tx-approval__action {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+}
+
+.w1337-tx-approval__action--warn {
+  border-color: rgba(251, 146, 60, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.w1337-tx-approval__action-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.w1337-tx-approval__action-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.w1337-tx-approval__action-warn {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #fdba74;
+}
+
+.w1337-tx-approval__action-dl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.w1337-tx-approval__action-dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.w1337-tx-approval__action-dl dt {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.w1337-tx-approval__action-dl dd {
+  margin: 0;
+  text-align: right;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.w1337-tx-approval__action-unlimited {
+  color: #fdba74;
+  font-weight: 650;
+}
+
+.w1337-tx-approval__gate-banner {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.4;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.w1337-tx-approval__danger-banner {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  border-radius: var(--radius-md);
+  background: var(--danger-bg);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
 .w1337-tx-approval__sections {
   display: flex;
   flex-direction: column;
@@ -5492,6 +5584,57 @@ button.w1337-quick-send-inline__send--busy {
   color: var(--text);
   font-size: 13px;
   font-weight: 650;
+}
+
+.w1337-settings-gates {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.w1337-settings-gates > strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.w1337-settings-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.w1337-settings-check input {
+  margin-top: 3px;
+  flex: none;
+  accent-color: var(--acc);
+}
+
+.w1337-settings-check span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.w1337-settings-check .muted {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.w1337-settings-check:has(input:disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.w1337-settings-check--danger input {
+  accent-color: var(--danger);
 }
 
 .w1337-wallets-active {
