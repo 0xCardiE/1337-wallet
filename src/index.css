@@ -1328,18 +1328,24 @@ button.bfox-main-header__addr:hover:not(:disabled) {
   opacity: 0.94;
 }
 
-/* Side panel is tall — float brand + password toward vertical center above the footer art */
+/* Side panel: logo stays high; password + Unlock sit in the vertical middle */
 html.w1337-surface--side-panel .unlock-screen {
-  padding-top: 24px;
+  padding-top: 28px;
 }
 
 html.w1337-surface--side-panel .unlock-brand {
-  margin-top: auto;
-  margin-bottom: 28px;
+  margin-top: 0;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 html.w1337-surface--side-panel .unlock-form {
-  margin-bottom: 12px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+html.w1337-surface--side-panel .unlock-footer-art {
+  margin-top: 0;
 }
 
 /* ── LEET swap card ─────────────────────────────────────────────── */

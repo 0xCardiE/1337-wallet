@@ -113,6 +113,20 @@ Done this round: disable `eth_sign`, EIP-712 chainId mismatch, SIWE mismatch, to
 
 ---
 
+### Hardware wallet gaps
+
+Ledger/Trezor work for dapp signing and Quick Send, but several Tools flows still need a **local key** account. Track so we don’t forget:
+
+| Done | P | Item | Notes |
+|------|---|------|-------|
+| [ ] | P1 | Multisend on hardware | Today: local key only (`MultiSendView`). Needs per-recipient device confirms (or a batched contract path). |
+| [ ] | P1 | ENS register / records on hardware | Today: blocked; points users to app.ens.domains. `EnsView.tsx` |
+| [ ] | P2 | Gas Station execute on hardware | Verify / wire device signing for Gas Station actions if missing |
+| [ ] | P2 | Swap execute on hardware | Verify LiFi swap path signs via HW approval sheet end-to-end |
+| [ ] | P2 | Unified “HW unsupported” empty states | Same muted banner pattern everywhere a Tools tab can’t use Ledger/Trezor |
+
+---
+
 ## Features
 
 Product, UX, infra, and platform work that is not a security control.
@@ -171,6 +185,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-08-16 | Hardware gaps section (Multisend, ENS, Gas, Swap); Multisend Instant confirm-per-recipient |
 | 2026-08-14 | Split TODO into Security vs Features |
 | 2026-08-14 | Security sprint: disable eth_sign; EIP-712 chainId + SIWE checks; token approval cards; Instant gates in Settings |
 | 2026-08-09 | MetaMask-style security audit checklist (29 items) |
