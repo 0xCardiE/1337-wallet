@@ -397,16 +397,7 @@ export function EnsView({ settings }: { settings: AppSettings }) {
     return <p className="w1337-tools-empty muted">Unlock wallet to manage ENS names.</p>;
   }
 
-  if (isHardwareAccount(meta)) {
-    return (
-      <p className="w1337-tools-empty muted">
-        ENS registration and record updates require signing on Ethereum mainnet. Switch to a local
-        key account, or use{' '}
-        <ExternalLink href="https://app.ens.domains">app.ens.domains</ExternalLink> with your
-        Ledger/Trezor.
-      </p>
-    );
-  }
+  const hwAccount = isHardwareAccount(meta);
 
   async function runGlobal(action: () => Promise<void>, opts?: { register?: boolean }) {
     setBusy(true);
@@ -436,7 +427,8 @@ export function EnsView({ settings }: { settings: AppSettings }) {
   function requestTx(prompt: EnsTxPrompt) {
     setErr(null);
     const isRegister = prompt.anchor === 'register';
-    if (needsConfirm) {
+    // Hardware already opens the confirm sheet + device prompt.
+    if (needsConfirm && !hwAccount) {
       setTxPrompt(prompt);
       return;
     }
