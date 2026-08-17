@@ -12,39 +12,32 @@ import {
   filterRowsForWalletTokens,
   findUnscannedTokens,
   formatAllowance,
+  getLatestBlockNumber,
   mergeApprovalRows,
-  recentApprovalFromBlock,
+  olderApprovalWindow,
+  recentApprovalWindow,
   refreshLiveAllowances,
+  scannedLookbackDays,
   scanTokenApprovals,
   txExplorerLink,
   walletTokenKey,
+  type ApprovalLogWindow,
   type TokenApprovalRow,
 } from '../lib/tokenApprovals';
 import {
-  clearTokenApprovalsCache,
   loadTokenApprovalsCache,
   saveTokenApprovalsCache,
 } from '../lib/tokenApprovalsCache';
+import { ApprovalFact, ApprovalsScanOlder, ExternalLinkIcon, olderScanNote } from './ApprovalsScanOlder';
 import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
 import { describeError } from '../lib/utils';
 import { LiFiIcon } from './LiFiIcon';
 import { NftApprovalsPanel } from './NftApprovalsPanel';
 import { Permit2ApprovalsPanel } from './Permit2ApprovalsPanel';
-import { RefreshIconButton } from './RefreshIconButton';
 
 function shortAddress(addr: string): string {
   if (addr.length < 12) return addr;
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
-function ExternalLinkIcon() {
-  return (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" strokeLinecap="round" />
-      <polyline points="15 3 21 3 21 9" strokeLinecap="round" />
-      <line x1="10" y1="14" x2="21" y2="3" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 function ApprovalRowItem({
@@ -66,57 +59,40 @@ function ApprovalRowItem({
     <li className="w1337-approvals__item">
       <div className="w1337-approvals__token">
         <LiFiIcon logoURI={row.tokenLogo} label={row.tokenSymbol} size={28} rounded />
-        <div className="w1337-approvals__token-meta">
-          <span className="w1337-approvals__token-symbol">{row.tokenSymbol}</span>
+        <span className="w1337-approvals__token-symbol">{row.tokenSymbol}</span>
+      </div>
+      <dl className="w1337-approvals__facts">
+        <ApprovalFact label="Token">
           {tokenUrl ? (
-            <a
-              className="w1337-approvals__link muted"
-              href={tokenUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a className="w1337-approvals__link" href={tokenUrl} target="_blank" rel="noopener noreferrer">
               {shortAddress(row.token)} <ExternalLinkIcon />
             </a>
           ) : (
-            <span className="muted">{shortAddress(row.token)}</span>
+            shortAddress(row.token)
           )}
-        </div>
-      </div>
-
-      <div className="w1337-approvals__detail">
-        <span className="w1337-approvals__label muted">Spender</span>
-        {spenderUrl ? (
-          <a
-            className="w1337-approvals__link"
-            href={spenderUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {shortAddress(row.spender)} <ExternalLinkIcon />
-          </a>
-        ) : (
-          <span>{shortAddress(row.spender)}</span>
-        )}
-      </div>
-
-      <div className="w1337-approvals__detail">
-        <span className="w1337-approvals__label muted">Allowance</span>
-        <span className={`w1337-approvals__allowance${row.unlimited ? ' w1337-approvals__allowance--warn' : ''}`}>
-          {formatAllowance(row.allowance, row.tokenDecimals, row.unlimited)}
-        </span>
-      </div>
-
-      {txUrl ? (
-        <a
-          className="w1337-approvals__tx-link muted"
-          href={txUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Last approval tx <ExternalLinkIcon />
-        </a>
-      ) : null}
-
+        </ApprovalFact>
+        <ApprovalFact label="Spender">
+          {spenderUrl ? (
+            <a className="w1337-approvals__link" href={spenderUrl} target="_blank" rel="noopener noreferrer">
+              {shortAddress(row.spender)} <ExternalLinkIcon />
+            </a>
+          ) : (
+            shortAddress(row.spender)
+          )}
+        </ApprovalFact>
+        <ApprovalFact label="Allowance">
+          <span className={`w1337-approvals__allowance${row.unlimited ? ' w1337-approvals__allowance--warn' : ''}`}>
+            {formatAllowance(row.allowance, row.tokenDecimals, row.unlimited)}
+          </span>
+        </ApprovalFact>
+        {txUrl ? (
+          <ApprovalFact label="Last tx">
+            <a className="w1337-approvals__link" href={txUrl} target="_blank" rel="noopener noreferrer">
+              View <ExternalLinkIcon />
+            </a>
+          </ApprovalFact>
+        ) : null}
+      </dl>
       <button
         type="button"
         className="w1337-approvals__revoke"
@@ -172,10 +148,12 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   const [scannedTokens, setScannedTokens] = useState<string[]>([]);
   const [scanningTokens, setScanningTokens] = useState<string[]>([]);
   const [fromBlock, setFromBlock] = useState<number | null>(null);
+  const [latestBlock, setLatestBlock] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [revokingKey, setRevokingKey] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [olderNote, setOlderNote] = useState<string | null>(null);
   const scanningRef = useRef(false);
 
   const visibleRows = useMemo(
@@ -214,12 +192,11 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   }, [addr, chainId]);
 
   const scanTokens = useCallback(
-    async (tokens: WalletBalEntry[], opts?: { fullRescan?: boolean }) => {
+    async (tokens: WalletBalEntry[], opts?: { window?: ApprovalLogWindow }) => {
       if (!addr) return;
       if (tokens.length === 0) return;
 
-      const block = fromBlock ?? (await recentApprovalFromBlock(chainId));
-      if (fromBlock == null) setFromBlock(block);
+      const win = opts?.window ?? (await recentApprovalWindow(chainId));
 
       setScanningTokens(tokens.map(walletTokenKey));
       try {
@@ -227,7 +204,8 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
           chainId,
           owner: addr,
           tokens,
-          fromBlock: block,
+          fromBlock: win.fromBlock,
+          toBlock: win.toBlock,
           explorerApiKey: apiKey,
           onTokenScanned: token => {
             setScanningTokens(prev => prev.filter(t => t !== token.toLowerCase()));
@@ -239,30 +217,33 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
 
         let nextRows: TokenApprovalRow[] = [];
         setRows(prev => {
-          nextRows = opts?.fullRescan
-            ? mergeApprovalRows([], incoming)
-            : mergeApprovalRows(prev, incoming);
+          nextRows = mergeApprovalRows(prev, incoming);
           return nextRows;
         });
 
         let nextScanned: string[] = [];
         setScannedTokens(prev => {
-          nextScanned = opts?.fullRescan
-            ? tokens.map(walletTokenKey)
-            : [...new Set([...prev, ...tokens.map(walletTokenKey)])];
+          nextScanned = [...new Set([...prev, ...tokens.map(walletTokenKey)])];
           return nextScanned;
+        });
+
+        let nextFrom = win.fromBlock;
+        setFromBlock(prev => {
+          nextFrom = prev == null ? win.fromBlock : Math.min(prev, win.fromBlock);
+          return nextFrom;
         });
 
         await persist({
           rows: nextRows,
           scannedTokenAddresses: nextScanned,
-          fromBlock: block,
+          fromBlock: nextFrom,
         });
+        return incoming;
       } finally {
         setScanningTokens([]);
       }
     },
-    [addr, apiKey, chainId, fromBlock, persist],
+    [addr, apiKey, chainId, persist],
   );
 
   const loadInitial = useCallback(async () => {
@@ -278,7 +259,11 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     setBusy(true);
     setErr(null);
     try {
-      const cached = await loadTokenApprovalsCache(chainId, addr);
+      const [cached, latest] = await Promise.all([
+        loadTokenApprovalsCache(chainId, addr),
+        getLatestBlockNumber(chainId).catch(() => null),
+      ]);
+      if (latest != null) setLatestBlock(latest);
       if (cached) {
         setRows(cached.rows);
         setScannedTokens(cached.scannedTokenAddresses);
@@ -309,6 +294,12 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
 
   useEffect(() => {
     setHydrated(false);
+    setRows([]);
+    setScannedTokens([]);
+    setFromBlock(null);
+    setLatestBlock(null);
+    setWalletTokens([]);
+    setOlderNote(null);
     void loadInitial();
   }, [chainId, addr, apiKey, loadInitial]);
 
@@ -328,22 +319,30 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     })();
   }, [addr, apiKey, busy, chainId, hydrated, scanTokens, unscanned]);
 
-  async function refreshAll() {
-    if (!addr) return;
+  async function scanOlder() {
+    if (!addr || fromBlock == null || scanningRef.current) return;
+    const win = olderApprovalWindow(chainId, fromBlock);
+    if (!win) return;
+    scanningRef.current = true;
     setBusy(true);
     setErr(null);
+    setOlderNote(null);
     try {
-      await clearTokenApprovalsCache(chainId, addr);
-      setRows([]);
-      setScannedTokens([]);
-      setFromBlock(null);
-      const bals = await loadBalances();
-      const block = await recentApprovalFromBlock(chainId);
-      setFromBlock(block);
-      await scanTokens(bals, { fullRescan: true });
+      const bals = walletTokens.length > 0 ? walletTokens : await loadBalances();
+      const existingKeys = new Set(
+        rows.map(r => `${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+      );
+      const incoming = (await scanTokens(bals, { window: win })) ?? [];
+      const found = incoming.filter(
+        r => !existingKeys.has(`${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+      ).length;
+      setOlderNote(olderScanNote(found));
+      const latest = await getLatestBlockNumber(chainId).catch(() => null);
+      if (latest != null) setLatestBlock(latest);
     } catch (e) {
       setErr(describeError(e));
     } finally {
+      scanningRef.current = false;
       setBusy(false);
     }
   }
@@ -399,6 +398,13 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     scanningTokens.length > 0
       ? `Scanning ${scanningTokens.length} token${scanningTokens.length === 1 ? '' : 's'}…`
       : null;
+  const scannedDays =
+    fromBlock != null && latestBlock != null
+      ? scannedLookbackDays(chainId, latestBlock, fromBlock)
+      : fromBlock != null
+        ? APPROVAL_LOG_LOOKBACK_DAYS
+        : null;
+  const scanBusy = busy || scanningTokens.length > 0;
 
   return (
     <div className="w1337-approvals">
@@ -413,31 +419,10 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
               {visibleRows.length > 0
                 ? `${visibleRows.length} active approval${visibleRows.length === 1 ? '' : 's'}`
                 : 'Token approvals'}
-              {walletTokens.length > 0
-                ? ` · ${walletTokens.filter(t => t.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee').length} wallet tokens`
-                : ''}
-              {scannedTokens.length > 0 ? ` · ${scannedTokens.length} scanned` : ''}
+              {scannedDays != null ? ` · ~${scannedDays} days` : ''}
             </p>
           </div>
         </div>
-        <RefreshIconButton
-          busy={busy || scanningTokens.length > 0}
-          ariaLabel="Refresh token approvals"
-          onClick={() => void refreshAll()}
-        />
-      </div>
-
-      <div className="w1337-approvals__notice" role="note">
-        <strong>Limited scan.</strong> We only check ERC-20 tokens currently in your wallet, using
-        Etherscan approval logs from the last {APPROVAL_LOG_LOOKBACK_DAYS} days. Approvals on tokens
-        you no longer hold, or older than this window, are not shown. New wallet tokens are scanned
-        automatically.
-        {scannedTokens.length > 0 ? (
-          <>
-            {' '}
-            Scanned: {scannedTokens.length} token{scannedTokens.length === 1 ? '' : 's'}.
-          </>
-        ) : null}
       </div>
 
       {err ? <p className="error">{err}</p> : null}
@@ -471,6 +456,14 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
           })}
         </ul>
       ) : null}
+
+      <ApprovalsScanOlder
+        scannedDays={scannedDays}
+        scannedFromGenesis={fromBlock === 0}
+        busy={scanBusy}
+        note={olderNote}
+        onScanOlder={() => void scanOlder()}
+      />
     </div>
   );
 }

@@ -2,11 +2,7 @@ import { decodeFunctionResult, encodeFunctionData, getAddress, isAddress, keccak
 import { PERMIT2_ABI, PERMIT2_ADDRESS } from './abis';
 import { chainJsonRpcCall } from './ethereum';
 import { fetchErc20Meta } from './txRisk';
-import {
-  fetchExplorerLogs,
-  padTopicAddress,
-  recentApprovalFromBlock,
-} from './tokenApprovals';
+import { fetchExplorerLogs, padTopicAddress } from './tokenApprovals';
 
 export const PERMIT2_APPROVAL_TOPIC = keccak256(
   toBytes('Approval(address,address,address,uint160,uint48)'),
@@ -27,6 +23,7 @@ export type Permit2ApprovalRow = {
   nonce: number;
   unlimited: boolean;
   lastApprovalTx?: `0x${string}`;
+  lastApprovalBlock?: number;
 };
 
 async function permit2Deployed(chainId: number): Promise<boolean> {
@@ -84,6 +81,8 @@ function parseIndexedAddress(topic: string | undefined): `0x${string}` | undefin
 export async function scanPermit2Approvals(params: {
   chainId: number;
   owner: string;
+  fromBlock: number;
+  toBlock?: number | 'latest';
   explorerApiKey?: string;
 }): Promise<{ rows: Permit2ApprovalRow[]; available: boolean }> {
   if (!isAddress(params.owner)) throw new Error('Invalid wallet address');
@@ -91,13 +90,13 @@ export async function scanPermit2Approvals(params: {
   const available = await permit2Deployed(params.chainId);
   if (!available) return { rows: [], available: false };
 
-  const fromBlock = await recentApprovalFromBlock(params.chainId);
   const ownerTopic = padTopicAddress(owner);
   const [approvalLogs, permitLogs] = await Promise.all([
     fetchExplorerLogs({
       chainId: params.chainId,
       address: PERMIT2_ADDRESS,
-      fromBlock,
+      fromBlock: params.fromBlock,
+      toBlock: params.toBlock,
       topic0: PERMIT2_APPROVAL_TOPIC,
       topic1: ownerTopic,
       explorerApiKey: params.explorerApiKey,
@@ -105,7 +104,8 @@ export async function scanPermit2Approvals(params: {
     fetchExplorerLogs({
       chainId: params.chainId,
       address: PERMIT2_ADDRESS,
-      fromBlock,
+      fromBlock: params.fromBlock,
+      toBlock: params.toBlock,
       topic0: PERMIT2_PERMIT_TOPIC,
       topic1: ownerTopic,
       explorerApiKey: params.explorerApiKey,
@@ -114,18 +114,21 @@ export async function scanPermit2Approvals(params: {
 
   const latest = new Map<
     string,
-    { token: `0x${string}`; spender: `0x${string}`; tx?: `0x${string}` }
+    { token: `0x${string}`; spender: `0x${string}`; tx?: `0x${string}`; block: number }
   >();
   for (const log of [...approvalLogs, ...permitLogs]) {
     const token = parseIndexedAddress(log.topics?.[2]);
     const spender = parseIndexedAddress(log.topics?.[3]);
     if (!token || !spender) continue;
+    const block = Number.parseInt(log.blockNumber ?? '0', 16);
     const key = `${token.toLowerCase()}:${spender.toLowerCase()}`;
+    const prev = latest.get(key);
+    if (prev && prev.block >= block) continue;
     const tx =
       log.transactionHash && /^0x[a-fA-F0-9]{64}$/.test(log.transactionHash)
         ? (log.transactionHash as `0x${string}`)
         : undefined;
-    latest.set(key, { token, spender, tx });
+    latest.set(key, { token, spender, tx, block });
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -145,11 +148,54 @@ export async function scanPermit2Approvals(params: {
       nonce: live.nonce,
       unlimited: live.amount >= MAX_UINT160,
       lastApprovalTx: item.tx,
+      lastApprovalBlock: item.block,
     });
   }
 
   rows.sort((a, b) => a.tokenSymbol.localeCompare(b.tokenSymbol));
   return { rows, available: true };
+}
+
+export async function refreshLivePermit2Approvals(params: {
+  chainId: number;
+  owner: string;
+  rows: Permit2ApprovalRow[];
+}): Promise<Permit2ApprovalRow[]> {
+  if (!isAddress(params.owner)) throw new Error('Invalid wallet address');
+  const owner = getAddress(params.owner);
+  const now = Math.floor(Date.now() / 1000);
+  const out: Permit2ApprovalRow[] = [];
+  for (const row of params.rows) {
+    const live = await liveAllowance(params.chainId, owner, row.token, row.spender);
+    if (!live || live.amount <= 0n) continue;
+    if (live.expiration !== 0 && live.expiration < now) continue;
+    out.push({
+      ...row,
+      amount: live.amount,
+      expiration: live.expiration,
+      nonce: live.nonce,
+      unlimited: live.amount >= MAX_UINT160,
+    });
+  }
+  return out;
+}
+
+export function mergePermit2ApprovalRows(
+  existing: Permit2ApprovalRow[],
+  incoming: Permit2ApprovalRow[],
+): Permit2ApprovalRow[] {
+  const map = new Map<string, Permit2ApprovalRow>();
+  for (const row of existing) {
+    map.set(`${row.token.toLowerCase()}:${row.spender.toLowerCase()}`, row);
+  }
+  for (const row of incoming) {
+    const key = `${row.token.toLowerCase()}:${row.spender.toLowerCase()}`;
+    const prev = map.get(key);
+    if (!prev || (row.lastApprovalBlock ?? 0) >= (prev.lastApprovalBlock ?? 0)) {
+      map.set(key, row);
+    }
+  }
+  return [...map.values()].sort((a, b) => a.tokenSymbol.localeCompare(b.tokenSymbol));
 }
 
 export function formatPermit2Expiration(expiration: number): string {

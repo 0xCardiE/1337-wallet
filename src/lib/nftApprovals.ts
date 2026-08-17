@@ -1,12 +1,7 @@
 import { decodeFunctionResult, encodeFunctionData, getAddress, isAddress } from 'viem';
 import { ERC721_ENUM_ABI } from './abis';
 import { chainJsonRpcCall } from './ethereum';
-import {
-  APPROVAL_LOG_LOOKBACK_DAYS,
-  fetchExplorerLogs,
-  padTopicAddress,
-  recentApprovalFromBlock,
-} from './tokenApprovals';
+import { fetchExplorerLogs, padTopicAddress } from './tokenApprovals';
 
 /** keccak256("ApprovalForAll(address,address,bool)") */
 export const APPROVAL_FOR_ALL_TOPIC =
@@ -86,14 +81,16 @@ async function collectionMeta(
 export async function scanNftApprovals(params: {
   chainId: number;
   owner: string;
+  fromBlock: number;
+  toBlock?: number | 'latest';
   explorerApiKey?: string;
 }): Promise<NftApprovalRow[]> {
   if (!isAddress(params.owner)) throw new Error('Invalid wallet address');
   const owner = getAddress(params.owner);
-  const fromBlock = await recentApprovalFromBlock(params.chainId);
   const logs = await fetchExplorerLogs({
     chainId: params.chainId,
-    fromBlock,
+    fromBlock: params.fromBlock,
+    toBlock: params.toBlock,
     topic0: APPROVAL_FOR_ALL_TOPIC,
     topic1: padTopicAddress(owner),
     explorerApiKey: params.explorerApiKey,
@@ -155,4 +152,44 @@ export async function scanNftApprovals(params: {
   return rows;
 }
 
-export { APPROVAL_LOG_LOOKBACK_DAYS };
+export async function refreshLiveNftApprovals(params: {
+  chainId: number;
+  owner: string;
+  rows: NftApprovalRow[];
+}): Promise<NftApprovalRow[]> {
+  if (!isAddress(params.owner)) throw new Error('Invalid wallet address');
+  const owner = getAddress(params.owner);
+  const out: NftApprovalRow[] = [];
+  for (const row of params.rows) {
+    try {
+      const approved = await isApprovedForAll(
+        params.chainId,
+        row.contract,
+        owner,
+        row.operator,
+      );
+      if (approved) out.push(row);
+    } catch {
+      /* drop contracts that no longer answer */
+    }
+  }
+  return out;
+}
+
+export function mergeNftApprovalRows(
+  existing: NftApprovalRow[],
+  incoming: NftApprovalRow[],
+): NftApprovalRow[] {
+  const map = new Map<string, NftApprovalRow>();
+  for (const row of existing) {
+    map.set(`${row.contract.toLowerCase()}:${row.operator.toLowerCase()}`, row);
+  }
+  for (const row of incoming) {
+    const key = `${row.contract.toLowerCase()}:${row.operator.toLowerCase()}`;
+    const prev = map.get(key);
+    if (!prev || (row.lastApprovalBlock ?? 0) >= (prev.lastApprovalBlock ?? 0)) {
+      map.set(key, row);
+    }
+  }
+  return [...map.values()].sort((a, b) => a.collectionName.localeCompare(b.collectionName));
+}

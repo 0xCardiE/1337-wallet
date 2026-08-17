@@ -1,32 +1,32 @@
-import type { TokenApprovalRow } from './tokenApprovals';
+import type { Permit2ApprovalRow } from './permit2Approvals';
 
-const STORAGE_KEY = '1337_token_approvals_v1';
+const STORAGE_KEY = '1337_permit2_approvals_v1';
 
 type StoredRow = {
   token: string;
   tokenSymbol: string;
   tokenDecimals: number;
-  tokenLogo?: string;
   spender: string;
-  allowance: string;
+  amount: string;
+  expiration: number;
+  nonce: number;
   unlimited: boolean;
   lastApprovalTx?: string;
   lastApprovalBlock?: number;
 };
 
-export type TokenApprovalsCache = {
-  scannedTokenAddresses: string[];
-  /** Oldest block included in a completed log scan. Do not advance on timeout. */
+export type Permit2ApprovalsCache = {
   fromBlock: number;
-  rows: TokenApprovalRow[];
+  available: boolean;
+  rows: Permit2ApprovalRow[];
   updatedAt: number;
 };
 
 type PersistedBundle = Record<
   string,
   {
-    scannedTokenAddresses: string[];
     fromBlock: number;
+    available: boolean;
     rows: StoredRow[];
     updatedAt: number;
   }
@@ -36,28 +36,30 @@ function cacheKey(chainId: number, address: string): string {
   return `${chainId}:${address.toLowerCase()}`;
 }
 
-function toStored(rows: TokenApprovalRow[]): StoredRow[] {
+function toStored(rows: Permit2ApprovalRow[]): StoredRow[] {
   return rows.map(r => ({
     token: r.token,
     tokenSymbol: r.tokenSymbol,
     tokenDecimals: r.tokenDecimals,
-    tokenLogo: r.tokenLogo,
     spender: r.spender,
-    allowance: r.allowance.toString(),
+    amount: r.amount.toString(),
+    expiration: r.expiration,
+    nonce: r.nonce,
     unlimited: r.unlimited,
     lastApprovalTx: r.lastApprovalTx,
     lastApprovalBlock: r.lastApprovalBlock,
   }));
 }
 
-function fromStored(rows: StoredRow[]): TokenApprovalRow[] {
+function fromStored(rows: StoredRow[]): Permit2ApprovalRow[] {
   return rows.map(r => ({
     token: r.token as `0x${string}`,
     tokenSymbol: r.tokenSymbol,
     tokenDecimals: r.tokenDecimals,
-    tokenLogo: r.tokenLogo,
     spender: r.spender as `0x${string}`,
-    allowance: BigInt(r.allowance),
+    amount: BigInt(r.amount),
+    expiration: r.expiration,
+    nonce: r.nonce,
     unlimited: r.unlimited,
     lastApprovalTx: r.lastApprovalTx as `0x${string}` | undefined,
     lastApprovalBlock: r.lastApprovalBlock,
@@ -83,45 +85,33 @@ async function readAll(): Promise<PersistedBundle> {
   });
 }
 
-export async function loadTokenApprovalsCache(
+export async function loadPermit2ApprovalsCache(
   chainId: number,
   address: string,
-): Promise<TokenApprovalsCache | null> {
+): Promise<Permit2ApprovalsCache | null> {
   const all = await readAll();
   const entry = all[cacheKey(chainId, address)];
   if (!entry) return null;
   return {
-    scannedTokenAddresses: entry.scannedTokenAddresses.map(a => a.toLowerCase()),
     fromBlock: entry.fromBlock,
+    available: entry.available,
     rows: fromStored(entry.rows),
     updatedAt: entry.updatedAt,
   };
 }
 
-export async function saveTokenApprovalsCache(
+export async function savePermit2ApprovalsCache(
   chainId: number,
   address: string,
-  cache: TokenApprovalsCache,
+  cache: Permit2ApprovalsCache,
 ): Promise<void> {
   const all = await readAll();
   all[cacheKey(chainId, address)] = {
-    scannedTokenAddresses: cache.scannedTokenAddresses.map(a => a.toLowerCase()),
     fromBlock: cache.fromBlock,
+    available: cache.available,
     rows: toStored(cache.rows),
     updatedAt: cache.updatedAt,
   };
-  return new Promise((resolve, reject) => {
-    storage().set({ [STORAGE_KEY]: all }, () => {
-      const err = chrome.runtime?.lastError;
-      if (err) reject(new Error(err.message));
-      else resolve();
-    });
-  });
-}
-
-export async function clearTokenApprovalsCache(chainId: number, address: string): Promise<void> {
-  const all = await readAll();
-  delete all[cacheKey(chainId, address)];
   return new Promise((resolve, reject) => {
     storage().set({ [STORAGE_KEY]: all }, () => {
       const err = chrome.runtime?.lastError;

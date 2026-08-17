@@ -74,27 +74,72 @@ export function walletTokenKey(entry: WalletBalEntry): string {
   return entry.address.toLowerCase();
 }
 
-export async function recentApprovalFromBlock(chainId: number): Promise<number> {
+export function lookbackBlockSpan(chainId: number): number {
+  return APPROVAL_LOG_LOOKBACK_DAYS * blocksPerDay(chainId);
+}
+
+export async function getLatestBlockNumber(chainId: number): Promise<number> {
   const latestHex = await chainJsonRpcCall<string>(chainId, 'eth_blockNumber', []);
-  const latest = Number.parseInt(latestHex, 16);
-  const lookback = APPROVAL_LOG_LOOKBACK_DAYS * blocksPerDay(chainId);
-  return Math.max(0, latest - lookback);
+  return Number.parseInt(latestHex, 16);
+}
+
+export type ApprovalLogWindow = {
+  fromBlock: number;
+  toBlock: number | 'latest';
+};
+
+/** Most recent 180-day window (default scan). */
+export async function recentApprovalWindow(chainId: number): Promise<ApprovalLogWindow> {
+  const latest = await getLatestBlockNumber(chainId);
+  return {
+    fromBlock: Math.max(0, latest - lookbackBlockSpan(chainId)),
+    toBlock: 'latest',
+  };
+}
+
+/** Next older 180-day slice before `scannedFromBlock`. Null at genesis. */
+export function olderApprovalWindow(
+  chainId: number,
+  scannedFromBlock: number,
+): ApprovalLogWindow | null {
+  if (scannedFromBlock <= 0) return null;
+  const toBlock = scannedFromBlock - 1;
+  if (toBlock < 0) return null;
+  const fromBlock = Math.max(0, scannedFromBlock - lookbackBlockSpan(chainId));
+  if (fromBlock > toBlock) return null;
+  return { fromBlock, toBlock };
+}
+
+export function scannedLookbackDays(
+  chainId: number,
+  latestBlock: number,
+  scannedFromBlock: number,
+): number {
+  const span = Math.max(0, latestBlock - scannedFromBlock);
+  return Math.max(APPROVAL_LOG_LOOKBACK_DAYS, Math.round(span / blocksPerDay(chainId)));
+}
+
+export async function recentApprovalFromBlock(chainId: number): Promise<number> {
+  const w = await recentApprovalWindow(chainId);
+  return w.fromBlock;
 }
 
 export async function fetchExplorerLogs(params: {
   chainId: number;
   fromBlock: number;
+  toBlock?: number | 'latest';
   topic0: string;
   topic1?: string;
   address?: string;
   explorerApiKey?: string;
 }): Promise<RawApprovalLog[]> {
+  const toBlock = params.toBlock ?? 'latest';
   const query = new URLSearchParams({
     chainid: String(params.chainId),
     module: 'logs',
     action: 'getLogs',
     fromBlock: String(params.fromBlock),
-    toBlock: 'latest',
+    toBlock: toBlock === 'latest' ? 'latest' : String(toBlock),
     topic0: params.topic0,
   });
   if (params.address) query.set('address', getAddress(params.address));
@@ -119,10 +164,14 @@ export async function fetchExplorerLogs(params: {
         : json.message ?? 'Etherscan returned no approval logs';
     if (/no records found|no logs found/i.test(msg)) return [];
     if (/rate limit|max rate limit/i.test(msg)) throw new Error(msg);
-    if (/query timeout|timeout/i.test(msg)) return [];
+    if (/query timeout|timeout/i.test(msg)) {
+      throw new Error(
+        'Explorer log query timed out for this period. Try again — the range was not marked scanned.',
+      );
+    }
     if (/more than 10000|too many/i.test(msg)) {
       throw new Error(
-        `Too many approval events for this token in the last ${APPROVAL_LOG_LOOKBACK_DAYS} days. Try revoking manually on the explorer.`,
+        `Too many approval events in this ${APPROVAL_LOG_LOOKBACK_DAYS}-day period. Try a quieter token or revoke on the explorer.`,
       );
     }
     throw new Error(msg);
@@ -294,6 +343,7 @@ export async function scanTokenApprovals(params: {
   owner: string;
   tokens: WalletBalEntry[];
   fromBlock: number;
+  toBlock?: number | 'latest';
   explorerApiKey?: string;
   onTokenScanned?: (token: string) => void;
 }): Promise<TokenApprovalRow[]> {
@@ -314,6 +364,7 @@ export async function scanTokenApprovals(params: {
       chainId: params.chainId,
       address: tokenAddr,
       fromBlock: params.fromBlock,
+      toBlock: params.toBlock,
       topic0: APPROVAL_EVENT_TOPIC,
       topic1: padTopicAddress(owner),
       explorerApiKey: params.explorerApiKey,
