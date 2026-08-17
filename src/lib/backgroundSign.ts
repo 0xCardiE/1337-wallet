@@ -177,25 +177,6 @@ export function parseAddressList(raw: string): `0x${string}`[] {
   return out;
 }
 
-export async function multiSendNative(params: {
-  pk: `0x${string}`;
-  chainId: number;
-  recipients: `0x${string}`[];
-  amountPerRecipient: bigint;
-}): Promise<Hex[]> {
-  const from = addressFromPrivateKey(params.pk);
-  const hashes: Hex[] = [];
-  for (const to of params.recipients) {
-    const hash = await signAndSendTransaction(params.pk, params.chainId, {
-      from,
-      to,
-      value: `0x${params.amountPerRecipient.toString(16)}`,
-    });
-    hashes.push(hash);
-  }
-  return hashes;
-}
-
 export async function sendNativeTransfer(params: {
   pk: `0x${string}`;
   chainId: number;
@@ -229,32 +210,6 @@ export async function sendErc20Transfer(params: {
     data,
     value: '0x0',
   });
-}
-
-export async function multiSendErc20(params: {
-  pk: `0x${string}`;
-  chainId: number;
-  token: `0x${string}`;
-  recipients: `0x${string}`[];
-  amountPerRecipient: bigint;
-}): Promise<Hex[]> {
-  const from = addressFromPrivateKey(params.pk);
-  const hashes: Hex[] = [];
-  for (const to of params.recipients) {
-    const data = encodeFunctionData({
-      abi: ERC20_ABI,
-      functionName: 'transfer',
-      args: [to, params.amountPerRecipient],
-    });
-    const hash = await signAndSendTransaction(params.pk, params.chainId, {
-      from,
-      to: params.token,
-      data,
-      value: '0x0',
-    });
-    hashes.push(hash);
-  }
-  return hashes;
 }
 
 export function parseTypedDataParam(raw: unknown): {

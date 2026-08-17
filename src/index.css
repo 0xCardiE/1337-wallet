@@ -4486,6 +4486,36 @@ button.w1337-token-row--action:hover:not(:disabled) {
   padding-top: 4px;
 }
 
+.w1337-ms-note {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  border-radius: var(--radius-md);
+}
+
+.w1337-ms-note--ok {
+  background: rgba(125, 211, 252, 0.1);
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  color: #7dd3fc;
+}
+
+.w1337-ms-note--warn {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.w1337-ms-confirm {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* Tools sub-tabs */
 .w1337-tools-tabs {
   display: flex;
