@@ -24,9 +24,12 @@ import {
   type FunctionSignatureLookup,
   type TxGasPreview,
 } from '../lib/approvalDetails';
+import { fetchContractHint, type ContractHint } from '../lib/contractHints';
 import { fetchFunctionSourceFromExplorer, type FunctionSourceResult } from '../lib/explorerContractSource';
 import { lookupFunctionSelectors } from '../lib/fourByteDirectory';
 import { addressExplorerLink } from '../lib/tokenApprovals';
+import { humanizePendingRequest } from '../lib/txHumanize';
+import { simulateTransaction, type TxSimResult } from '../lib/txSimulate';
 import { chainById } from '../lib/chainCatalog';
 import { chainJsonRpcCall } from '../lib/ethereum';
 import { executeHardwareSignRequest } from '../lib/hardwareSign';
@@ -691,6 +694,8 @@ function ApprovalContent({
   const [gasPreview, setGasPreview] = useState<TxGasPreview | null>(null);
   const [sigLookup, setSigLookup] = useState<FunctionSignatureLookup | null>(null);
   const [tokenMeta, setTokenMeta] = useState<TokenMeta | null>(null);
+  const [sim, setSim] = useState<TxSimResult | null>(null);
+  const [hint, setHint] = useState<ContractHint | null>(null);
   const explorerApiKey = settings.explorerApiKey?.trim();
   const tokenForMeta = risk.tokenApproval?.token ?? risk.permit?.token;
 
@@ -724,6 +729,17 @@ function ApprovalContent({
     [pending.request],
   );
   const canShowSource = !!functionSignature && !!contractAddress;
+  const human = useMemo(
+    () =>
+      humanizePendingRequest({
+        request: pending.request,
+        risk,
+        chainId: pending.chainId,
+        tokenMeta,
+        functionSignature,
+      }),
+    [pending.request, pending.chainId, risk, tokenMeta, functionSignature],
+  );
 
   const gasFetchedForRef = useRef<string | null>(null);
   const sigLookupKeyRef = useRef<string | null>(null);
@@ -790,6 +806,45 @@ function ApprovalContent({
     };
   }, [pending.id, pending.chainId, tokenForMeta]);
 
+  useEffect(() => {
+    if (pending.request.method !== 'eth_sendTransaction' || !walletAddress) {
+      setSim(null);
+      return;
+    }
+    const tx = (pending.request.params?.[0] ?? {}) as Record<string, unknown>;
+    let cancelled = false;
+    void simulateTransaction({
+      chainId: pending.chainId,
+      from: walletAddress,
+      to: typeof tx.to === 'string' ? tx.to : undefined,
+      data: typeof tx.data === 'string' ? tx.data : undefined,
+      value: typeof tx.value === 'string' ? tx.value : undefined,
+    }).then(r => {
+      if (!cancelled) setSim(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pending.id, pending.chainId, pending.request, walletAddress]);
+
+  useEffect(() => {
+    if (!contractAddress) {
+      setHint(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchContractHint({
+      chainId: pending.chainId,
+      address: contractAddress,
+      explorerApiKey,
+    }).then(h => {
+      if (!cancelled) setHint(h);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pending.id, pending.chainId, contractAddress, explorerApiKey]);
+
   const hostname = pending.summary.hostname;
 
   return (
@@ -813,6 +868,54 @@ function ApprovalContent({
         <SiweWarnBanner risk={risk} />
         <Eip712ChainBanner risk={risk} />
 
+        <div className="w1337-tx-approval__human">
+          <p className="w1337-tx-approval__human-kicker">You are about to</p>
+          <p className="w1337-tx-approval__human-title">{human.headline}</p>
+          {human.detail ? <p className="w1337-tx-approval__human-detail muted">{human.detail}</p> : null}
+        </div>
+
+        {pending.request.method === 'eth_sendTransaction' ? (
+          <p
+            className={`w1337-tx-approval__sim${
+              sim?.status === 'revert'
+                ? ' w1337-tx-approval__sim--fail'
+                : sim?.status === 'ok'
+                  ? ' w1337-tx-approval__sim--ok'
+                  : ''
+            }`}
+          >
+            {!sim
+              ? 'Simulating on current chain state…'
+              : sim.status === 'ok'
+                ? 'Simulation succeeded on the current chain state.'
+                : sim.status === 'revert'
+                  ? `This transaction would fail: ${sim.revertReason ?? 'reverted'}`
+                  : `Could not simulate: ${sim.revertReason ?? 'RPC error'}`}
+          </p>
+        ) : null}
+
+        {hint && (hint.dangers.length > 0 || hint.proxy || hint.name || hint.owner) ? (
+          <div className={`w1337-tx-approval__hint${hint.dangers.length ? ' w1337-tx-approval__hint--warn' : ''}`}>
+            <p className="w1337-tx-approval__hint-title">
+              {hint.name ? hint.name : 'Contract'}
+              {hint.verified ? ' · verified' : hint.sourceError ? '' : ' · unverified'}
+              {hint.proxy ? ' · proxy' : ''}
+            </p>
+            {hint.dangers.length > 0 ? (
+              <p className="w1337-tx-approval__hint-dangers">{hint.dangers.join(' · ')}</p>
+            ) : null}
+            {hint.owner ? (
+              <p className="muted">Owner {shortAddress(hint.owner)}</p>
+            ) : null}
+            {hint.implementation ? (
+              <p className="muted">Implementation {shortAddress(hint.implementation)}</p>
+            ) : null}
+            {hint.sourceError && hint.dangers.length === 0 ? (
+              <p className="muted">{hint.sourceError}</p>
+            ) : null}
+          </div>
+        ) : null}
+
         {risk.tokenApproval ? (
           <TokenApprovalCard
             chainId={pending.chainId}
@@ -834,7 +937,7 @@ function ApprovalContent({
         ) : null}
 
         <p className="w1337-tx-approval__dev-note muted">
-          Developer view — inspect gas, calldata, and raw RPC params before signing.
+          Technical details — gas, calldata, and raw params.
         </p>
 
         <div className="w1337-tx-approval__sections">

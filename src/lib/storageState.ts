@@ -19,6 +19,7 @@ import {
   normalizeInstantUngatedGates,
   type InstantGateId,
 } from './instantGates';
+import { normalizeEnabledTools, type ToolId } from './toolsRegistry';
 
 export type { WalletAccount } from './accounts';
 export {
@@ -65,6 +66,8 @@ export interface AppSettings {
   instantUngatedGates?: InstantGateId[];
   /** Native-token amount at or above which Instant pauses (when highValue gate is on). */
   instantHighValueNative?: number;
+  /** Tools-tab modules the user wants visible. Missing = defaults (see toolsRegistry). */
+  enabledTools?: ToolId[];
 }
 
 export interface PersistedState {
@@ -238,6 +241,7 @@ export async function loadPersisted(): Promise<PersistedState> {
           instantHighValueNative: normalizeHighValueNativeStored(
             row.settings?.instantHighValueNative,
           ),
+          enabledTools: normalizeEnabledTools(row.settings?.enabledTools),
           ...(tm ? { toolbarOpenMode: tm } : {}),
         },
       };
@@ -308,6 +312,9 @@ export async function patchSettings(patch: AppSettings): Promise<void> {
   }
   if (patch.instantHighValueNative !== undefined) {
     merged.instantHighValueNative = normalizeHighValueNativeStored(patch.instantHighValueNative);
+  }
+  if (patch.enabledTools !== undefined) {
+    merged.enabledTools = normalizeEnabledTools(patch.enabledTools);
   }
   applyRpcPreferences(merged);
   await savePersisted({

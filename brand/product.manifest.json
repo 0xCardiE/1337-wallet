@@ -3,26 +3,28 @@
   "name": "1337 Wallet",
   "shortName": "1337",
   "version": "2.1.1",
-  "tagline": "Professional Ethereum wallet for developers, hackers, and advanced users.",
-  "elevatorPitch": "Self-custody EVM wallet built for people who want RPC control, hardware signing, LiFi swaps, and a fast terminal UI — with no 1337 accounts, no analytics, and no central server.",
+  "tagline": "A professional EVM signer for developers, hackers, and advanced users.",
+  "elevatorPitch": "Self-custody signer: understand the request, judge the risk, sign or reject. RPC control, hardware, LiFi swaps, and a fast terminal UI — no 1337 accounts, no analytics, no central server. Not a Foundry or Etherscan lab.",
   "audience": [
     "Software developers",
     "Security researchers and hackers",
     "Power users who manage their own RPCs and chains",
-    "Anyone who wants advanced tooling without wallet bloat"
+    "Anyone who wants a serious signer without wallet bloat"
   ],
   "positioning": {
-    "category": "Advanced self-custody Ethereum wallet (Chrome extension)",
+    "category": "Advanced self-custody Ethereum signer (Chrome extension)",
     "differentiators": [
+      "Confirm-time human summary, local simulation, and contract danger flags",
       "Side panel + popup, multi-RPC per chain, network doctor",
       "Seed, private key, Ledger, and Trezor in one shell",
       "LiFi swaps, multi-send, MetaMask-compatible dapp provider",
-      "Turbo vs Normal signing modes for speed or review",
+      "Normal vs Instant signing modes for review or speed",
       "Dark terminal aesthetic inspired by 1337 Skulls"
     ],
     "notA": [
       "Not a hosted wallet — keys never leave your browser except to chains you broadcast to",
       "Not an analytics product — we do not track how you use the extension",
+      "Not a Foundry, Hardhat, or Etherscan replacement — no ABI lab, storage inspector, or cast-style utilities",
       "Not a burner-only toy — suitable as a serious daily driver when hardened (Normal mode, auto-lock, hardware)"
     ]
   },
@@ -53,13 +55,13 @@
     ]
   },
   "messaging": {
-    "chromeExtensionDescription": "1337 — advanced Ethereum wallet for developers and power users. Seed/private-key accounts, Ledger/Trezor, LiFi swaps, multi-RPC, multi-send, MetaMask-compatible dapps. No analytics. No 1337 server.",
-    "onboardingLead": "Advanced Ethereum wallet for developers and power users. Create or import a seed phrase or private key — encrypted locally with your password. Add Ledger or Trezor later in Settings.",
+    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, local simulation, approvals, Ledger/Trezor, LiFi swaps, multi-RPC. No analytics. No 1337 server.",
+    "onboardingLead": "A signer for developers and power users. Create or import a seed phrase or private key — encrypted locally with your password. Add Ledger or Trezor later in Settings.",
     "settingsPrivacyHeading": "Privacy & data",
     "settingsPrivacyLead": "No analytics. No 1337 server. Everything below stays on your machine unless you initiate a swap, RPC call, or explorer lookup.",
     "promoBullets": [
-      "Professional wallet UI — not a disposable burner toy",
-      "Full EVM tooling: swaps, multi-send, custom RPCs, 20+ chains",
+      "A signer first — readable confirms, not a disposable burner toy",
+      "Swaps, multi-send, custom RPCs, 20+ chains — no Foundry lab in the wallet",
       "Hardware wallet support (Ledger WebHID, Trezor Connect)",
       "Zero 1337 analytics or central account system",
       "Open build — inspect the extension; verify before you trust"
@@ -73,7 +75,10 @@
     "Per-chain RPC picker and network doctor",
     "MetaMask drop-in dapp provider (optional)",
     "Side panel and popup layouts",
-    "Turbo / Normal transaction confirmation modes",
+    "Normal / Instant transaction confirmation modes",
+    "Confirm-time human summary, local simulate, contract hints",
+    "Inspect address / token / ENS / tx before you sign or send",
+    "Token, NFT, and Permit2 approval revoke",
     "Transaction history via your own explorer API key"
   ],
   "links": {

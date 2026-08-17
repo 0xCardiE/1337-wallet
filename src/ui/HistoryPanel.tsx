@@ -23,6 +23,7 @@ import {
   fetchTxFailureDetail,
   type TxFailureDetail,
 } from '../lib/txFailureDetail';
+import { humanizeHistoryRow } from '../lib/txHumanize';
 import { describeError } from '../lib/utils';
 import { LiFiIcon } from './LiFiIcon';
 import { RefreshIconButton } from './RefreshIconButton';
@@ -67,11 +68,6 @@ function groupRowsByDate(rows: TxHistoryRow[]): DateGroup[] {
   return groups;
 }
 
-function shortAddress(addr: string): string {
-  if (addr.length < 12) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
 function shortHash(hash: string): string {
   return `${hash.slice(0, 10)}…${hash.slice(-6)}`;
 }
@@ -83,34 +79,6 @@ function txKind(row: TxHistoryRow): TxKind {
   return 'sent';
 }
 
-function txTitle(kind: TxKind, symbol: string, row: TxHistoryRow): string {
-  if (!row.success) {
-    if (row.functionName) return `Failed · ${row.functionName.split('(')[0]}`;
-    if (kind === 'contract') return 'Failed contract call';
-    return `Failed ${kind === 'sent' ? 'send' : kind}`;
-  }
-  switch (kind) {
-    case 'sent':
-      return `Sent ${symbol}`;
-    case 'received':
-      return `Received ${symbol}`;
-    case 'self':
-      return `Self ${symbol}`;
-    case 'contract':
-      return row.functionName ? row.functionName.split('(')[0] : 'Contract interaction';
-  }
-}
-
-function txSubtitle(row: TxHistoryRow, kind: TxKind): string {
-  const methodBit = row.methodId && row.success === false ? `${row.methodId} · ` : '';
-  if (kind === 'self') return `${methodBit}Self transfer`;
-  if (kind === 'contract' && row.to) return `${methodBit}With ${shortAddress(row.to)}`;
-  if (kind === 'received') {
-    return row.from ? `${methodBit}From ${shortAddress(row.from)}` : `${methodBit}Incoming transfer`;
-  }
-  if (row.to) return `${methodBit}To ${shortAddress(row.to)}`;
-  return `${methodBit}Outgoing transfer`;
-}
 
 function formatAmount(row: TxHistoryRow, chainId: number): string | null {
   if (row.value === 0n) return null;
@@ -363,9 +331,7 @@ function TxHistoryRowItem({
   onToggle: () => void;
 }) {
   const kind = txKind(row);
-  const symbol = chainById(chainId)?.nativeCurrency.symbol ?? 'ETH';
-  const title = txTitle(kind, symbol, row);
-  const subtitle = txSubtitle(row, kind);
+  const { title, subtitle } = humanizeHistoryRow(row, chainId);
   const amount = formatAmount(row, chainId);
   const url = txExplorerLink(chainId, row.hash);
   const failed = !row.success;

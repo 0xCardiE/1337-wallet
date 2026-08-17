@@ -24,7 +24,7 @@ Signing, consent, supply chain, physical access, and threat prevention.
 | [ ] | P0 | Document security invariants | Rabby | Low | Consent resets on lock/unlock/account/chain switch; fail-closed signing; no implicit consent via broadcasts. Add to `docs/wallet-security.md` or `docs/security-invariants.md` |
 | [ ] | P0 | RPC middleware refactor (`@APPROVAL`-style) | Rabby | Medium | Replace inline branching in `src/lib/providerRpc.ts` with metadata-driven middleware (unlock → connect → approve → execute) |
 | [~] | P1 | Action-type approval components | Rabby | Medium | Approve / Permit cards exist in `TxApprovalSheet`. Remaining: Send, Swap, Unknown dedicated views |
-| [ ] | P1 | Opt-in tx simulation / balance preview | Rabby | Medium | Predicted balance changes in Normal mode. **Opt-in** if using DeBank/Rabby API (privacy). Alternative: local `eth_call` heuristics |
+| [~] | P1 | Opt-in tx simulation / balance preview | Rabby | Medium | Local `eth_call` pass/fail/revert/gas on confirm (`txSimulate.ts`). Full asset-diff needs a sim API — **not planned** as default (signer.md) |
 | [ ] | P1 | Secrets-leak E2E test | Ambire | Low | Scan network/request bodies for mnemonics, private keys, session material during tests |
 | [ ] | P1 | LavaMoat unsafe-packages lockfile gate | Ambire | Low | Block lockfile bumps to packages excluded from LavaMoat unless PR is explicitly approved |
 | [ ] | P2 | Connect-time security hints | Rabby | Medium | On dapp connect, show origin reputation / basic rules (new site, suspicious domain). Lighter than full Rabby security engine |
@@ -48,14 +48,14 @@ Benchmark from MetaMask security analysis. **1337 score is our implementation st
 | [x] | `eth_sign` method disabled | 3.3 | Done | Rejected with `4200`. Use `personal_sign` / `eth_signTypedData_v4` |
 | [x] | Mismatching SIWE domain detection | 1.8 | Done | Parses EIP-4361; domain/URI/chain vs page origin. `siwe.ts` |
 | [~] | Connected dApp management | 1.5 | Partial | Per-origin connect/disconnect + `wallet_revokePermissions`; **no full connected-sites list** |
-| [x] | Token approval management | 1.5 | Done | Scan, view, revoke in Tools → Approvals |
+| [x] | Token approval management | 1.5 | Done | ERC-20, NFT `setApprovalForAll`, Permit2 in Tools → Approvals |
 | [-] | User confirmation before switching chains | 1.1 | Deferred | Auto-switch kept (no reconnect required) |
 
 #### Intent Verification (MetaMask ref: 15.6/25)
 
 | Done | Feature | Weight | 1337 status | Notes |
 |------|---------|--------|-------------|-------|
-| [~] | Transaction simulation | 6.7 | Partial | RPC proxy + gas estimate; **no balance-change preview**. See backlog "Opt-in tx simulation" |
+| [~] | Transaction simulation | 6.7 | Partial | Local `eth_call` pass/fail/revert on confirm. No balance-change preview (signer.md) |
 | [~] | Clear message signing dialog | 3.8 | Partial | SIWE + permit + token-approval cards; remaining views still developer-oriented |
 | [x] | EIP-712 message parsing | 2.4 | Done | Domain, types, message fields, raw JSON |
 | [~] | Invalid address checksum detection | 2.2 | Partial | Viem `getAddress()` validates on parse; **no explicit checksum warning UI** |
@@ -137,7 +137,7 @@ Product, UX, infra, and platform work that is not a security control.
 |------|---|------|--------|--------|-------|
 | [ ] | P0 | Per-origin MetaMask-compat mode | Rabby | Low | Hide `is1337` / announce as MetaMask in EIP-6963 for broken dapps; per-site override in settings. See `src/inpage/provider.ts`, `src/lib/dappConnections.ts` |
 | [ ] | P1 | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `launchPersistentContext` + `--load-extension`; seed storage via service worker to skip onboarding |
-| [ ] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Modular decoders for ERC-20/721, common routers; embed in approval UI. Start in `src/lib/approvalDetails.ts` or `src/lib/humanizer/` |
+| [~] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Confirm sheet + History titles. See `src/lib/txHumanize.ts`. Expand known selectors as needed |
 | [ ] | P2 | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts` |
 | [ ] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts |
 | [ ] | P2 | Four-byte + contract source in approval (expand) | 1337 + Rabby | Low | Already partial via `fourByteDirectory.ts`, `explorerContractSource.ts` — expand coverage and surface in action UI |
@@ -145,6 +145,23 @@ Product, UX, infra, and platform work that is not a security control.
 | [ ] | P3 | Cross-browser builds (Firefox / Safari) | Ambire | High | `WEB_ENGINE` env, gecko manifest transforms, Safari converter. Only if store expansion is a goal |
 | [ ] | P3 | Embedded Benzin-style explorer | Ambire | Medium | Standalone decode app + in-wallet preview; depends on humanizer investment |
 | [ ] | P3 | Shared logic submodule (`ambire-common` pattern) | Ambire | High | Only if mobile or multiple apps share vault/signing logic |
+
+---
+
+## Signer backlog (only if users ask)
+
+1337 is a **signer**, not a lab. See [docs/signer.md](./docs/signer.md). Do not build these as Tools tabs unless someone asks — then opt-in, default off.
+
+| Done | Item | Why it waits |
+|------|------|--------------|
+| [ ] | ABI encode/decode, selector / event lookup | `cast` / 4byte.directory |
+| [ ] | Read / Write Contract | Etherscan or `cast call` / `cast send` |
+| [ ] | Storage slot / layout | `cast storage` |
+| [ ] | CREATE / CREATE2, keccak, converters | Foundry |
+| [ ] | Standalone signature / calldata lab | Confirm sheet already decodes what you sign |
+| [ ] | Tenderly-style asset-diff simulation | Needs a third-party sim API |
+| [ ] | Other-address multichain activity | Explorer / DeBank |
+| [ ] | NFT collection browser | Marketplace |
 
 ---
 
@@ -175,6 +192,7 @@ Product, UX, infra, and platform work that is not a security control.
 ## Related docs
 
 - [README.md](./README.md) — features and build
+- [docs/signer.md](./docs/signer.md) — **signer, not a lab** (product guideline)
 - [docs/wallet-security.md](./docs/wallet-security.md) — security model
 - [docs/wallet-comparison-metamask.md](./docs/wallet-comparison-metamask.md) — MetaMask comparison
 - [website/src/app/integrate/page.tsx](./website/src/app/integrate/page.tsx) — dapp integration (EIP-6963)
@@ -185,6 +203,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-08-17 | Signer guideline (`docs/signer.md`): confirm-time humanize/simulate/hints, Inspect, Approvals+=NFT+Permit2; lab tools deferred until asked |
 | 2026-08-16 | Hardware gaps section (Multisend, ENS, Gas, Swap); Multisend Instant confirm-per-recipient |
 | 2026-08-14 | Split TODO into Security vs Features |
 | 2026-08-14 | Security sprint: disable eth_sign; EIP-712 chainId + SIWE checks; token approval cards; Instant gates in Settings |

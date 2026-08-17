@@ -1,7 +1,7 @@
 {
   "name": "1337-wallet",
   "version": "2.1.1",
-  "description": "Advanced Ethereum wallet for developers and power users. No analytics. No 1337 server.",
+  "description": "EVM signer for developers and power users. Readable confirms, no analytics, no 1337 server.",
   "private": true,
   "type": "module",
   "scripts": {

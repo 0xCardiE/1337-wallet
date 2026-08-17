@@ -46,6 +46,14 @@ type RegisterFeedback = {
   txHash?: string;
 };
 
+function shortContentUri(uri: string, head = 10, tail = 6): string {
+  const idx = uri.indexOf('://');
+  const scheme = idx >= 0 ? uri.slice(0, idx + 3) : '';
+  const rest = idx >= 0 ? uri.slice(idx + 3) : uri;
+  if (rest.length <= head + tail + 1) return uri;
+  return `${scheme}${rest.slice(0, head)}…${rest.slice(-tail)}`;
+}
+
 function EnsTxConfirm({
   prompt,
   onCancel,
@@ -193,14 +201,6 @@ function DomainRow({
 
       {open ? (
         <div className="w1337-ens-row__body">
-          <p className="muted w1337-ens-row__meta">
-            {domain.isSubdomain ? 'Subdomain' : '.eth name'}
-            {domain.expiryInheritedFrom
-              ? ` · expires with ${domain.expiryInheritedFrom}`
-              : ''}
-            {domain.resolver ? ` · resolver ${domain.resolver.slice(0, 10)}…` : ' · no resolver'}
-          </p>
-
           {onChainLoading ? (
             <p className="muted w1337-ens-row__hint">Loading on-chain records…</p>
           ) : null}
@@ -216,8 +216,9 @@ function DomainRow({
               onChange={e => setContentDraft(e.target.value)}
             />
             {domain.contentHash.uri ? (
-              <p className="muted w1337-ens-row__hint">
-                Current: {domain.contentHash.uri}
+              <p className="muted w1337-ens-row__hint w1337-ens-row__current">
+                Current:{' '}
+                <span title={domain.contentHash.uri}>{shortContentUri(domain.contentHash.uri)}</span>
                 {gateway ? (
                   <>
                     {' '}

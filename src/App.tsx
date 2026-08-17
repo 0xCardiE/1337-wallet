@@ -11,6 +11,8 @@ import { Unlock } from './ui/Unlock';
 import { SettingsView } from './ui/SettingsView';
 import { WalletsView } from './ui/WalletsView';
 import { NetworksManageView } from './ui/NetworksManageView';
+import { InstantGatesView } from './ui/InstantGatesView';
+import { ToolsSettingsView } from './ui/ToolsSettingsView';
 import { WalletLayout, type WalletMainTab } from './ui/WalletLayout';
 import { WalletHomeView } from './ui/WalletHomeView';
 import { HistoryPanel } from './ui/HistoryPanel';
@@ -20,7 +22,7 @@ import { ScreenFade } from './ui/ScreenFade';
 
 type Screen = 'load' | 'onboard' | 'main';
 type MainTab = WalletMainTab;
-type Overlay = 'none' | 'settings' | 'networks' | 'wallets';
+type Overlay = 'none' | 'settings' | 'networks' | 'wallets' | 'instant' | 'toolsSettings';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('load');
@@ -98,10 +100,14 @@ export function App() {
           ? 'unlock'
           : overlay === 'settings'
             ? 'settings'
-            : overlay === 'wallets'
-              ? 'wallets'
+          : overlay === 'wallets'
+            ? 'wallets'
             : overlay === 'networks'
               ? 'networks'
+              : overlay === 'instant'
+                ? 'instant'
+                : overlay === 'toolsSettings'
+                  ? 'toolsSettings'
               : mainTab;
 
   let shell: ReactNode;
@@ -132,6 +138,22 @@ export function App() {
         onBack={() => setOverlay('settings')}
       />
     );
+  } else if (overlay === 'instant') {
+    shell = (
+      <InstantGatesView
+        settings={settings}
+        onSaved={() => void refresh()}
+        onBack={() => setOverlay('settings')}
+      />
+    );
+  } else if (overlay === 'toolsSettings') {
+    shell = (
+      <ToolsSettingsView
+        settings={settings}
+        onSaved={() => void refresh()}
+        onBack={() => setOverlay('settings')}
+      />
+    );
   } else if (overlay === 'settings') {
     shell = (
       <SettingsView
@@ -140,6 +162,8 @@ export function App() {
         onBack={() => setOverlay('none')}
         onOpenNetworks={() => setOverlay('networks')}
         onOpenWallets={() => setOverlay('wallets')}
+        onOpenInstantGates={() => setOverlay('instant')}
+        onOpenTools={() => setOverlay('toolsSettings')}
       />
     );
   } else if (overlay === 'networks') {

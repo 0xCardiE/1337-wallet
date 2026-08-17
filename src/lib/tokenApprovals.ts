@@ -9,7 +9,7 @@ import { formatTokenAmount } from './walletBalances';
 export const APPROVAL_EVENT_TOPIC =
   '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925' as const;
 
-export const APPROVAL_LOG_LOOKBACK_DAYS = 90;
+export const APPROVAL_LOG_LOOKBACK_DAYS = 180;
 
 const MAX_UINT256 = (1n << 256n) - 1n;
 const ZERO = '0x0000000000000000000000000000000000000000';
@@ -27,7 +27,7 @@ export type TokenApprovalRow = {
   lastApprovalBlock?: number;
 };
 
-type RawApprovalLog = {
+export type RawApprovalLog = {
   address?: string;
   topics?: string[];
   transactionHash?: string;
@@ -52,7 +52,7 @@ function explorerOrigin(chainId: number): string | undefined {
   }
 }
 
-function padTopicAddress(addr: string): string {
+export function padTopicAddress(addr: string): string {
   const hex = addr.startsWith('0x') ? addr.slice(2) : addr;
   return `0x${hex.toLowerCase().padStart(64, '0')}`;
 }
@@ -81,25 +81,27 @@ export async function recentApprovalFromBlock(chainId: number): Promise<number> 
   return Math.max(0, latest - lookback);
 }
 
-async function fetchEtherscanApprovalLogs(params: {
+export async function fetchExplorerLogs(params: {
   chainId: number;
-  token: string;
-  owner: string;
   fromBlock: number;
+  topic0: string;
+  topic1?: string;
+  address?: string;
   explorerApiKey?: string;
 }): Promise<RawApprovalLog[]> {
-  const ownerTopic = padTopicAddress(getAddress(params.owner));
   const query = new URLSearchParams({
     chainid: String(params.chainId),
     module: 'logs',
     action: 'getLogs',
     fromBlock: String(params.fromBlock),
     toBlock: 'latest',
-    address: getAddress(params.token),
-    topic0: APPROVAL_EVENT_TOPIC,
-    topic0_1_opr: 'and',
-    topic1: ownerTopic,
+    topic0: params.topic0,
   });
+  if (params.address) query.set('address', getAddress(params.address));
+  if (params.topic1) {
+    query.set('topic1', params.topic1);
+    query.set('topic0_1_opr', 'and');
+  }
   if (params.explorerApiKey?.trim()) query.set('apikey', params.explorerApiKey.trim());
 
   const res = await fetch(`https://api.etherscan.io/v2/api?${query.toString()}`);
@@ -308,11 +310,12 @@ export async function scanTokenApprovals(params: {
       continue;
     }
 
-    const logs = await fetchEtherscanApprovalLogs({
+    const logs = await fetchExplorerLogs({
       chainId: params.chainId,
-      token: tokenAddr,
-      owner,
+      address: tokenAddr,
       fromBlock: params.fromBlock,
+      topic0: APPROVAL_EVENT_TOPIC,
+      topic1: padTopicAddress(owner),
       explorerApiKey: params.explorerApiKey,
     });
     allCandidates.push(...parseSpenderCandidates(logs, tokenAddr));

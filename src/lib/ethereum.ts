@@ -4,7 +4,14 @@ import { healthyRpcUrlsFor } from './chainRpcRegistry';
 import { getActiveAccountMeta, getUnlockedAccount } from './accountSession';
 import { isHardwareAccount } from './accounts';
 import { signAndSendWithHardware } from './hardwareSign';
-import { ERC20_ABI, MULTICALL3_ABI, MULTICALL3_ADDRESS } from './abis';
+import {
+  ERC20_ABI,
+  ERC721_ENUM_ABI,
+  MULTICALL3_ABI,
+  MULTICALL3_ADDRESS,
+  PERMIT2_ABI,
+  PERMIT2_ADDRESS,
+} from './abis';
 import {
   classifyRpcFailure,
   recordRpcFailure,
@@ -619,6 +626,48 @@ export async function revokeErc20Approval(params: {
 
   return sendTransactionRequest(params.chainId, {
     to: params.tokenAddress,
+    data,
+    value: '0x0',
+    from: account.address,
+    chainId: params.chainId,
+  });
+}
+
+export async function revokeNftApprovalForAll(params: {
+  chainId: number;
+  contract: string;
+  operator: string;
+}): Promise<string | null> {
+  const account = getUnlockedAccount();
+  if (!account) throw new Error('Wallet is locked.');
+  const data = encodeFunctionData({
+    abi: ERC721_ENUM_ABI,
+    functionName: 'setApprovalForAll',
+    args: [params.operator as `0x${string}`, false],
+  });
+  return sendTransactionRequest(params.chainId, {
+    to: params.contract,
+    data,
+    value: '0x0',
+    from: account.address,
+    chainId: params.chainId,
+  });
+}
+
+export async function revokePermit2Allowance(params: {
+  chainId: number;
+  token: string;
+  spender: string;
+}): Promise<string | null> {
+  const account = getUnlockedAccount();
+  if (!account) throw new Error('Wallet is locked.');
+  const data = encodeFunctionData({
+    abi: PERMIT2_ABI,
+    functionName: 'approve',
+    args: [params.token as `0x${string}`, params.spender as `0x${string}`, 0n, 0],
+  });
+  return sendTransactionRequest(params.chainId, {
+    to: PERMIT2_ADDRESS,
     data,
     value: '0x0',
     from: account.address,

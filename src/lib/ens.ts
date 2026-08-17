@@ -1,6 +1,6 @@
 import { createPublicClient, getAddress, http, type Address } from 'viem';
 import { mainnet } from 'viem/chains';
-import { getEnsName } from 'viem/actions';
+import { getEnsAddress, getEnsName } from 'viem/actions';
 import { shortAddress, type WalletAccount } from './accounts';
 import { healthyRpcUrlsFor } from './chainRpcRegistry';
 import { DEFAULT_CHAIN_ID } from './constants';
@@ -49,6 +49,35 @@ export async function fetchEnsName(address: string): Promise<string | null> {
     }
   }
 
+  return null;
+}
+
+const forwardCache = new Map<string, { at: number; address: Address | null }>();
+
+/** Forward-resolve a mainnet ENS name to an address (cached). */
+export async function fetchEnsAddress(name: string): Promise<Address | null> {
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return null;
+  const cached = forwardCache.get(normalized);
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.address;
+
+  const rpcs = healthyRpcUrlsFor(DEFAULT_CHAIN_ID).slice(0, MAX_RPC_ATTEMPTS);
+  if (rpcs.length === 0) return null;
+
+  for (const rpc of rpcs) {
+    try {
+      const client = createPublicClient({
+        chain: mainnet,
+        transport: http(rpc, { timeout: RPC_TIMEOUT_MS }),
+      });
+      const address = await getEnsAddress(client, { name: normalized });
+      const resolved = address ?? null;
+      forwardCache.set(normalized, { at: Date.now(), address: resolved });
+      return resolved;
+    } catch {
+      continue;
+    }
+  }
   return null;
 }
 

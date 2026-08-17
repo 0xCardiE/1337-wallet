@@ -1,9 +1,9 @@
 export const SITE = {
   name: '1337 Wallet',
   shortName: '1337',
-  tagline: 'Professional Ethereum wallet for developers, hackers, and advanced users.',
+  tagline: 'A professional EVM signer for developers, hackers, and advanced users.',
   description:
-    'Self-custody EVM wallet with RPC control, detailed transaction previews, LiFi swaps, ENS, Human Passport, and MetaMask-compatible dapps. No analytics. No central server.',
+    'Self-custody signer: understand the request, judge the risk, sign or reject. RPC control, readable confirms, LiFi swaps, ENS, and MetaMask-compatible dapps. No analytics. No central server. Not a Foundry lab.',
   chromeStoreUrl: '#download',
   contactEmail: 'hello@1337wallet.io',
   githubUrl: 'https://github.com',
@@ -43,9 +43,9 @@ export const CORE_FEATURES = [
     icon: 'passport',
   },
   {
-    title: 'Transaction deep-dive',
+    title: 'Readable before you sign',
     description:
-      'Every approval shows decoded calldata, contract links, token movements, and four-byte signatures — heavily linked to Etherscan.',
+      'Human summary, local simulation (pass / fail / revert), and contract danger flags — then the decoded details if you want them.',
     icon: 'tx',
   },
   {
@@ -58,19 +58,14 @@ export const CORE_FEATURES = [
 
 export const TOOLS = [
   {
-    id: 'multisend',
-    title: 'Multisend',
-    description: 'Paste a list of addresses and batch-send native or ERC-20 in one go.',
-  },
-  {
-    id: 'gas',
-    title: 'Gas station',
-    description: 'Top up gas across chains when you are running low on the network you need.',
+    id: 'inspect',
+    title: 'Inspect',
+    description: 'Paste an address, token, ENS name, or tx hash before you send or approve.',
   },
   {
     id: 'approvals',
     title: 'Approvals',
-    description: 'Review and revoke ERC-20 allowances before they become a liability.',
+    description: 'Review and revoke ERC-20, NFT, and Permit2 allowances from the wallet.',
   },
   {
     id: 'swap',
@@ -83,10 +78,14 @@ export const TOOLS = [
     description: 'Register, renew, and manage .eth names and related DNS records.',
   },
   {
-    id: 'next',
-    title: 'Your idea?',
-    description: 'Request a tool or workflow — we ship for power users first.',
-    placeholder: true as const,
+    id: 'multisend',
+    title: 'Multisend',
+    description: 'Paste a list of addresses and batch-send native or ERC-20 in one go.',
+  },
+  {
+    id: 'gas',
+    title: 'Gas station',
+    description: 'Top up gas across chains when you are running low on the network you need.',
   },
 ] as const;
 
@@ -101,7 +100,7 @@ export const PROVIDER = {
 export const FAQ = [
   {
     q: 'Who is 1337 Wallet for?',
-    a: 'Developers, security researchers, and advanced users who want RPC control, readable transaction data, and serious tooling — not a simplified consumer wallet.',
+    a: 'Developers, security researchers, and advanced users who want a serious signer — readable confirms, RPC control, hardware — not a consumer toy and not a Foundry lab in the toolbar.',
   },
   {
     q: 'Does it track me?',

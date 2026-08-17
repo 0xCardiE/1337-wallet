@@ -28,6 +28,8 @@ import {
 import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
 import { describeError } from '../lib/utils';
 import { LiFiIcon } from './LiFiIcon';
+import { NftApprovalsPanel } from './NftApprovalsPanel';
+import { Permit2ApprovalsPanel } from './Permit2ApprovalsPanel';
 import { RefreshIconButton } from './RefreshIconButton';
 
 function shortAddress(addr: string): string {
@@ -128,6 +130,36 @@ function ApprovalRowItem({
 }
 
 export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
+  const [kind, setKind] = useState<'tokens' | 'nfts' | 'permit2'>('tokens');
+  return (
+    <div>
+      <nav className="w1337-approvals-kinds" aria-label="Approval type">
+        {(
+          [
+            ['tokens', 'Tokens'],
+            ['nfts', 'NFTs'],
+            ['permit2', 'Permit2'],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={`w1337-approvals-kinds__btn${kind === id ? ' w1337-approvals-kinds__btn--on' : ''}`}
+            aria-current={kind === id ? 'page' : undefined}
+            onClick={() => setKind(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {kind === 'tokens' ? <TokenApprovalsPanel settings={settings} /> : null}
+      {kind === 'nfts' ? <NftApprovalsPanel settings={settings} /> : null}
+      {kind === 'permit2' ? <Permit2ApprovalsPanel settings={settings} /> : null}
+    </div>
+  );
+}
+
+function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   const account = getUnlockedAccount();
   const addr = account ? getAddress(account.address) : null;
   const chainId = effectiveActiveChainId(settings);

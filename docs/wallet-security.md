@@ -1,6 +1,6 @@
 # Wallet security model (1337 extension)
 
-This note describes how signing works in 1337 and how to keep risk lower in practice. For a full comparison of **all account types vs MetaMask equivalents**, see **[wallet-comparison-metamask.md](./wallet-comparison-metamask.md)**.
+This note describes how signing works in 1337 and how to keep risk lower in practice. Product scope — **1337 is a signer, not a lab** — lives in **[signer.md](./signer.md)**. For a full comparison of **all account types vs MetaMask equivalents**, see **[wallet-comparison-metamask.md](./wallet-comparison-metamask.md)**.
 
 **Privacy:** 1337 does not run analytics or store wallet data on a central server. See **[brand/product.manifest.json](../brand/product.manifest.json)** for positioning and privacy claims used in the UI and future promo material.
 
@@ -10,7 +10,7 @@ This note describes how signing works in 1337 and how to keep risk lower in prac
 - **Hardware accounts** — Ledger (WebHID) and Trezor Connect; only address + path are stored. Signing uses the device SDK.
 - After unlock, local signing uses a **Viem account** and **`eth_sendRawTransaction`** over your RPC (`src/lib/ethereum.ts`).
 - A full **EIP-1193 provider** is injected (`window.ethereum`), with optional MetaMask replacement.
-- **Normal mode (default):** each dApp sign/send request is queued in `TxApprovalSheet`. **Instant mode:** ordinary requests execute automatically while a **local** account is unlocked. Instant is **gated by default** — unlimited approvals, unknown contract calls, high-value sends, permits, EIP-712 chainId mismatches, and SIWE domain mismatches still open the approval sheet unless you ungate them in Settings. **Hardware** always requires device confirmation (and UI approval for dApp txs).
+- **Normal mode (default):** each dApp sign/send request is queued in `TxApprovalSheet` with a human summary, local `eth_call` simulation (pass / fail / revert), and contract danger flags when source is available. **Instant mode:** ordinary requests execute automatically while a **local** account is unlocked. Instant is **gated by default** — unlimited approvals, unknown contract calls, high-value sends, permits, EIP-712 chainId mismatches, and SIWE domain mismatches still open the approval sheet unless you ungate them in Settings. **Hardware** always requires device confirmation (and UI approval for dApp txs).
 - **`eth_sign` is disabled.** Use `personal_sign` or `eth_signTypedData_v4`.
 - The unlocked **active private key** (local only) is kept in the MV3 **service worker** and as **plaintext in `chrome.storage.session`**. Seed phrase (if any) stays in UI memory for the unlock session, not in session storage. **Lock** / **auto-lock** clears the session.
 
@@ -84,6 +84,10 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).
 6. After adding or upgrading dependencies, run **`npm run lavamoat:check`** (or `build:policy`), review policy diffs, and commit them with the lockfile.
+
+## Related docs
+
+- [signer.md](./signer.md) — signer-not-a-lab guideline (confirm sheet, Tools, what not to build)
 
 ## Related source files
 

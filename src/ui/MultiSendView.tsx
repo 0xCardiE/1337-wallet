@@ -48,7 +48,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     pk: `0x${string}`,
     to: `0x${string}`,
     amount: bigint,
-    token: `0x${string}` | null,
+    token: `0x${string}` | null
   ): Promise<string> {
     if (token) {
       return sendErc20Transfer({
@@ -66,7 +66,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     pk: `0x${string}`,
     recipients: `0x${string}`[],
     amount: bigint,
-    token: `0x${string}` | null,
+    token: `0x${string}` | null
   ) {
     const hashes = token
       ? await multiSendErc20({
@@ -93,7 +93,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
       setErr(
         meta && isHardwareAccount(meta)
           ? 'Multi-send currently requires a local key account. Switch active account in Settings.'
-          : 'Wallet must be unlocked with a private key.',
+          : 'Wallet must be unlocked with a private key.'
       );
       return;
     }
@@ -168,17 +168,15 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     .map(s => s.trim())
     .filter(Boolean).length;
 
-  const pendingTo =
-    pendingIndex != null && queue ? queue.recipients[pendingIndex] : null;
+  const pendingTo = pendingIndex != null && queue ? queue.recipients[pendingIndex] : null;
   const pendingTotal = queue?.recipients.length ?? 0;
 
   return (
     <div className="w1337-send-panel">
       <p className="muted" style={{ marginTop: 0, fontSize: 12 }}>
         Each recipient is a separate transaction. Turn{' '}
-        <strong style={{ color: 'var(--text)' }}>Instant On</strong> to skip confirming every
-        send — otherwise you approve one address at a time. Network:{' '}
-        {chain?.name ?? chainId}.
+        <strong style={{ color: 'var(--text)' }}>Instant On</strong> to skip confirming every send —
+        otherwise you approve one address at a time. Network: {chain?.name ?? chainId}.
       </p>
 
       <label htmlFor="ms-addrs">Recipients (one per line)</label>

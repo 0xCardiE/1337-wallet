@@ -1,6 +1,6 @@
 # 1337 Wallet (Chrome extension)
 
-**1337** — advanced Ethereum wallet for developers, hackers, and power users. Multi-RPC, LiFi swaps, hardware signing, and MetaMask-compatible dapps. **No analytics. No 1337 server.** Styled after [1337 Skulls Wallet](https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk).
+**1337** — a **signer** for developers, hackers, and power users: understand the request, judge the risk, sign or reject. Multi-RPC, LiFi swaps, hardware signing, and MetaMask-compatible dapps. **No analytics. No 1337 server.** Not a Foundry/Etherscan lab — see **[docs/signer.md](docs/signer.md)**. Styled after [1337 Skulls Wallet](https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk).
 
 Product positioning, privacy claims, and promo copy live in **[brand/product.manifest.json](brand/product.manifest.json)** (imported in the app via `src/lib/productManifest.ts`).
 
@@ -11,6 +11,9 @@ Product positioning, privacy claims, and promo copy live in **[brand/product.man
 - **Private key** — generate or import a single hex key for focused accounts
 - **Hardware wallets** — connect Ledger (WebHID) or Trezor Connect; sign txs on-device
 - **Security docs** — [MetaMask comparison by wallet type](docs/wallet-comparison-metamask.md)
+- **Signer confirms** — human summary, local `eth_call` simulation, and contract danger flags before you sign
+- **Inspect** — paste an address, token, ENS name, or tx hash from Tools
+- **Approvals** — review and revoke ERC-20, NFT operators, and Permit2
 - **Swaps** — cross-chain token swaps powered by LI.FI
 - **Multi-send** — paste a list of addresses and send native or ERC-20 to each (local key accounts)
 - **Networks** — 20 popular chains with pre-filled public RPCs; switch endpoint from a dropdown
@@ -60,6 +63,8 @@ Review and commit:
 Local keys are password-encrypted in extension storage. Ledger/Trezor accounts keep private keys on the device.
 
 **Supply chain:** install scripts are allowlisted; popup and background bundles run in LavaMoat SES compartments. Details: [docs/wallet-security.md](docs/wallet-security.md) (see “Supply chain & LavaMoat”). Also [MetaMask comparison](docs/wallet-comparison-metamask.md).
+
+**Product scope:** [docs/signer.md](docs/signer.md) — 1337 is a signer, not a Foundry/Etherscan lab.
 
 ## Wallet pain research tool
 

@@ -11,7 +11,7 @@ export const INSTANT_GATE_IDS = [
 
 export type InstantGateId = (typeof INSTANT_GATE_IDS)[number];
 
-export const DEFAULT_HIGH_VALUE_NATIVE = 0.1;
+export const DEFAULT_HIGH_VALUE_NATIVE = 1;
 
 export const INSTANT_GATE_META: Record<
   InstantGateId,

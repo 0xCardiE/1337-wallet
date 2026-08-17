@@ -102,7 +102,7 @@ function findFunctionFileHint(source: string, functionName: string): string | un
   return undefined;
 }
 
-async function fetchSourceRecord(
+export async function fetchSourceRecord(
   chainId: number,
   address: string,
   explorerApiKey?: string,
