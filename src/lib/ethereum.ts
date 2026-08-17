@@ -3,7 +3,7 @@ import type { TransactionRequest } from '@lifi/types';
 import { healthyRpcUrlsFor } from './chainRpcRegistry';
 import { getActiveAccountMeta, getUnlockedAccount } from './accountSession';
 import { isHardwareAccount } from './accounts';
-import { signAndSendWithHardware } from './hardwareSign';
+import { queueInternalHardwareTransaction } from './approvalBridge';
 import {
   ERC20_ABI,
   ERC721_ENUM_ABI,
@@ -244,6 +244,10 @@ async function estimateGas(
   }
 }
 
+function toHexQty(n: bigint | number): `0x${string}` {
+  return `0x${BigInt(n).toString(16)}`;
+}
+
 function bigIntish(v: string | number | undefined | null): bigint | undefined {
   if (v === undefined || v === null) return undefined;
   if (typeof v === 'number') return BigInt(v);
@@ -254,7 +258,8 @@ function bigIntish(v: string | number | undefined | null): bigint | undefined {
 }
 
 /**
- * Broadcast a LiFi {@link TransactionRequest} with the unlocked local account.
+ * Broadcast a {@link TransactionRequest} with the unlocked account.
+ * Hardware accounts go through the confirm sheet, then the device.
  */
 export async function sendTransactionRequest(
   chainId: number,
@@ -287,46 +292,25 @@ export async function sendTransactionRequest(
   const legacyGas = bigIntish(tr.gasPrice);
 
   if (meta && isHardwareAccount(meta)) {
-    let tx;
+    const rpcTx: Record<string, unknown> = {
+      from: account.address,
+      to: tr.to,
+      value: toHexQty(value),
+      data: (tr.data as string) ?? '0x',
+      gas: toHexQty(gasBuffered),
+      nonce: toHexQty(nonce),
+    };
     if (maxFee !== undefined) {
-      const prio = maxPrio ?? maxFee / 10n;
-      tx = {
-        chainId,
-        type: 'eip1559' as const,
-        nonce,
-        gas: gasBuffered,
-        maxFeePerGas: maxFee,
-        maxPriorityFeePerGas: prio,
-        to: tr.to as `0x${string}`,
-        value,
-        data: (tr.data as `0x${string}`) ?? '0x',
-      };
+      rpcTx.maxFeePerGas = toHexQty(maxFee);
+      rpcTx.maxPriorityFeePerGas = toHexQty(maxPrio ?? maxFee / 10n);
     } else if (legacyGas !== undefined) {
-      tx = {
-        chainId,
-        type: 'legacy' as const,
-        nonce,
-        gas: gasBuffered,
-        gasPrice: legacyGas,
-        to: tr.to as `0x${string}`,
-        value,
-        data: (tr.data as `0x${string}`) ?? '0x',
-      };
+      rpcTx.gasPrice = toHexQty(legacyGas);
     } else {
       const gasPrice = await getGasPrice(chainId);
-      tx = {
-        chainId,
-        type: 'eip1559' as const,
-        nonce,
-        gas: gasBuffered,
-        maxFeePerGas: (gasPrice * 150n) / 100n,
-        maxPriorityFeePerGas: gasPrice / 10n,
-        to: tr.to as `0x${string}`,
-        value,
-        data: (tr.data as `0x${string}`) ?? '0x',
-      };
+      rpcTx.maxFeePerGas = toHexQty((gasPrice * 150n) / 100n);
+      rpcTx.maxPriorityFeePerGas = toHexQty(gasPrice / 10n);
     }
-    return signAndSendWithHardware({ account: meta, chainId, tx });
+    return queueInternalHardwareTransaction({ chainId, tx: rpcTx });
   }
 
   let signed: `0x${string}`;

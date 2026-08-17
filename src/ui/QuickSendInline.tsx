@@ -348,7 +348,9 @@ export function QuickSendInline({
   }
 
   function onSendClick() {
-    if (needsConfirm && !confirming) {
+    const meta = getActiveAccountMeta();
+    const hw = Boolean(meta && isHardwareAccount(meta));
+    if (!hw && needsConfirm && !confirming) {
       setConfirming(true);
       setErr(null);
       return;

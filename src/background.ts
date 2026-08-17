@@ -19,7 +19,9 @@ import {
   type ProviderRpcResult,
 } from './lib/providerRpc';
 import {
+  INTERNAL_WALLET_ORIGIN,
   listPendingApprovals,
+  queueApprovalRequest,
   rejectPendingApproval,
   takePendingApproval,
 } from './lib/pendingApprovals';
@@ -36,6 +38,10 @@ import { reportInternalFailure } from './lib/devErrorReport';
 import { getAddress } from 'viem';
 
 const POPUP_PATH = 'index.html';
+const HW_CONFIRM_PATH = 'index.html?hwconfirm=1';
+const INTERNAL_RESULT_PREFIX = '1337_internal_';
+
+let hwConfirmWindowId: number | undefined;
 
 async function loadPersistedSettingsOnStart(): Promise<void> {
   try {
@@ -179,9 +185,16 @@ async function broadcastChainChanged(
 async function openWalletUi(tabId?: number): Promise<void> {
   try {
     const side = chrome.sidePanel;
-    if (side?.open && tabId != null) {
-      await side.open({ tabId });
-      return;
+    if (side?.open) {
+      if (tabId != null) {
+        await side.open({ tabId });
+        return;
+      }
+      const win = await chrome.windows.getLastFocused({ windowTypes: ['normal'] });
+      if (win?.id != null) {
+        await side.open({ windowId: win.id });
+        return;
+      }
     }
   } catch {
     /* ignore */
@@ -191,6 +204,72 @@ async function openWalletUi(tabId?: number): Promise<void> {
   } catch {
     /* popup may already be open / not allowed */
   }
+}
+
+function notifyPendingApprovalsChanged(): void {
+  try {
+    chrome.runtime.sendMessage({ type: 'PENDING_APPROVALS_CHANGED' }, () => {
+      void chrome.runtime.lastError;
+    });
+  } catch {
+    /* no extension page listening */
+  }
+}
+
+/** Keep a surface alive while the user confirms on Ledger/Trezor (action popups close on blur). */
+async function openHardwareConfirmUi(tabId?: number): Promise<void> {
+  try {
+    const { settings } = await loadPersisted();
+    if (effectiveToolbarOpenMode(settings) === 'side_panel') {
+      await openWalletUi(tabId);
+      return;
+    }
+  } catch {
+    /* fall through to a dedicated window */
+  }
+
+  if (hwConfirmWindowId != null) {
+    try {
+      await chrome.windows.update(hwConfirmWindowId, { focused: true });
+      return;
+    } catch {
+      hwConfirmWindowId = undefined;
+    }
+  }
+
+  try {
+    const win = await chrome.windows.create({
+      url: chrome.runtime.getURL(HW_CONFIRM_PATH),
+      type: 'popup',
+      focused: true,
+      width: 400,
+      height: 700,
+    });
+    hwConfirmWindowId = win?.id;
+  } catch {
+    await openWalletUi(tabId);
+  }
+}
+
+chrome.windows.onRemoved.addListener((id: number) => {
+  if (id === hwConfirmWindowId) hwConfirmWindowId = undefined;
+});
+
+async function setInternalResult(
+  id: string,
+  row: { ok: true; result: unknown } | { ok: false; error: string },
+): Promise<void> {
+  await chrome.storage.session.set({ [INTERNAL_RESULT_PREFIX + id]: row });
+}
+
+async function getInternalResult(
+  id: string,
+): Promise<{ ok: true; result: unknown } | { ok: false; error: string } | undefined> {
+  const data = await chrome.storage.session.get(INTERNAL_RESULT_PREFIX + id);
+  return data[INTERNAL_RESULT_PREFIX + id] as
+    | { ok: true; result: unknown }
+    | { ok: false; error: string }
+    | undefined;
 }
 
 async function buildDappConnectionStatus(): Promise<{
@@ -314,6 +393,14 @@ type Msg =
   | { type: 'CONNECT_ACTIVE_TAB' }
   | { type: 'DISCONNECT_ACTIVE_TAB' }
   | { type: 'GET_PENDING_APPROVALS' }
+  | { type: 'PENDING_APPROVALS_CHANGED' }
+  | { type: 'OPEN_HARDWARE_CONFIRM_UI' }
+  | {
+      type: 'QUEUE_INTERNAL_APPROVAL';
+      chainId: number;
+      tx: Record<string, unknown>;
+    }
+  | { type: 'GET_INTERNAL_RESULT'; id: string }
   | { type: 'RESOLVE_PENDING_APPROVAL'; id: string; approved: boolean; gasOverrides?: import('./lib/gasOverrides').GasOverrideInput };
 
 async function sessionUnlockPassword(): Promise<string | null> {
@@ -488,7 +575,11 @@ chrome.runtime.onMessage.addListener(
             origin,
             {
               tabId: sender.tab?.id,
-              onApprovalQueued: () => void openWalletUi(sender.tab?.id),
+              onApprovalQueued: () => {
+                notifyPendingApprovalsChanged();
+                if (hw) void openHardwareConfirmUi(sender.tab?.id);
+                else void openWalletUi(sender.tab?.id);
+              },
               sessionAddress: hw
                 ? (getAddress(hw.address) as `0x${string}`)
                 : undefined,
@@ -535,6 +626,75 @@ chrome.runtime.onMessage.addListener(
       return;
     }
 
+    if (message.type === 'PENDING_APPROVALS_CHANGED') {
+      return;
+    }
+
+    if (message.type === 'OPEN_HARDWARE_CONFIRM_UI') {
+      void openHardwareConfirmUi();
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message.type === 'GET_INTERNAL_RESULT') {
+      void (async () => {
+        try {
+          const row = await getInternalResult(message.id);
+          if (!row) {
+            sendResponse({ status: 'pending' });
+            return;
+          }
+          if (row.ok) sendResponse({ status: 'ok', result: row.result });
+          else sendResponse({ status: 'error', error: row.error });
+        } catch (e) {
+          sendResponse({
+            status: 'error',
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      })();
+      return true;
+    }
+
+    if (message.type === 'QUEUE_INTERNAL_APPROVAL') {
+      const chainId = message.chainId;
+      const tx = message.tx;
+      if (!tx || typeof tx !== 'object' || typeof chainId !== 'number' || !Number.isFinite(chainId)) {
+        sendResponse({ ok: false, error: 'Invalid internal approval' });
+        return;
+      }
+      const id = `internal-${Date.now().toString(16)}-${Math.random().toString(36).slice(2, 8)}`;
+      sendResponse({ ok: true, id });
+      void (async () => {
+        try {
+          const res = await queueApprovalRequest({
+            request: { id, method: 'eth_sendTransaction', params: [tx] },
+            origin: INTERNAL_WALLET_ORIGIN,
+            chainId,
+            onQueued: () => {
+              notifyPendingApprovalsChanged();
+              void openHardwareConfirmUi();
+            },
+          });
+          if (res.ok) {
+            await setInternalResult(id, { ok: true, result: res.result });
+          } else {
+            await setInternalResult(id, {
+              ok: false,
+              error: res.error?.message || 'Request rejected.',
+            });
+          }
+        } catch (e) {
+          await setInternalResult(id, {
+            ok: false,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+        notifyPendingApprovalsChanged();
+      })();
+      return;
+    }
+
     if (message.type === 'RESOLVE_PENDING_APPROVAL') {
       void (async () => {
         try {
@@ -545,6 +705,7 @@ chrome.runtime.onMessage.addListener(
           }
           if (!approved) {
             rejectPendingApproval(id);
+            notifyPendingApprovalsChanged();
             sendResponse({ ok: true });
             return;
           }
@@ -567,6 +728,7 @@ chrome.runtime.onMessage.addListener(
               message.gasOverrides,
             );
             entry.resolve({ id, ok: true, result });
+            notifyPendingApprovalsChanged();
             sendResponse({ ok: true });
           } catch (e) {
             const err = e as Error & { code?: number };
@@ -680,10 +842,12 @@ chrome.runtime.onMessage.addListener(
               ok: false,
               error: { code: 4001, message: message.error },
             });
+            notifyPendingApprovalsChanged();
             sendResponse({ ok: true });
             return;
           }
           entry.resolve({ id: entry.request.id, ok: true, result: message.result });
+          notifyPendingApprovalsChanged();
           sendResponse({ ok: true });
         } catch (e) {
           sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
@@ -737,7 +901,7 @@ chrome.runtime.onMessage.addListener(
         memoryHw = message.session;
         memoryPk = null;
         void chrome.storage.session.set({ [HW_SESSION_KEY]: memoryHw });
-        void chrome.storage.session.remove([SESSION_KEY, UNLOCK_PASSWORD_KEY]);
+        void chrome.storage.session.remove([SESSION_KEY]);
         void touchActivity();
         void broadcastAccountsChanged(getAddress(memoryHw.address));
         sendResponse({ ok: true });

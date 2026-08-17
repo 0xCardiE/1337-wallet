@@ -35,6 +35,15 @@ export async function connectLedgerAddress(
   }
 }
 
+function parseLedgerV(v: string | number): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  const s = String(v).trim();
+  if (!s) return 0;
+  if (s.startsWith('0x') || s.startsWith('0X')) return Number.parseInt(s, 16);
+  if (/^[0-9]+$/.test(s)) return Number.parseInt(s, 10);
+  return Number.parseInt(s, 16);
+}
+
 export async function signSerializedTxWithLedger(params: {
   derivationPath: string;
   unsignedSerialized: Hex;
@@ -42,11 +51,29 @@ export async function signSerializedTxWithLedger(params: {
   const { transport, eth } = await openLedgerEth();
   try {
     const rawTxHex = params.unsignedSerialized.replace(/^0x/i, '');
-    const sig = await eth.signTransaction(toLedgerPath(params.derivationPath), rawTxHex, null);
+    const path = toLedgerPath(params.derivationPath);
+    const resolutionConfig = {
+      erc20: true,
+      externalPlugins: true,
+      nft: true,
+      uniswapV3: true,
+    };
+    let sig: { r: string; s: string; v: string };
+    try {
+      // Resolve ERC-20 / plugin metadata so the device can clear-sign contract calls.
+      // throwOnError=false: CAL miss still attempts a device sign (blind-sign fallback).
+      sig = await eth.clearSignTransaction(path, rawTxHex, resolutionConfig, false);
+    } catch (clearErr) {
+      try {
+        sig = await eth.signTransaction(path, rawTxHex, null);
+      } catch {
+        throw clearErr;
+      }
+    }
     return {
       r: ensureHex(sig.r),
       s: ensureHex(sig.s),
-      v: Number.parseInt(sig.v, 16),
+      v: parseLedgerV(sig.v),
     };
   } catch (err) {
     throw new Error(formatLedgerError(err));
@@ -115,9 +142,14 @@ function ensureHex(value: string): Hex {
 
 function formatLedgerError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
-  if (/denied|reject|cancel/i.test(message)) return 'Ledger request was rejected on the device.';
+  if (/denied|reject|cancel|0x6985/i.test(message)) {
+    return 'Ledger request was rejected on the device.';
+  }
   if (/locked|0x5515|0x6b0c/i.test(message)) {
     return 'Unlock your Ledger and open the Ethereum app.';
+  }
+  if (/0x6a80|blind sign|unresolved|missing metadata/i.test(message)) {
+    return 'Ledger could not clear-sign this contract call. Enable Blind signing in the Ethereum app settings, then retry.';
   }
   if (/No device|Access denied|NotFoundError/i.test(message)) {
     return 'No Ledger selected. Plug in the device, unlock it, and try again.';

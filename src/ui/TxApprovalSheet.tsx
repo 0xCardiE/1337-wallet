@@ -51,9 +51,10 @@ import {
 import {
   completePendingApproval,
   fetchPendingApprovals,
+  requestHardwareConfirmWindow,
   resolvePendingApproval,
 } from '../lib/approvalBridge';
-import type { PendingApproval } from '../lib/pendingApprovals';
+import { isInternalWalletOrigin, type PendingApproval } from '../lib/pendingApprovals';
 
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -245,6 +246,15 @@ function PermitCard({
       </dl>
     </div>
   );
+}
+
+function isPersistentWalletSurface(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).has('hwconfirm')) return true;
+  } catch {
+    /* ignore */
+  }
+  return document.documentElement.classList.contains('w1337-surface--side-panel');
 }
 
 function InstantPausedBanner({
@@ -853,7 +863,7 @@ function ApprovalContent({
         {hostname ? (
           <p className="w1337-tx-approval__site">
             Request from <strong>{hostname}</strong>
-            {pending.origin ? (
+            {pending.origin && !isInternalWalletOrigin(pending.origin) ? (
               <span className="w1337-tx-approval__origin muted"> · {pending.origin}</span>
             ) : null}
           </p>
@@ -985,6 +995,14 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
   }, [pending?.id, refresh]);
 
   useEffect(() => {
+    const onMsg = (message: { type?: string }) => {
+      if (message?.type === 'PENDING_APPROVALS_CHANGED') void refresh();
+    };
+    chrome.runtime.onMessage.addListener(onMsg);
+    return () => chrome.runtime.onMessage.removeListener(onMsg);
+  }, [refresh]);
+
+  useEffect(() => {
     setGasOverrides(DEFAULT_GAS_OVERRIDES);
   }, [pending?.id]);
 
@@ -992,6 +1010,25 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
     () => validateGasOverrides(gasOverrides),
     [gasOverrides],
   );
+
+  const hwMeta = getActiveAccountMeta();
+  const hwAccount = Boolean(hwMeta && isHardwareAccount(hwMeta));
+  const persistentSurface = isPersistentWalletSurface();
+
+  useEffect(() => {
+    if (!pending || !hwAccount || persistentSurface) return;
+    void requestHardwareConfirmWindow();
+  }, [pending?.id, hwAccount, persistentSurface]);
+
+  useEffect(() => {
+    if (!pending || !hwAccount || !busy) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [pending?.id, hwAccount, busy]);
 
   if (!pending) return null;
 
@@ -1104,6 +1141,28 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
 
         {err ? <p className="error w1337-tx-approval__err">{err}</p> : null}
 
+        {hwAccount ? (
+          <p className="w1337-tx-approval__hw-banner">
+            {busy
+              ? 'Confirm on the device. Keep this window open until it finishes.'
+              : persistentSurface
+                ? 'Keep this window open. You will confirm on the device next.'
+                : 'A 1337 window stays open while you confirm on the device — use Confirm there.'}
+            {!persistentSurface ? (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="w1337-tx-approval__hw-open"
+                  onClick={() => void requestHardwareConfirmWindow()}
+                >
+                  Open window
+                </button>
+              </>
+            ) : null}
+          </p>
+        ) : null}
+
         <div className="w1337-tx-approval__actions">
           <button
             type="button"
@@ -1116,13 +1175,13 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
           <button
             type="button"
             className="w1337-tx-approval__approve"
-            disabled={busy || confirmBlocked}
+            disabled={busy || confirmBlocked || (hwAccount && !persistentSurface)}
             onClick={() => void onDecision(true)}
           >
             {busy
               ? 'Confirming…'
-              : getActiveAccountMeta() && isHardwareAccount(getActiveAccountMeta())
-                ? `Confirm on ${getActiveAccountMeta()?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
+              : hwAccount
+                ? `Confirm on ${hwMeta?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
                 : confirmLabel}
           </button>
         </div>

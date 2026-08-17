@@ -3,6 +3,13 @@ import type { ProviderRequest, ProviderResponse } from '../provider/types';
 import { providerError } from '../provider/types';
 import { bytesToHexMessage, parseTypedDataParam } from './backgroundSign';
 
+/** Origin stamped on in-wallet hardware sends so the confirm sheet is not a dapp. */
+export const INTERNAL_WALLET_ORIGIN = '1337://wallet';
+
+export function isInternalWalletOrigin(origin?: string): boolean {
+  return origin === INTERNAL_WALLET_ORIGIN;
+}
+
 const SIGN_METHODS = new Set([
   'eth_sendTransaction',
   'personal_sign',
@@ -40,6 +47,7 @@ const pending = new Map<string, PendingEntry>();
 
 function hostnameFromOrigin(origin?: string): string | undefined {
   if (!origin) return undefined;
+  if (isInternalWalletOrigin(origin)) return '1337';
   try {
     return new URL(origin).hostname;
   } catch {
