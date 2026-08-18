@@ -380,17 +380,17 @@ export function SettingsView({
               {busy ? '…' : 'Save'}
             </button>
           </div>
-        </div>
 
-        <div className="settings-wallet-footer">
-          <hr className="sep" />
-          <div className="row" style={{ marginBottom: 0 }}>
-            <button type="button" className="ghost" onClick={() => void lock()}>
-              Lock
-            </button>
-            <button type="button" className="danger" onClick={() => void wipe()}>
-              Wipe wallet
-            </button>
+          <div className="settings-wallet-footer">
+            <hr className="sep" />
+            <div className="row" style={{ marginBottom: 0 }}>
+              <button type="button" className="ghost" onClick={() => void lock()}>
+                Lock
+              </button>
+              <button type="button" className="danger" onClick={() => void wipe()}>
+                Wipe wallet
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -218,23 +218,20 @@ h2 {
   background: var(--bg);
 }
 
-/* Settings: push Lock / Wipe to bottom */
+/* Settings: form + Lock / Wipe scroll as one column (do not pin footer). */
 .settings-panel {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  box-sizing: border-box;
 }
 
 .settings-body {
-  flex: 1;
-  min-height: 0;
+  min-width: 0;
 }
 
 .settings-wallet-footer {
-  margin-top: auto;
-  padding-top: 16px;
+  margin-top: 8px;
+  padding-top: 4px;
+  padding-bottom: 8px;
 }
 
 .settings-wallet-footer hr.sep {
