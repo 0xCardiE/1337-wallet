@@ -3,29 +3,26 @@ import { formatUnits, getAddress, parseUnits } from 'viem';
 import { getQuote, getStatus, getTokens } from '@lifi/sdk';
 import { ChainType, CoinKey, TokenTag } from '@lifi/types';
 import type { ExtendedChain, LiFiStep, Token, TokenExtended } from '@lifi/types';
-import { getUnlockedAccount } from '../lib/accountSession';
+import { getUnlockedAccount, getActiveAccountMeta, getSessionPrivateKey } from '../lib/accountSession';
+import { isHardwareAccount } from '../lib/accounts';
 import type { AppSettings } from '../lib/storageState';
 import { effectiveSlippageRatio } from '../lib/storageState';
 import { sortEvmChainIds, sortExtendedChains } from '../lib/chainPopularity';
 import { loadEvmMainnetChains } from '../lib/lifiBootstrap';
 import { summarizeApiError } from '../lib/errors';
 import { reportDevError } from '../lib/devErrorLog';
-import {
-  ensureErc20Allowance,
-  sendTransactionRequest,
-  snapshotHeldTokensOnChain,
-  waitForChainReceipt,
-} from '../lib/ethereum';
+import { executeLiFiStep } from '../lib/lifiExecute';
+import { snapshotHeldTokensOnChain } from '../lib/ethereum';
 import type { OnChainBalanceProbe } from '../lib/ethereum';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
 import { appendSwapToHistory, loadSwapHistory, type SwapHistoryEntry } from '../lib/swapHistory';
 import { loadSwapUi, saveSwapUi } from '../lib/swapUiPersist';
 import { loadWalletBalancesMap } from '../lib/walletBalances';
-import { describeRevertedTx } from '../lib/txFailureDetail';
 import { ScreenHeader } from './ScreenHeader';
 import { LiFiIcon } from './LiFiIcon';
 import { TokenWithBadge } from './TokenWithBadge';
 import { DefiYieldPanel } from './DefiYieldPanel';
+import { HardwareSignHint } from './HardwareSignHint';
 import { RefreshIconButton } from './RefreshIconButton';
 
 type WalletTab = 'swap' | 'defi' | 'history';
@@ -334,6 +331,9 @@ export function SwapView({
 }) {
   const account = getUnlockedAccount();
   const addr = account?.address;
+  const meta = getActiveAccountMeta();
+  const hw = Boolean(meta && isHardwareAccount(meta));
+  const canSend = Boolean(getSessionPrivateKey() || hw);
 
   const [evmChains, setEvmChains] = useState<ExtendedChain[]>([]);
   const [balancesRecord, setBalancesRecord] = useState<Record<number, BalEntry[]> | null>(null);
@@ -1102,6 +1102,14 @@ export function SwapView({
       setExecLog('Unlock your wallet first.');
       return;
     }
+    if (!canSend) {
+      setExecLog(
+        hw
+          ? 'Unlock and keep your device ready to sign.'
+          : 'Unlock a local or hardware account to swap.',
+      );
+      return;
+    }
     setExecBusy(true);
     try {
       let step = quote;
@@ -1118,8 +1126,7 @@ export function SwapView({
         }
       }
 
-      const est = step.estimate;
-      if (!step.transactionRequest || !est) {
+      if (!step.transactionRequest || !step.estimate) {
         setExecLog('Nothing to execute — quote has no execution payload.');
         setExecTx(null);
         return;
@@ -1131,76 +1138,32 @@ export function SwapView({
       }
 
       const fromC = step.action.fromChainId;
-      const spend = BigInt(step.action.fromAmount);
       const maxBal = BigInt(fromToken.amount || '0');
-      if (spend > maxBal) {
-        setExecLog(
-          'Amount exceeds LiFi-reported balance. Fund the wallet or lower the amount before swapping.'
-        );
-        setExecTx(null);
-        return;
-      }
-      const approvalAddr = est.approvalAddress;
-      const tokenAddr = step.action.fromToken.address;
+      const result = await executeLiFiStep(step, {
+        fromTokenBalance: maxBal,
+        hardware: hw,
+        refreshQuote: async () => {
+          const next = await fetchQuoteLiFi();
+          setQuote(next);
+          return next;
+        },
+        callbacks: {
+          onLog: setExecLog,
+          onTx: setExecTx,
+        },
+      });
+      const hex = result.txHash;
+      step = result.step;
 
-      if (!est.skipApproval && approvalAddr && !isNativeToken(tokenAddr)) {
-        setExecLog('Checking token allowance…');
-        setExecTx(null);
-        const ah = await ensureErc20Allowance({
-          chainId: fromC,
-          tokenAddress: tokenAddr,
-          spender: approvalAddr,
-          minAmount: spend,
-        });
-        if (ah) {
-          setExecLog(`Approval sent (${ah.slice(0, 10)}…), waiting for confirmation…`);
-          setExecTx({ chainId: fromC, hash: ah as `0x${string}` });
-          const recApprove = await waitForChainReceipt(ah, fromC);
-          if (recApprove.status !== 'success') {
-            setExecLog(await describeRevertedTx(fromC, ah as `0x${string}`));
-            setExecTx(null);
-            return;
-          }
-          setExecLog('Re-fetching quote after approval…');
-          setExecTx(null);
-          try {
-            step = await fetchQuoteLiFi();
-            setQuote(step);
-          } catch (e) {
-            setExecLog(summarizeApiError(e));
-            setExecTx(null);
-            return;
-          }
-          if (!step.transactionRequest) {
-            setExecLog('Re-quote after approval did not return transaction data.');
-            setExecTx(null);
-            return;
-          }
-        }
-      }
-
-      const tr = step.transactionRequest;
-      setExecLog('Executing swap…');
-      setExecTx(null);
-      const txHash = await sendTransactionRequest(fromC, tr);
-      const hex = txHash as `0x${string}`;
-      setExecLog(`Submitted: ${txHash}`);
-      setExecTx({ chainId: fromC, hash: hex });
-      const rec = await waitForChainReceipt(txHash, fromC);
-      if (rec.status !== 'success') {
-        setExecLog(await describeRevertedTx(fromC, hex));
-        setExecTx({ chainId: fromC, hash: hex });
-        return;
-      }
-      if (fromC !== step.action.toChainId) {
-        pollCrossChain(txHash, fromC, step.action.toChainId, step.tool, step.action.toToken);
+      if (result.crossChain) {
+        pollCrossChain(hex, fromC, step.action.toChainId, step.tool, step.action.toToken);
         void commitRpcSnapshotForChains([{ chainId: fromC, extras: [step.action.fromToken] }]);
       } else {
         setAmountStr('');
         setQuote(null);
         setQuoteErr(null);
         setSwapSuccessCta(true);
-        setExecLog(`Done (same-chain). ${txHash}`);
+        setExecLog(`Done (same-chain). ${hex}`);
         setExecTx({ chainId: fromC, hash: hex });
         void commitRpcSnapshotForChains([
           { chainId: fromC, extras: [step.action.fromToken, step.action.toToken] },
@@ -1217,7 +1180,7 @@ export function SwapView({
             toChainId: step.action.toChainId,
             fromSymbol: step.action.fromToken.symbol,
             toSymbol: step.action.toToken.symbol,
-            crossChain: fromC !== step.action.toChainId,
+            crossChain: result.crossChain,
           });
           setSwapHistory(next);
         } catch {
@@ -1506,11 +1469,12 @@ export function SwapView({
                   <button
                     type="button"
                     className="primary w1337-swap-btn"
-                    disabled={execBusy || !quote.transactionRequest || !!quoteErr}
+                    disabled={execBusy || !canSend || !quote.transactionRequest || !!quoteErr}
                     onClick={() => void execute()}
                   >
-                    {execBusy ? 'Working…' : 'Swap'}
+                    {execBusy ? (hw ? 'Confirm on device…' : 'Working…') : 'Swap'}
                   </button>
+                  <HardwareSignHint show={hw} />
                 </div>
               )}
               {execLog && (

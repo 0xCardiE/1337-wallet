@@ -29,6 +29,8 @@ import { fetchFunctionSourceFromExplorer, type FunctionSourceResult } from '../l
 import { lookupFunctionSelectors } from '../lib/fourByteDirectory';
 import { addressExplorerLink } from '../lib/tokenApprovals';
 import { humanizePendingRequest } from '../lib/txHumanize';
+import { classifyTxAction, formatActionNative, pagePathAndQuery } from '../lib/txAction';
+import { findChecksumIssues, shortChecksumRaw } from '../lib/addressChecksum';
 import { simulateTransaction, type TxSimResult } from '../lib/txSimulate';
 import { chainById } from '../lib/chainCatalog';
 import { chainJsonRpcCall } from '../lib/ethereum';
@@ -245,6 +247,153 @@ function PermitCard({
         ) : null}
       </dl>
     </div>
+  );
+}
+
+function SendCard({
+  chainId,
+  action,
+  meta,
+}: {
+  chainId: number;
+  action: import('../lib/txAction').SendAction;
+  meta: TokenMeta | null;
+}) {
+  const native = formatActionNative(action.value, chainId);
+  const tokenLabel = meta?.symbol || meta?.name;
+  const amountLabel =
+    action.token && action.tokenAmount != null
+      ? `${formatApprovalAmount(action.tokenAmount, meta?.decimals ?? 18)} ${tokenLabel ?? 'tokens'}`
+      : native;
+  return (
+    <div className="w1337-tx-approval__action">
+      <p className="w1337-tx-approval__action-kicker">Send</p>
+      <h3 className="w1337-tx-approval__action-title">
+        {action.token ? `Send ${amountLabel}` : `Send ${native}`}
+      </h3>
+      <dl className="w1337-tx-approval__action-dl">
+        <div>
+          <dt>To</dt>
+          <dd>
+            <ExplorerAddr chainId={chainId} address={action.recipient ?? action.to} />
+          </dd>
+        </div>
+        {action.token ? (
+          <div>
+            <dt>Token</dt>
+            <dd>
+              <TokenMetaLine chainId={chainId} token={action.token} meta={meta} />
+            </dd>
+          </div>
+        ) : null}
+        {action.token && action.value > 0n ? (
+          <div>
+            <dt>Also sending</dt>
+            <dd>{native}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
+function SwapCard({
+  chainId,
+  action,
+}: {
+  chainId: number;
+  action: import('../lib/txAction').SwapAction;
+}) {
+  return (
+    <div className="w1337-tx-approval__action">
+      <p className="w1337-tx-approval__action-kicker">Swap</p>
+      <h3 className="w1337-tx-approval__action-title">
+        Swap tokens via this contract
+      </h3>
+      <dl className="w1337-tx-approval__action-dl">
+        <div>
+          <dt>Router</dt>
+          <dd>
+            <ExplorerAddr chainId={chainId} address={action.to} />
+          </dd>
+        </div>
+        {action.functionName ? (
+          <div>
+            <dt>Function</dt>
+            <dd className="w1337-tx-approval__mono">{action.functionName}</dd>
+          </div>
+        ) : action.selector ? (
+          <div>
+            <dt>Selector</dt>
+            <dd className="w1337-tx-approval__mono">{action.selector}</dd>
+          </div>
+        ) : null}
+        {action.value > 0n ? (
+          <div>
+            <dt>Value</dt>
+            <dd>{formatActionNative(action.value, chainId)}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
+function UnknownCard({
+  chainId,
+  action,
+}: {
+  chainId: number;
+  action: import('../lib/txAction').UnknownCallAction;
+}) {
+  return (
+    <div className="w1337-tx-approval__action w1337-tx-approval__action--unknown">
+      <p className="w1337-tx-approval__action-kicker">Unknown contract call</p>
+      <h3 className="w1337-tx-approval__action-title">
+        {action.creating
+          ? 'Deploy a contract'
+          : action.functionName
+            ? `Call ${action.functionName}`
+            : 'Call a contract this wallet does not recognize'}
+      </h3>
+      <p className="w1337-tx-approval__action-warn">
+        Review simulation and contract details below before you sign.
+      </p>
+      <dl className="w1337-tx-approval__action-dl">
+        {action.to ? (
+          <div>
+            <dt>Contract</dt>
+            <dd>
+              <ExplorerAddr chainId={chainId} address={action.to} />
+            </dd>
+          </div>
+        ) : null}
+        {action.selector ? (
+          <div>
+            <dt>Selector</dt>
+            <dd className="w1337-tx-approval__mono">{action.selector}</dd>
+          </div>
+        ) : null}
+        {action.value > 0n ? (
+          <div>
+            <dt>Value</dt>
+            <dd>{formatActionNative(action.value, chainId)}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
+function ChecksumBanner({ issues }: { issues: ReturnType<typeof findChecksumIssues> }) {
+  if (issues.length === 0) return null;
+  const shown = issues.slice(0, 3).map(i => shortChecksumRaw(i.raw)).join(', ');
+  const extra = issues.length > 3 ? ` and ${issues.length - 3} more` : '';
+  return (
+    <p className="w1337-tx-approval__danger-banner">
+      Address checksum mismatch ({shown}{extra}). Mixed-case addresses that fail EIP-55 are often
+      copy-paste attacks. Do not sign unless you typed this yourself.
+    </p>
   );
 }
 
@@ -707,7 +856,22 @@ function ApprovalContent({
   const [sim, setSim] = useState<TxSimResult | null>(null);
   const [hint, setHint] = useState<ContractHint | null>(null);
   const explorerApiKey = settings.explorerApiKey?.trim();
-  const tokenForMeta = risk.tokenApproval?.token ?? risk.permit?.token;
+  const functionSignature = useMemo(
+    () => resolveLikelyFunctionSignature(pending.request, sigLookup),
+    [pending.request, sigLookup],
+  );
+  const action = useMemo(
+    () => classifyTxAction(pending.request, risk, functionSignature),
+    [pending.request, risk, functionSignature],
+  );
+  const tokenForMeta =
+    risk.tokenApproval?.token ??
+    risk.permit?.token ??
+    (action?.kind === 'send' ? action.token : undefined);
+  const checksumIssues = useMemo(
+    () => findChecksumIssues(pending.request.params),
+    [pending.request],
+  );
 
   const instantOn = effectiveTxConfirmMode(settings) === 'speed';
   const pausedHits = instantOn
@@ -730,10 +894,6 @@ function ApprovalContent({
     return built;
   }, [pending.request, pending.chainId, pending.origin, walletAddress, gasPreview, sigLookup]);
 
-  const functionSignature = useMemo(
-    () => resolveLikelyFunctionSignature(pending.request, sigLookup),
-    [pending.request, sigLookup],
-  );
   const contractAddress = useMemo(
     () => txContractAddress(pending.request),
     [pending.request],
@@ -856,6 +1016,9 @@ function ApprovalContent({
   }, [pending.id, pending.chainId, contractAddress, explorerApiKey]);
 
   const hostname = pending.summary.hostname;
+  const pageUrl = pending.pageUrl ?? pending.summary.pageUrl;
+  const pathQuery =
+    !isInternalWalletOrigin(pending.origin) ? pagePathAndQuery(pageUrl) : undefined;
 
   return (
     <>
@@ -863,7 +1026,9 @@ function ApprovalContent({
         {hostname ? (
           <p className="w1337-tx-approval__site">
             Request from <strong>{hostname}</strong>
-            {pending.origin && !isInternalWalletOrigin(pending.origin) ? (
+            {pathQuery ? (
+              <span className="w1337-tx-approval__origin muted"> · {pathQuery}</span>
+            ) : pending.origin && !isInternalWalletOrigin(pending.origin) ? (
               <span className="w1337-tx-approval__origin muted"> · {pending.origin}</span>
             ) : null}
           </p>
@@ -877,6 +1042,7 @@ function ApprovalContent({
         <InstantPausedBanner hits={pausedHits} />
         <SiweWarnBanner risk={risk} />
         <Eip712ChainBanner risk={risk} />
+        <ChecksumBanner issues={checksumIssues} />
 
         <div className="w1337-tx-approval__human">
           <p className="w1337-tx-approval__human-kicker">You are about to</p>
@@ -935,6 +1101,15 @@ function ApprovalContent({
         ) : null}
         {risk.permit ? (
           <PermitCard chainId={pending.chainId} permit={risk.permit} meta={tokenMeta} />
+        ) : null}
+        {action?.kind === 'send' ? (
+          <SendCard chainId={pending.chainId} action={action} meta={tokenMeta} />
+        ) : null}
+        {action?.kind === 'swap' ? (
+          <SwapCard chainId={pending.chainId} action={action} />
+        ) : null}
+        {action?.kind === 'unknown' ? (
+          <UnknownCard chainId={pending.chainId} action={action} />
         ) : null}
 
         {pending.request.method === 'eth_sendTransaction' ? (
@@ -1037,12 +1212,21 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
     origin: pending.origin,
     highValueNative: effectiveHighValueNative(settings),
   });
-  const title = approvalTitle(pending.request, risk);
+  const action = classifyTxAction(
+    pending.request,
+    risk,
+    resolveLikelyFunctionSignature(pending.request, null),
+  );
+  const title = approvalTitle(pending.request, risk, action);
   const confirmLabel = risk.tokenApproval
     ? 'Approve'
     : risk.siwe
       ? 'Sign in'
-      : 'Confirm';
+      : action?.kind === 'send'
+        ? 'Send'
+        : action?.kind === 'swap'
+          ? 'Swap'
+          : 'Confirm';
   const confirmBlocked =
     pending.request.method === 'eth_sendTransaction' &&
     gasOverrides.mode === 'custom' &&

@@ -29,9 +29,10 @@ export async function executeLiFiStep(
     fromTokenBalance: bigint;
     refreshQuote: () => Promise<LiFiStep>;
     callbacks: LiFiExecCallbacks;
+    hardware?: boolean;
   },
 ): Promise<LiFiExecuteResult> {
-  const { callbacks, refreshQuote } = options;
+  const { callbacks, refreshQuote, hardware } = options;
   const onLog = callbacks.onLog;
   const onTx = callbacks.onTx;
 
@@ -53,7 +54,7 @@ export async function executeLiFiStep(
   const tokenAddr = current.action.fromToken.address;
 
   if (!est.skipApproval && approvalAddr && !isNativeToken(tokenAddr)) {
-    onLog('Checking token allowance…');
+    onLog(hardware ? 'Confirm the token approval on your device…' : 'Checking token allowance…');
     onTx?.(null);
     const ah = await ensureErc20Allowance({
       chainId: fromC,
@@ -77,7 +78,7 @@ export async function executeLiFiStep(
     }
   }
 
-  onLog('Submitting transaction…');
+  onLog(hardware ? 'Confirm the swap on your device…' : 'Submitting transaction…');
   onTx?.(null);
   const txHash = (await sendTransactionRequest(fromC, current.transactionRequest)) as `0x${string}`;
   onLog(`Submitted: ${txHash}`);

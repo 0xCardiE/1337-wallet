@@ -3359,6 +3359,10 @@ html.w1337-surface--popup .wallet-shell.w1337--main:has(.w1337-tx-approval) {
   background: rgba(245, 158, 11, 0.08);
 }
 
+.w1337-tx-approval__action--unknown {
+  border-color: rgba(251, 146, 60, 0.35);
+}
+
 .w1337-tx-approval__action-kicker {
   margin: 0 0 4px;
   font-size: 10px;
@@ -5992,6 +5996,59 @@ button.w1337-quick-send-inline__send--busy {
 
 .w1337-settings-link-card .ghost {
   flex-shrink: 0;
+}
+
+.w1337-connected-sites {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.w1337-connected-sites__row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.w1337-connected-sites__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.w1337-connected-sites__copy strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.w1337-connected-sites__copy .muted {
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.w1337-connected-sites__compat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.w1337-connected-sites__compat select {
+  width: 100%;
+}
+
+.w1337-hw-sign-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .w1337-settings-gates {

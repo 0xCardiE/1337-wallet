@@ -1,3 +1,5 @@
+import type { ConnectedSite } from './dappConnections';
+
 export type DappTabInfo = {
   tabId: number;
   url: string;
@@ -52,6 +54,33 @@ export async function disconnectActiveTab(): Promise<{ ok: boolean; error?: stri
       ok?: boolean;
       error?: string;
     };
+    return { ok: res?.ok === true, error: res?.error };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function fetchConnectedSites(): Promise<ConnectedSite[]> {
+  try {
+    const res = (await chrome.runtime.sendMessage({ type: 'LIST_CONNECTED_SITES' })) as {
+      ok?: boolean;
+      sites?: ConnectedSite[];
+    };
+    if (res?.ok && Array.isArray(res.sites)) return res.sites;
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+export async function disconnectConnectedOrigin(
+  origin: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = (await chrome.runtime.sendMessage({
+      type: 'DISCONNECT_ORIGIN',
+      origin,
+    })) as { ok?: boolean; error?: string };
     return { ok: res?.ok === true, error: res?.error };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };

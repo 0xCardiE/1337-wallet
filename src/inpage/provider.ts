@@ -3,6 +3,7 @@
  */
 import {
   PROVIDER_CHANNEL,
+  type ProviderInjectConfig,
   type ProviderRequest,
   type ProviderResponse,
   type WindowProviderEvent,
@@ -25,8 +26,8 @@ class ProviderRpcError extends Error {
 }
 
 class Provider1337 {
-  readonly is1337 = true;
-  readonly isMetaMask = true;
+  is1337 = true;
+  isMetaMask = true;
   readonly _metamask = {
     isUnlocked: async () => true,
     requestBatch: async () => [],
@@ -255,7 +256,20 @@ class Provider1337 {
   }
 }
 
-function announceEip6963(provider: Provider1337, replaceMetaMask: boolean): void {
+function defaultInjectConfig(): ProviderInjectConfig {
+  return {
+    replaceMetaMask: true,
+    is1337: true,
+    isMetaMask: true,
+    announceAs1337: true,
+    announceAsMetaMask: true,
+  };
+}
+
+let lastAnnounce: (() => void) | null = null;
+let eip6963Listening = false;
+
+function announceEip6963(provider: Provider1337, config: ProviderInjectConfig): void {
   const announceDetail = (info: {
     uuid: string;
     name: string;
@@ -270,14 +284,15 @@ function announceEip6963(provider: Provider1337, replaceMetaMask: boolean): void
   };
 
   const announce = () => {
-    announceDetail({
-      uuid: PROVIDER_INFO_1337.uuid,
-      name: PROVIDER_INFO_1337.name,
-      icon: PROVIDER_INFO_1337.icon,
-      rdns: PROVIDER_INFO_1337.rdns,
-    });
-    /* Wallet modals often filter for MetaMask by rdns — surface ourselves there in drop-in mode. */
-    if (replaceMetaMask) {
+    if (config.announceAs1337) {
+      announceDetail({
+        uuid: PROVIDER_INFO_1337.uuid,
+        name: PROVIDER_INFO_1337.name,
+        icon: PROVIDER_INFO_1337.icon,
+        rdns: PROVIDER_INFO_1337.rdns,
+      });
+    }
+    if (config.announceAsMetaMask) {
       announceDetail({
         uuid: '1337-metamask-dropin-2026',
         name: 'MetaMask',
@@ -287,11 +302,20 @@ function announceEip6963(provider: Provider1337, replaceMetaMask: boolean): void
     }
   };
 
+  lastAnnounce = announce;
   announce();
-  window.addEventListener('eip6963:requestProvider', announce);
-  for (const ms of [0, 50, 200, 500, 1000, 2000]) {
-    window.setTimeout(announce, ms);
+  if (!eip6963Listening) {
+    eip6963Listening = true;
+    window.addEventListener('eip6963:requestProvider', () => lastAnnounce?.());
+    for (const ms of [0, 50, 200, 500, 1000, 2000]) {
+      window.setTimeout(() => lastAnnounce?.(), ms);
+    }
   }
+}
+
+function applyInjectConfig(provider: Provider1337, config: ProviderInjectConfig): void {
+  provider.is1337 = config.is1337;
+  provider.isMetaMask = config.isMetaMask;
 }
 
 function installEthereumShim(
@@ -340,7 +364,7 @@ function installEthereumShim(
   window.dispatchEvent(new Event('ethereum#initialized'));
 }
 
-function installProvider(replaceMetaMask: boolean): Provider1337 {
+function installProvider(config: ProviderInjectConfig): Provider1337 {
   const w = window as Window & {
     ethereum?: Provider1337 & { providers?: unknown[] };
     wallet1337?: Provider1337;
@@ -348,30 +372,32 @@ function installProvider(replaceMetaMask: boolean): Provider1337 {
   };
 
   if (w[INJECTED_FLAG_1337] && w.wallet1337) {
-    announceEip6963(w.wallet1337, replaceMetaMask);
-    if (replaceMetaMask) installEthereumShim(w, w.wallet1337);
+    applyInjectConfig(w.wallet1337, config);
+    announceEip6963(w.wallet1337, config);
+    if (config.replaceMetaMask) installEthereumShim(w, w.wallet1337);
     return w.wallet1337;
   }
 
   w[INJECTED_FLAG_1337] = true;
   const provider = new Provider1337();
+  applyInjectConfig(provider, config);
   w.wallet1337 = provider;
 
-  if (replaceMetaMask) {
+  if (config.replaceMetaMask) {
     installEthereumShim(w, provider);
   } else if (!w.ethereum) {
     w.ethereum = provider;
   }
 
-  announceEip6963(provider, replaceMetaMask);
+  announceEip6963(provider, config);
   return provider;
 }
 
-installProvider(true);
+installProvider(defaultInjectConfig());
 
 void (async () => {
   try {
-    const res = await new Promise<{ replaceMetaMask?: boolean }>(resolve => {
+    const res = await new Promise<ProviderInjectConfig>(resolve => {
       window.postMessage(
         { channel: PROVIDER_CHANNEL, target: 'content', type: 'init' },
         '*',
@@ -381,17 +407,27 @@ void (async () => {
         const data = event.data;
         if (data?.channel === PROVIDER_CHANNEL && data?.type === 'init-config') {
           window.removeEventListener('message', handler);
-          resolve(data.config ?? { replaceMetaMask: true });
+          const c = data.config as Partial<ProviderInjectConfig> | undefined;
+          resolve({
+            replaceMetaMask: c?.replaceMetaMask !== false,
+            is1337: c?.is1337 !== false,
+            isMetaMask: c?.isMetaMask !== false,
+            announceAs1337: c?.announceAs1337 !== false,
+            announceAsMetaMask:
+              typeof c?.announceAsMetaMask === 'boolean'
+                ? c.announceAsMetaMask
+                : c?.replaceMetaMask !== false,
+          });
         }
       };
       window.addEventListener('message', handler);
       window.setTimeout(() => {
         window.removeEventListener('message', handler);
-        resolve({ replaceMetaMask: true });
+        resolve(defaultInjectConfig());
       }, 400);
     });
-    installProvider(res.replaceMetaMask !== false);
+    installProvider(res);
   } catch {
-    installProvider(true);
+    installProvider(defaultInjectConfig());
   }
 })();

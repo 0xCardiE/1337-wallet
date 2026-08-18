@@ -11,6 +11,7 @@ import { chainById } from './chainCatalog';
 import { bytesToHexMessage, parseTypedDataParam } from './backgroundSign';
 import type { ProviderRequest } from '../provider/types';
 import { classifyRequest, parseDomainChainId, type TxRiskReport } from './txRisk';
+import type { TxAction } from './txAction';
 
 export type ApprovalDetailField = {
   label: string;
@@ -647,7 +648,11 @@ export function mergeGasPreview(
   return sections;
 }
 
-export function approvalTitle(request: ProviderRequest, risk?: TxRiskReport): string {
+export function approvalTitle(
+  request: ProviderRequest,
+  risk?: TxRiskReport,
+  action?: TxAction,
+): string {
   if (risk?.tokenApproval?.kind === 'setApprovalForAll') {
     return risk.tokenApproval.approved ? 'Approve operator for all NFTs' : 'Revoke NFT operator';
   }
@@ -660,6 +665,9 @@ export function approvalTitle(request: ProviderRequest, risk?: TxRiskReport): st
       risk.siwe.domainMismatch || risk.siwe.uriMismatch || risk.siwe.chainMismatch;
     return bad ? 'Sign-in request — check domain' : 'Sign in with Ethereum';
   }
+  if (action?.kind === 'send') return action.token ? 'Send tokens' : 'Send';
+  if (action?.kind === 'swap') return 'Swap';
+  if (action?.kind === 'unknown') return action.creating ? 'Deploy contract' : 'Unknown contract call';
   switch (request.method) {
     case 'eth_sendTransaction':
       return 'Confirm transaction';

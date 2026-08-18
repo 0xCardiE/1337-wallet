@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatUnits, getAddress } from 'viem';
 import type { ExtendedChain, LiFiStep, Token } from '@lifi/types';
-import { getUnlockedAccount } from '../lib/accountSession';
+import { getUnlockedAccount, getActiveAccountMeta, getSessionPrivateKey } from '../lib/accountSession';
+import { isHardwareAccount } from '../lib/accounts';
 import { summarizeApiError } from '../lib/errors';
 import { reportDevError } from '../lib/devErrorLog';
 import {
@@ -24,6 +25,8 @@ import {
 import { appendSwapToHistory } from '../lib/swapHistory';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
 import { Select1337, type Select1337Group } from './Select1337';
+import { HardwareSignHint } from './HardwareSignHint';
+
 type BalEntry = {
   address: string;
   symbol: string;
@@ -37,6 +40,9 @@ type BalEntry = {
 export function GasStationView({ settings }: { settings: AppSettings }) {
   const account = getUnlockedAccount();
   const addr = account?.address;
+  const meta = getActiveAccountMeta();
+  const hw = Boolean(meta && isHardwareAccount(meta));
+  const canSend = Boolean(getSessionPrivateKey() || hw);
   const slippageRatio = effectiveSlippageRatio(settings);
   const defaultChainId = effectiveActiveChainId(settings);
 
@@ -264,6 +270,14 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       setExecLog('Unlock your wallet first.');
       return;
     }
+    if (!canSend) {
+      setExecLog(
+        hw
+          ? 'Unlock and keep your device ready to sign.'
+          : 'Unlock a local or hardware account to top up gas.',
+      );
+      return;
+    }
     setExecBusy(true);
     setExecLog(null);
     setExecTx(null);
@@ -281,6 +295,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       const fromBal = BigInt(sourceToken.amount || '0');
       const result = await executeLiFiStep(step, {
         fromTokenBalance: fromBal,
+        hardware: hw,
         refreshQuote: fetchQuote,
         callbacks: {
           onLog: setExecLog,
@@ -527,12 +542,15 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
         <button
           type="button"
           className="primary"
-          disabled={execBusy || quoteBusy || !sourceToken || !destNative || !gasAmountStr.trim()}
+          disabled={
+            execBusy || quoteBusy || !canSend || !sourceToken || !destNative || !gasAmountStr.trim()
+          }
           onClick={() => void executeTopUp()}
         >
-          {execBusy ? 'Topping up…' : 'Top up gas'}
+          {execBusy ? (hw ? 'Confirm on device…' : 'Topping up…') : 'Top up gas'}
         </button>
       </div>
+      <HardwareSignHint show={hw} />
     </div>
   );
 }

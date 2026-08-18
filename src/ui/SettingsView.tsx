@@ -38,6 +38,7 @@ export function SettingsView({
   onOpenWallets,
   onOpenInstantGates,
   onOpenTools,
+  onOpenConnectedSites,
 }: {
   settings: AppSettings;
   onSaved: () => void;
@@ -46,6 +47,7 @@ export function SettingsView({
   onOpenWallets?: () => void;
   onOpenInstantGates?: () => void;
   onOpenTools?: () => void;
+  onOpenConnectedSites?: () => void;
 }) {
   const [slippageStr, setSlippageStr] = useState(() =>
     String(effectiveSlippagePercent(settings)),
@@ -205,6 +207,20 @@ export function SettingsView({
             </div>
           ) : null}
 
+          {onOpenConnectedSites ? (
+            <div className="w1337-settings-link-card">
+              <div>
+                <strong>Connected sites</strong>
+                <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
+                  Revoke origins and set per-site MetaMask-compat.
+                </p>
+              </div>
+              <button type="button" className="ghost" onClick={onOpenConnectedSites}>
+                Open
+              </button>
+            </div>
+          ) : null}
+
           <label htmlFor="slip" style={{ marginTop: 16 }}>
             Slippage (%)
           </label>
@@ -319,8 +335,8 @@ export function SettingsView({
             />
           </div>
           <p className="muted" style={{ fontSize: 12 }}>
-            When enabled, sites that offer MetaMask will connect to 1337 instead. Reload open
-            tabs after changing this.
+            Default for new sites. Override per origin in Connected sites. Reload open tabs after
+            changing this.
           </p>
 
           <div

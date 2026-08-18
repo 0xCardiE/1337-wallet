@@ -8,6 +8,7 @@
  */
 import {
   PROVIDER_CHANNEL,
+  type ProviderInjectConfig,
   type ProviderRequest,
   type ProviderResponse,
 } from '../provider/types';
@@ -55,17 +56,35 @@ async function sendToBackground<T>(message: unknown): Promise<T> {
   }
 }
 
-async function loadInjectConfig(): Promise<{ replaceMetaMask: boolean }> {
+async function loadInjectConfig(): Promise<ProviderInjectConfig> {
+  const origin = window.location.origin;
   try {
     const res = await sendToBackground<{
       ok?: boolean;
       replaceMetaMask?: boolean;
-    }>({ type: 'PROVIDER_GET_CONFIG' });
+      is1337?: boolean;
+      isMetaMask?: boolean;
+      announceAs1337?: boolean;
+      announceAsMetaMask?: boolean;
+    }>({ type: 'PROVIDER_GET_CONFIG', origin });
     cachedReplaceMetaMask = res?.replaceMetaMask !== false;
+    return {
+      replaceMetaMask: res?.replaceMetaMask !== false,
+      is1337: res?.is1337 !== false,
+      isMetaMask: res?.isMetaMask !== false,
+      announceAs1337: res?.announceAs1337 !== false,
+      announceAsMetaMask: res?.announceAsMetaMask === true,
+    };
   } catch {
     /* keep previous / default when background is unavailable */
   }
-  return { replaceMetaMask: cachedReplaceMetaMask };
+  return {
+    replaceMetaMask: cachedReplaceMetaMask,
+    is1337: true,
+    isMetaMask: true,
+    announceAs1337: true,
+    announceAsMetaMask: cachedReplaceMetaMask,
+  };
 }
 
 void loadInjectConfig();
@@ -102,6 +121,7 @@ window.addEventListener('message', (event: MessageEvent) => {
     type: 'PROVIDER_RPC',
     request,
     origin: window.location.origin,
+    pageUrl: window.location.href,
   })
     .then(response => {
       window.postMessage(

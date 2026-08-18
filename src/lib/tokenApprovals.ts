@@ -2,6 +2,7 @@ import { decodeFunctionResult, encodeFunctionData, getAddress, isAddress } from 
 import { ERC20_ABI, MULTICALL3_ABI, MULTICALL3_ADDRESS } from './abis';
 import { chainJsonRpcCall } from './ethereum';
 import { chainById } from './chainCatalog';
+import { etherscanV2Get } from './etherscanV2';
 import type { WalletBalEntry } from './walletBalances';
 import { formatTokenAmount } from './walletBalances';
 
@@ -149,21 +150,15 @@ export async function fetchExplorerLogs(params: {
   }
   if (params.explorerApiKey?.trim()) query.set('apikey', params.explorerApiKey.trim());
 
-  const res = await fetch(`https://api.etherscan.io/v2/api?${query.toString()}`);
-  if (!res.ok) throw new Error(`Etherscan logs HTTP ${res.status}`);
-  const json = (await res.json()) as {
-    status?: string;
-    message?: string;
-    result?: RawApprovalLog[] | string;
-  };
+  const json = await etherscanV2Get(query);
+  const result = json.result;
 
-  if (json.status !== '1' || !Array.isArray(json.result)) {
+  if (json.status !== '1' || !Array.isArray(result)) {
     const msg =
-      typeof json.result === 'string'
-        ? json.result
+      typeof result === 'string'
+        ? result
         : json.message ?? 'Etherscan returned no approval logs';
     if (/no records found|no logs found/i.test(msg)) return [];
-    if (/rate limit|max rate limit/i.test(msg)) throw new Error(msg);
     if (/query timeout|timeout/i.test(msg)) {
       throw new Error(
         'Explorer log query timed out for this period. Try again — the range was not marked scanned.',
@@ -176,7 +171,7 @@ export async function fetchExplorerLogs(params: {
     }
     throw new Error(msg);
   }
-  return json.result;
+  return result as RawApprovalLog[];
 }
 
 function parseSpenderCandidates(

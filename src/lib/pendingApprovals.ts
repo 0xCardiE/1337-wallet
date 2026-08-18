@@ -28,6 +28,7 @@ export type ApprovalSummary = {
   method: string;
   origin?: string;
   hostname?: string;
+  pageUrl?: string;
   title: string;
   fields: { label: string; value: string }[];
 };
@@ -36,6 +37,7 @@ type PendingEntry = {
   id: string;
   request: ProviderRequest;
   origin?: string;
+  pageUrl?: string;
   tabId?: number;
   chainId: number;
   summary: ApprovalSummary;
@@ -82,6 +84,7 @@ function formatMessagePreview(raw: unknown): string {
 export function buildApprovalSummary(
   request: ProviderRequest,
   origin?: string,
+  pageUrl?: string,
 ): ApprovalSummary {
   const { method, params = [] } = request;
   const hostname = hostnameFromOrigin(origin);
@@ -112,6 +115,7 @@ export function buildApprovalSummary(
       method,
       origin,
       hostname,
+      pageUrl,
       title: 'Confirm transaction',
       fields,
     };
@@ -124,6 +128,7 @@ export function buildApprovalSummary(
       method,
       origin,
       hostname,
+      pageUrl,
       title: 'Sign message',
       fields: [{ label: 'Message', value: formatMessagePreview(msgParam) }],
     };
@@ -142,6 +147,7 @@ export function buildApprovalSummary(
       method,
       origin,
       hostname,
+      pageUrl,
       title: 'Sign typed data',
       fields: [
         { label: 'Primary type', value: typed.primaryType },
@@ -154,6 +160,7 @@ export function buildApprovalSummary(
       method,
       origin,
       hostname,
+      pageUrl,
       title: 'Sign typed data',
       fields: [{ label: 'Payload', value: truncate(String(typedRaw)) }],
     };
@@ -164,6 +171,7 @@ export type PendingApproval = {
   id: string;
   request: ProviderRequest;
   origin?: string;
+  pageUrl?: string;
   tabId?: number;
   chainId: number;
   summary: ApprovalSummary;
@@ -173,18 +181,20 @@ export type PendingApproval = {
 export function queueApprovalRequest(opts: {
   request: ProviderRequest;
   origin?: string;
+  pageUrl?: string;
   tabId?: number;
   chainId: number;
   onQueued?: () => void;
 }): Promise<ProviderResponse> {
-  const { request, origin, tabId, chainId, onQueued } = opts;
+  const { request, origin, pageUrl, tabId, chainId, onQueued } = opts;
   const id = request.id;
   return new Promise(resolve => {
-    const summary = buildApprovalSummary(request, origin);
+    const summary = buildApprovalSummary(request, origin, pageUrl);
     pending.set(id, {
       id,
       request,
       origin,
+      pageUrl,
       tabId,
       chainId,
       summary,

@@ -19,6 +19,10 @@ import {
   normalizeInstantUngatedGates,
   type InstantGateId,
 } from './instantGates';
+import {
+  normalizeDappCompatByOrigin,
+  type DappCompatMode,
+} from './dappCompat';
 import { normalizeEnabledTools, type ToolId } from './toolsRegistry';
 
 export type { WalletAccount } from './accounts';
@@ -51,6 +55,8 @@ export interface AppSettings {
   customChains?: ChainDefinition[];
   /** When true, inject as window.ethereum (MetaMask drop-in). When false, use window.wallet1337. */
   replaceMetaMask?: boolean;
+  /** Per-origin EIP-6963 / is1337 override. Missing origin = follow replaceMetaMask. */
+  dappCompatByOrigin?: Record<string, DappCompatMode>;
   /** Optional Etherscan API v2 key — one key covers most *scan explorers for tx history. */
   explorerApiKey?: string;
   /** Optional The Graph API key for ENS subgraph (100k free queries/mo). */
@@ -227,6 +233,7 @@ export async function loadPersisted(): Promise<PersistedState> {
           customRpcByChain: normalizeCustomRpcMap(row.settings?.customRpcByChain),
           customChains: normalizeCustomChains(row.settings?.customChains),
           replaceMetaMask: row.settings?.replaceMetaMask !== false,
+          dappCompatByOrigin: normalizeDappCompatByOrigin(row.settings?.dappCompatByOrigin),
           explorerApiKey:
             typeof row.settings?.explorerApiKey === 'string' && row.settings.explorerApiKey.trim()
               ? row.settings.explorerApiKey.trim()
@@ -315,6 +322,9 @@ export async function patchSettings(patch: AppSettings): Promise<void> {
   }
   if (patch.enabledTools !== undefined) {
     merged.enabledTools = normalizeEnabledTools(patch.enabledTools);
+  }
+  if (patch.dappCompatByOrigin !== undefined) {
+    merged.dappCompatByOrigin = normalizeDappCompatByOrigin(patch.dappCompatByOrigin);
   }
   applyRpcPreferences(merged);
   await savePersisted({

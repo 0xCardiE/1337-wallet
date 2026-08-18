@@ -1,5 +1,6 @@
 import { getAddress, isAddress } from 'viem';
 import { addressExplorerLink } from './tokenApprovals';
+import { etherscanV2Get } from './etherscanV2';
 
 type SourceRecord = {
   SourceCode: string;
@@ -120,10 +121,7 @@ export async function fetchSourceRecord(
   });
   if (explorerApiKey?.trim()) params.set('apikey', explorerApiKey.trim());
 
-  const res = await fetch(`https://api.etherscan.io/v2/api?${params.toString()}`);
-  if (!res.ok) throw new Error(`Explorer API HTTP ${res.status}`);
-
-  const json = (await res.json()) as ApiResponse;
+  const json = (await etherscanV2Get(params)) as ApiResponse;
   if (json.status !== '1' || !Array.isArray(json.result) || !json.result[0]) {
     const msg = typeof json.result === 'string' ? json.result : json.message ?? 'No verified source';
     throw new Error(msg);

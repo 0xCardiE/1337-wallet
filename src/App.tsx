@@ -13,6 +13,7 @@ import { WalletsView } from './ui/WalletsView';
 import { NetworksManageView } from './ui/NetworksManageView';
 import { InstantGatesView } from './ui/InstantGatesView';
 import { ToolsSettingsView } from './ui/ToolsSettingsView';
+import { ConnectedSitesView } from './ui/ConnectedSitesView';
 import { WalletLayout, type WalletMainTab } from './ui/WalletLayout';
 import { WalletHomeView } from './ui/WalletHomeView';
 import { HistoryPanel } from './ui/HistoryPanel';
@@ -22,7 +23,7 @@ import { ScreenFade } from './ui/ScreenFade';
 
 type Screen = 'load' | 'onboard' | 'main';
 type MainTab = WalletMainTab;
-type Overlay = 'none' | 'settings' | 'networks' | 'wallets' | 'instant' | 'toolsSettings';
+type Overlay = 'none' | 'settings' | 'networks' | 'wallets' | 'instant' | 'toolsSettings' | 'connectedSites';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('load');
@@ -108,6 +109,8 @@ export function App() {
                 ? 'instant'
                 : overlay === 'toolsSettings'
                   ? 'toolsSettings'
+                : overlay === 'connectedSites'
+                  ? 'connectedSites'
               : 'main';
 
   let shell: ReactNode;
@@ -154,6 +157,14 @@ export function App() {
         onBack={() => setOverlay('settings')}
       />
     );
+  } else if (overlay === 'connectedSites') {
+    shell = (
+      <ConnectedSitesView
+        settings={settings}
+        onSaved={() => void refresh()}
+        onBack={() => setOverlay('settings')}
+      />
+    );
   } else if (overlay === 'settings') {
     shell = (
       <SettingsView
@@ -164,6 +175,7 @@ export function App() {
         onOpenWallets={() => setOverlay('wallets')}
         onOpenInstantGates={() => setOverlay('instant')}
         onOpenTools={() => setOverlay('toolsSettings')}
+        onOpenConnectedSites={() => setOverlay('connectedSites')}
       />
     );
   } else if (overlay === 'networks') {

@@ -17,6 +17,15 @@ export type WindowProviderEvent =
   | { type: 'connect'; chainId: string }
   | { type: 'disconnect' };
 
+/** Content → inpage inject flags (global Settings + per-origin override). */
+export type ProviderInjectConfig = {
+  replaceMetaMask: boolean;
+  is1337: boolean;
+  isMetaMask: boolean;
+  announceAs1337: boolean;
+  announceAsMetaMask: boolean;
+};
+
 export const PROVIDER_RPC_METHODS = [
   'eth_requestAccounts',
   'eth_accounts',

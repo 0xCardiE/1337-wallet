@@ -1,5 +1,6 @@
 import { formatUnits, getAddress, isAddress } from 'viem';
 import { chainById } from './chainCatalog';
+import { etherscanV2Get } from './etherscanV2';
 
 export const TX_HISTORY_PAGE_SIZE = 50;
 
@@ -165,13 +166,7 @@ async function fetchEtherscanV2Page(
   });
   if (apiKey?.trim()) params.set('apikey', apiKey.trim());
 
-  const res = await fetch(`https://api.etherscan.io/v2/api?${params.toString()}`);
-  if (!res.ok) throw new Error(`Explorer API HTTP ${res.status}`);
-  const json = (await res.json()) as {
-    status?: string;
-    message?: string;
-    result?: RawExplorerTx[] | string;
-  };
+  const json = await etherscanV2Get(params);
   if (json.status !== '1' || !Array.isArray(json.result)) {
     const msg =
       typeof json.result === 'string'
@@ -180,7 +175,7 @@ async function fetchEtherscanV2Page(
     if (/no transactions found/i.test(msg)) return [];
     throw new Error(msg);
   }
-  return json.result;
+  return json.result as RawExplorerTx[];
 }
 
 async function fetchBlockscoutPage(

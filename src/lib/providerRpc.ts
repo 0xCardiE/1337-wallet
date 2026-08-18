@@ -116,6 +116,7 @@ export async function handleProviderRpc(
   origin?: string,
   opts?: {
     tabId?: number;
+    pageUrl?: string;
     onApprovalQueued?: () => void;
     sessionAddress?: `0x${string}`;
     hardware?: boolean;
@@ -305,6 +306,7 @@ export async function handleProviderRpc(
         const approval = await queueApprovalRequest({
           request,
           origin,
+          pageUrl: opts?.pageUrl,
           tabId: opts?.tabId,
           chainId,
           onQueued: opts?.onApprovalQueued,

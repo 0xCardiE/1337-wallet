@@ -95,6 +95,23 @@ export async function disconnectOrigin(origin: string): Promise<void> {
   await setConnectedMap(map);
 }
 
+export type ConnectedSite = {
+  origin: string;
+  hostname: string;
+  addresses: string[];
+};
+
+export async function listConnectedSites(): Promise<ConnectedSite[]> {
+  const map = await getConnectedMap();
+  return Object.entries(map)
+    .map(([origin, addresses]) => ({
+      origin,
+      hostname: hostnameFromUrl(origin) ?? origin,
+      addresses,
+    }))
+    .sort((a, b) => a.hostname.localeCompare(b.hostname));
+}
+
 export function originFromUrl(url: string | undefined): string | null {
   if (!url) return null;
   try {

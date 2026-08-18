@@ -9,6 +9,7 @@ import {
   faviconForTab,
   getConnectedOrigins,
   isAddressConnected,
+  listConnectedSites,
   originFromUrl,
   queryActiveBrowserTab,
 } from './lib/dappConnections';
@@ -31,6 +32,7 @@ import {
   effectiveToolbarOpenMode,
   effectiveActiveChainId,
 } from './lib/storageState';
+import { resolveProviderInjectConfig } from './lib/dappCompat';
 import { handleTrezorMessage, initTrezorConnect, isTrezorMessage } from './lib/trezorBackground';
 import type { ProviderRequest, ProviderResponse } from './provider/types';
 import { toHexChainId } from './provider/types';
@@ -328,6 +330,23 @@ async function buildDappConnectionStatus(): Promise<{
   };
 }
 
+/** Push an event to every tab on this origin. */
+async function emitToOrigin(
+  origin: string,
+  event: { type: string; chainId?: string; accounts?: string[] },
+): Promise<void> {
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id == null) continue;
+      if (originFromUrl(tab.url) !== origin) continue;
+      await emitToTab(tab.id, event);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Tell connected dapp tabs which accounts the active wallet exposes for their origin. */
 async function broadcastAccountsChanged(activeAddress: `0x${string}` | null): Promise<void> {
   try {
@@ -386,12 +405,14 @@ type Msg =
     }
   | { type: 'PING' }
   | { type: 'SYNC_TOOLBAR_OPEN_MODE' }
-  | { type: 'PROVIDER_GET_CONFIG' }
-  | { type: 'PROVIDER_RPC'; request: ProviderRequest; origin?: string }
+  | { type: 'PROVIDER_GET_CONFIG'; origin?: string }
+  | { type: 'PROVIDER_RPC'; request: ProviderRequest; origin?: string; pageUrl?: string }
   | { type: 'BROADCAST_CHAIN_CHANGED'; chainId: number }
   | { type: 'GET_DAPP_CONNECTION' }
   | { type: 'CONNECT_ACTIVE_TAB' }
   | { type: 'DISCONNECT_ACTIVE_TAB' }
+  | { type: 'LIST_CONNECTED_SITES' }
+  | { type: 'DISCONNECT_ORIGIN'; origin: string }
   | { type: 'GET_PENDING_APPROVALS' }
   | { type: 'PENDING_APPROVALS_CHANGED' }
   | { type: 'OPEN_HARDWARE_CONFIRM_UI' }
@@ -533,9 +554,19 @@ chrome.runtime.onMessage.addListener(
       void (async () => {
         try {
           const { settings } = await loadPersisted();
-          sendResponse({ ok: true, replaceMetaMask: settings.replaceMetaMask !== false });
+          const origin =
+            message.origin ??
+            (sender.tab?.url ? originFromUrl(sender.tab.url) ?? undefined : undefined);
+          sendResponse({ ok: true, ...resolveProviderInjectConfig(settings, origin) });
         } catch {
-          sendResponse({ ok: true, replaceMetaMask: true });
+          sendResponse({
+            ok: true,
+            replaceMetaMask: true,
+            is1337: true,
+            isMetaMask: true,
+            announceAs1337: true,
+            announceAsMetaMask: true,
+          });
         }
       })();
       return true;
@@ -569,12 +600,17 @@ chrome.runtime.onMessage.addListener(
           const origin =
             message.origin ??
             (sender.url ? originFromUrl(sender.url) ?? undefined : undefined);
+          const pageUrl =
+            typeof message.pageUrl === 'string' && message.pageUrl
+              ? message.pageUrl
+              : sender.tab?.url;
           const res: ProviderRpcResult = await handleProviderRpc(
             pk,
             message.request,
             origin,
             {
               tabId: sender.tab?.id,
+              pageUrl,
               onApprovalQueued: () => {
                 notifyPendingApprovalsChanged();
                 if (hw) void openHardwareConfirmUi(sender.tab?.id);
@@ -820,6 +856,36 @@ chrome.runtime.onMessage.addListener(
           else await disconnectOrigin(status.tab.origin);
           await emitToTab(status.tab.tabId, { type: 'disconnect' });
           await emitToTab(status.tab.tabId, { type: 'accountsChanged', accounts: [] });
+          sendResponse({ ok: true });
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+        }
+      })();
+      return true;
+    }
+
+    if (message.type === 'LIST_CONNECTED_SITES') {
+      void (async () => {
+        try {
+          sendResponse({ ok: true, sites: await listConnectedSites() });
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e), sites: [] });
+        }
+      })();
+      return true;
+    }
+
+    if (message.type === 'DISCONNECT_ORIGIN') {
+      void (async () => {
+        try {
+          const origin = message.origin;
+          if (!origin) {
+            sendResponse({ ok: false, error: 'Missing origin' });
+            return;
+          }
+          await disconnectOrigin(origin);
+          await emitToOrigin(origin, { type: 'disconnect' });
+          await emitToOrigin(origin, { type: 'accountsChanged', accounts: [] });
           sendResponse({ ok: true });
         } catch (e) {
           sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });

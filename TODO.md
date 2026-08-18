@@ -23,7 +23,7 @@ Signing, consent, supply chain, physical access, and threat prevention.
 | [ ] | P0 | CI LavaMoat policy drift check | Ambire | Low | Fail PRs when `lavamoat/webpack/policy.json` changes without explicit commit after `npm run build:policy` |
 | [ ] | P0 | Document security invariants | Rabby | Low | Consent resets on lock/unlock/account/chain switch; fail-closed signing; no implicit consent via broadcasts. Add to `docs/wallet-security.md` or `docs/security-invariants.md` |
 | [ ] | P0 | RPC middleware refactor (`@APPROVAL`-style) | Rabby | Medium | Replace inline branching in `src/lib/providerRpc.ts` with metadata-driven middleware (unlock → connect → approve → execute) |
-| [~] | P1 | Action-type approval components | Rabby | Medium | Approve / Permit cards exist in `TxApprovalSheet`. Remaining: Send, Swap, Unknown dedicated views |
+| [x] | P1 | Action-type approval components | Rabby | Medium | Approve / Permit / Send / Swap / Unknown cards in `TxApprovalSheet`. |
 | [~] | P1 | Opt-in tx simulation / balance preview | Rabby | Medium | Local `eth_call` pass/fail/revert/gas on confirm (`txSimulate.ts`). Full asset-diff needs a sim API — **not planned** as default (signer.md) |
 | [ ] | P1 | Secrets-leak E2E test | Ambire | Low | Scan network/request bodies for mnemonics, private keys, session material during tests |
 | [ ] | P1 | LavaMoat unsafe-packages lockfile gate | Ambire | Low | Block lockfile bumps to packages excluded from LavaMoat unless PR is explicitly approved |
@@ -47,7 +47,7 @@ Benchmark from MetaMask security analysis. **1337 score is our implementation st
 | [x] | Mismatching EIP-712 chainId detection | 3.5 | Done | Warns in approval UI; Instant pauses unless ungated. `txRisk.ts` |
 | [x] | `eth_sign` method disabled | 3.3 | Done | Rejected with `4200`. Use `personal_sign` / `eth_signTypedData_v4` |
 | [x] | Mismatching SIWE domain detection | 1.8 | Done | Parses EIP-4361; domain/URI/chain vs page origin. `siwe.ts` |
-| [~] | Connected dApp management | 1.5 | Partial | Per-origin connect/disconnect + `wallet_revokePermissions`; **no full connected-sites list** |
+| [x] | Connected dApp management | 1.5 | Done | Per-origin connect/disconnect + `wallet_revokePermissions` + Settings → Connected sites |
 | [x] | Token approval management | 1.5 | Done | ERC-20, NFT `setApprovalForAll`, Permit2 in Tools → Approvals |
 | [-] | User confirmation before switching chains | 1.1 | Deferred | Auto-switch kept (no reconnect required) |
 
@@ -58,7 +58,7 @@ Benchmark from MetaMask security analysis. **1337 score is our implementation st
 | [~] | Transaction simulation | 6.7 | Partial | Local `eth_call` pass/fail/revert on confirm. No balance-change preview (signer.md) |
 | [~] | Clear message signing dialog | 3.8 | Partial | SIWE + permit + token-approval cards; remaining views still developer-oriented |
 | [x] | EIP-712 message parsing | 2.4 | Done | Domain, types, message fields, raw JSON |
-| [~] | Invalid address checksum detection | 2.2 | Partial | Viem `getAddress()` validates on parse; **no explicit checksum warning UI** |
+| [x] | Invalid address checksum detection | 2.2 | Done | Mixed-case EIP-55 mismatch warned on confirm (`addressChecksum.ts`) |
 | [x] | Clear token approval dialog | 6.7 | Done | Dedicated Approve / Permit cards. Instant still auto-signs unless that gate is on |
 | [~] | Mandatory message review | 2.1 | Partial | Required in Normal; Instant skips ordinary requests but not gated risks (default) |
 | [x] | Links to blockchain explorers | 1.2 | Done | Address/tx/contract links across approvals, history, gas, swap |
@@ -82,7 +82,7 @@ Benchmark from MetaMask security analysis. **1337 score is our implementation st
 | [ ] | Malicious address detection | 5.1 | Missing | No blocklists or drainer/scam databases |
 | [ ] | Trusted dApp detection | 3.3 | Missing | No allowlist or known-good dApp registry |
 | [~] | Unknown address detection | 2.8 | Partial | Unknown function selectors flagged `warn`; no address-book checks |
-| [~] | Full dApp URL display | 1.5 | Partial | Hostname + origin; **not full path/query** |
+| [x] | Full dApp URL display | 1.5 | Done | Confirm sheet shows hostname + path/query from `pageUrl` |
 | [~] | Malicious or spam token filtering | 1.3 | Partial | Approvals scoped to wallet token list; unlimited warned, not blocked |
 | [ ] | dApp access disclosure dialog | 1.0 | Missing | Silent `eth_requestAccounts`; kept by design for now |
 
@@ -105,9 +105,10 @@ Done this round: disable `eth_sign`, EIP-712 chainId mismatch, SIWE mismatch, to
 | [ ] | Phishing / malicious address checks | Local blocklist or opt-in Rabby/DeBank API |
 | [ ] | Clipboard hygiene | Auto-clear copied secrets; warn on seed/key copy |
 | [ ] | Auto-lock on by default | Or prompt during onboarding |
-| [ ] | Full URL display in approval | Show path + query, not just hostname |
-| [ ] | Explicit checksum warnings | Surface invalid/mixed-case addresses before sign |
-| [ ] | Connected sites manager | List all origins, per-site revoke and settings |
+| [x] | Full URL display in approval | Show path + query, not just hostname |
+| [x] | Explicit checksum warnings | Surface invalid/mixed-case addresses before sign |
+| [x] | Connected sites manager | List all origins, per-site revoke and settings |
+| [x] | Per-origin MetaMask-compat | Hide is1337 / announce as MetaMask per origin; reload tab after change |
 | [ ] | Robust auth (WebAuthn) | Optional passkey/biometric unlock |
 | [-] | dApp access disclosure dialog | Deferred with silent connect |
 
@@ -115,15 +116,15 @@ Done this round: disable `eth_sign`, EIP-712 chainId mismatch, SIWE mismatch, to
 
 ### Hardware wallet gaps
 
-Ledger/Trezor work for dapp signing and Quick Send, but several Tools flows still need a **local key** account. Track so we don’t forget:
+Ledger/Trezor work for dapp signing, Quick Send, Multisend, Swap, Gas, and ENS. Device confirm goes through the approval sheet.
 
 | Done | P | Item | Notes |
 |------|---|------|-------|
 | [x] | P1 | Multisend on hardware | Disperse.app batch (`MultiSendView`). One device confirm (plus ERC-20 approve). First-user CreateX deploy when the contract is missing — `docs/signer.md`. |
-| [ ] | P1 | ENS register / records on hardware | Today: blocked; points users to app.ens.domains. `EnsView.tsx` |
-| [ ] | P2 | Gas Station execute on hardware | Verify / wire device signing for Gas Station actions if missing |
-| [ ] | P2 | Swap execute on hardware | Verify LiFi swap path signs via HW approval sheet end-to-end |
-| [ ] | P2 | Unified “HW unsupported” empty states | Same muted banner pattern everywhere a Tools tab can’t use Ledger/Trezor |
+| [x] | P1 | ENS register / records on hardware | Routes through `sendTransactionRequest` → device confirm. Ledger may still need blind-sign on some controllers. `EnsView.tsx` |
+| [x] | P2 | Gas Station execute on hardware | LiFi path via `executeLiFiStep` + device confirm sheet |
+| [x] | P2 | Swap execute on hardware | Same LiFi + HW confirm path as Gas Station |
+| [x] | P2 | Unified “HW unsupported” empty states | Shared `HardwareSignHint` for Swap/Gas; remaining Tools use the same device confirm sheet |
 
 ---
 
@@ -135,7 +136,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Done | P | Item | Source | Effort | Notes |
 |------|---|------|--------|--------|-------|
-| [ ] | P0 | Per-origin MetaMask-compat mode | Rabby | Low | Hide `is1337` / announce as MetaMask in EIP-6963 for broken dapps; per-site override in settings. See `src/inpage/provider.ts`, `src/lib/dappConnections.ts` |
+| [x] | P0 | Per-origin MetaMask-compat mode | Rabby | Low | Hide `is1337` / announce as MetaMask in EIP-6963 per origin. Settings → Connected sites. `dappCompat.ts` |
 | [ ] | P1 | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `launchPersistentContext` + `--load-extension`; seed storage via service worker to skip onboarding |
 | [~] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Confirm sheet + History titles. See `src/lib/txHumanize.ts`. Expand known selectors as needed |
 | [ ] | P2 | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts` |
@@ -203,7 +204,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
-| 2026-08-18 | Multisend: Disperse.app on local + hardware; probe legacy then CreateX CREATE2; first user may deploy if both empty (`docs/signer.md`) |
+| 2026-08-19 | Confirm sheet Send/Swap/Unknown cards, full page URL, checksum warnings; connected sites + per-origin MetaMask-compat; Swap/Gas on hardware |
 | 2026-08-17 | Signer guideline (`docs/signer.md`): confirm-time humanize/simulate/hints, Inspect, Approvals+=NFT+Permit2; lab tools deferred until asked |
 | 2026-08-16 | Hardware gaps section (Multisend, ENS, Gas, Swap); Multisend Instant confirm-per-recipient |
 | 2026-08-14 | Split TODO into Security vs Features |
