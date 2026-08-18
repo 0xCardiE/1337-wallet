@@ -37,15 +37,17 @@ export function WalletHomeView({
     setBusy(true);
     setErr(null);
     try {
+      invalidateRpcBalanceCache(chainId);
       const { rows: next, error } = await loadWalletBalancesForChain(addr, chainId, {
         refreshRpc: true,
+        explorerApiKey: settings.explorerApiKey,
       });
       setRows(next);
       setErr(error);
     } finally {
       setBusy(false);
     }
-  }, [addr, chainId]);
+  }, [addr, chainId, settings.explorerApiKey]);
 
   useEffect(() => {
     invalidateRpcBalanceCache(chainId);

@@ -1,5 +1,4 @@
-import { formatUnits } from 'viem';
-import { getAddress } from 'viem';
+import { formatUnits, getAddress, isAddress } from 'viem';
 import { getTokens, getWalletBalances } from '@lifi/sdk';
 import { ChainType } from '@lifi/types';
 import type { Token } from '@lifi/types';
@@ -8,6 +7,14 @@ import { chainLogoUri } from './chainLogo';
 import { snapshotHeldTokensOnChain, type OnChainBalanceProbe } from './ethereum';
 import { isNativeToken } from './lifiHelpers';
 import { summarizeApiError } from './errors';
+import { etherscanV2Get } from './etherscanV2';
+import {
+  blockscoutApiOrigin,
+  blockscoutGet,
+  catalogExplorerOrigin,
+  etherscanCommunityAccess,
+  isBlockscoutOrigin,
+} from './explorerApis';
 
 export type WalletBalEntry = {
   address: string;
@@ -80,7 +87,13 @@ function formatUnitsStringCompact(raw: string): string {
 }
 
 const RPC_BALANCE_OVERRIDE_TTL_MS = 120_000;
+const RPC_SNAPSHOT_MAX = 150;
+const CATALOG_PROBE_MAX = 80;
+const EXPLORER_PROBE_MAX = 80;
+
 const rpcFresh = new Map<number, { at: number; rows: WalletBalEntry[] }>();
+/** Token contracts we have seen with a balance — kept after amount-cache invalidation. */
+const knownProbes = new Map<string, OnChainBalanceProbe[]>();
 
 export function fmtTokenAmount(entry: WalletBalEntry): string {
   try {
@@ -216,6 +229,254 @@ function usesLifiPortfolio(chainId: number): boolean {
   return chainById(chainId)?.kind !== 'testnet';
 }
 
+function knownProbeKey(chainId: number, holder: string): string {
+  return `${chainId}:${holder.toLowerCase()}`;
+}
+
+function rememberHeldProbes(chainId: number, holder: string, rows: WalletBalEntry[]): void {
+  knownProbes.set(
+    knownProbeKey(chainId, holder),
+    rows.filter(r => !isNativeWalletToken(r)).map(balEntryToProbe),
+  );
+}
+
+function tokenToProbe(t: Token): OnChainBalanceProbe {
+  return {
+    address: t.address,
+    decimals: t.decimals,
+    symbol: t.symbol,
+    name: t.name,
+    logoURI: t.logoURI,
+    priceUSD: t.priceUSD,
+  };
+}
+
+function mergeErc20Probe(map: Map<string, OnChainBalanceProbe>, probe: OnChainBalanceProbe): void {
+  const key = probe.address.toLowerCase();
+  if (NATIVE_ADDRS.has(key)) return;
+  const prev = map.get(key);
+  if (!prev) {
+    map.set(key, probe);
+    return;
+  }
+  map.set(key, {
+    address: prev.address,
+    decimals: prev.decimals || probe.decimals,
+    symbol: prev.symbol || probe.symbol,
+    name: prev.name || probe.name,
+    logoURI: prev.logoURI || probe.logoURI,
+    priceUSD: prev.priceUSD || probe.priceUSD,
+  });
+}
+
+function probeFromUnknownToken(raw: {
+  address?: string;
+  decimals?: unknown;
+  symbol?: unknown;
+  name?: unknown;
+  logoURI?: unknown;
+}): OnChainBalanceProbe | null {
+  const addr = raw.address?.trim();
+  if (!addr || !isAddress(addr)) return null;
+  const decimalsRaw = Number(raw.decimals);
+  const decimals = Number.isFinite(decimalsRaw) && decimalsRaw >= 0 && decimalsRaw <= 36 ? decimalsRaw : 18;
+  const symbol = typeof raw.symbol === 'string' && raw.symbol.trim() ? raw.symbol.trim() : 'TOKEN';
+  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : symbol;
+  const logoURI = typeof raw.logoURI === 'string' && raw.logoURI.trim() ? raw.logoURI.trim() : undefined;
+  return { address: getAddress(addr), decimals, symbol, name, logoURI };
+}
+
+function isErc20ScoutType(type: string | undefined): boolean {
+  if (!type) return true;
+  const t = type.toUpperCase().replace(/-/g, '');
+  return !(t.includes('721') || t.includes('1155') || t.includes('NFT'));
+}
+
+function parseScoutTokenItems(raw: unknown): OnChainBalanceProbe[] {
+  const items = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as { items?: unknown }).items)
+      ? ((raw as { items: unknown[] }).items)
+      : [];
+  const out: OnChainBalanceProbe[] = [];
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    const rec = item as {
+      token?: Record<string, unknown>;
+      token_type?: string;
+      value?: string;
+      token_id?: unknown;
+    };
+    if (rec.token_id != null && rec.token_id !== '') continue;
+    const token = rec.token && typeof rec.token === 'object' ? rec.token : rec;
+    const type = String(token.type ?? rec.token_type ?? '');
+    if (type && !isErc20ScoutType(type)) continue;
+    const probe = probeFromUnknownToken({
+      address: String(token.address ?? token.address_hash ?? ''),
+      decimals: token.decimals,
+      symbol: token.symbol,
+      name: token.name,
+      logoURI: token.icon_url,
+    });
+    if (probe) out.push(probe);
+    if (out.length >= EXPLORER_PROBE_MAX) break;
+  }
+  return out;
+}
+
+async function discoverHeldTokenProbes(
+  chainId: number,
+  holder: `0x${string}`,
+  explorerApiKey?: string,
+): Promise<OnChainBalanceProbe[]> {
+  const catalog = catalogExplorerOrigin(chainId);
+  const scout = blockscoutApiOrigin(chainId);
+  const catalogIsScout = !!catalog && isBlockscoutOrigin(catalog);
+  const origins = [...new Set([catalogIsScout ? catalog : undefined, scout].filter(Boolean))] as string[];
+
+  for (const origin of origins) {
+    try {
+      const v2 = await fetch(`${origin}/api/v2/addresses/${holder}/token-balances`);
+      if (v2.ok) {
+        const parsed = parseScoutTokenItems(await v2.json());
+        if (parsed.length) return parsed;
+      }
+    } catch {
+      /* try next */
+    }
+    try {
+      const v2tokens = await fetch(`${origin}/api/v2/addresses/${holder}/tokens?type=ERC-20`);
+      if (v2tokens.ok) {
+        const parsed = parseScoutTokenItems(await v2tokens.json());
+        if (parsed.length) return parsed;
+      }
+    } catch {
+      /* try classic */
+    }
+    try {
+      const json = await blockscoutGet(
+        origin,
+        new URLSearchParams({ module: 'account', action: 'tokenlist', address: holder }),
+      );
+      if (Array.isArray(json.result)) {
+        const parsed: OnChainBalanceProbe[] = [];
+        for (const row of json.result as Record<string, unknown>[]) {
+          const probe = probeFromUnknownToken({
+            address: String(row.contractAddress ?? row.contractaddress ?? ''),
+            decimals: row.decimals ?? row.tokenDecimal,
+            symbol: row.symbol,
+            name: row.tokenName ?? row.name,
+          });
+          if (probe) parsed.push(probe);
+          if (parsed.length >= EXPLORER_PROBE_MAX) break;
+        }
+        if (parsed.length) return parsed;
+      }
+    } catch {
+      /* try etherscan */
+    }
+  }
+
+  const access = etherscanCommunityAccess(chainId);
+  const key = explorerApiKey?.trim();
+  if (access === 'none' || (!key && access === 'paid')) return [];
+
+  try {
+    const params = new URLSearchParams({
+      chainid: String(chainId),
+      module: 'account',
+      action: 'tokentx',
+      address: holder,
+      page: '1',
+      offset: '100',
+      sort: 'desc',
+    });
+    if (key) params.set('apikey', key);
+    const json = await etherscanV2Get(params);
+    if (!Array.isArray(json.result)) return [];
+    const parsed: OnChainBalanceProbe[] = [];
+    const seen = new Set<string>();
+    for (const row of json.result as Record<string, unknown>[]) {
+      const probe = probeFromUnknownToken({
+        address: String(row.contractAddress ?? ''),
+        decimals: row.tokenDecimal,
+        symbol: row.tokenSymbol,
+        name: row.tokenName,
+      });
+      if (!probe) continue;
+      const k = probe.address.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      parsed.push(probe);
+      if (parsed.length >= EXPLORER_PROBE_MAX) break;
+    }
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+async function loadCatalogTokens(chainId: number): Promise<Token[]> {
+  if (!usesLifiPortfolio(chainId)) return [];
+  try {
+    const res = await getTokens({
+      chains: [chainId],
+      chainTypes: [ChainType.EVM],
+      extended: true,
+      orderBy: 'volumeUSD24H',
+    });
+    return res.tokens?.[chainId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function collectBalanceProbes(opts: {
+  chainId: number;
+  holder: `0x${string}`;
+  lifiRows?: WalletBalEntry[];
+  extra?: OnChainBalanceProbe[];
+}): Promise<OnChainBalanceProbe[]> {
+  const catalog = await loadCatalogTokens(opts.chainId);
+  const native = mergeNativeCatalogMeta(
+    nativeProbeForChain(opts.chainId),
+    nativeTokenFromCatalog(catalog),
+    opts.chainId,
+  );
+  const must = new Map<string, OnChainBalanceProbe>();
+  for (const p of knownProbes.get(knownProbeKey(opts.chainId, opts.holder)) ?? []) {
+    mergeErc20Probe(must, p);
+  }
+  for (const row of opts.lifiRows ?? []) mergeErc20Probe(must, balEntryToProbe(row));
+  for (const p of opts.extra ?? []) mergeErc20Probe(must, p);
+
+  const fill = new Map(must);
+  let catalogAdded = 0;
+  for (const t of catalog) {
+    const key = t.address.toLowerCase();
+    if (NATIVE_ADDRS.has(key)) continue;
+    if (fill.has(key)) {
+      const prev = fill.get(key)!;
+      const catalogProbe = tokenToProbe(t);
+      fill.set(key, {
+        address: prev.address,
+        decimals: catalogProbe.decimals || prev.decimals,
+        symbol: catalogProbe.symbol || prev.symbol,
+        name: catalogProbe.name || prev.name,
+        logoURI: catalogProbe.logoURI || prev.logoURI,
+        priceUSD: catalogProbe.priceUSD || prev.priceUSD,
+      });
+      continue;
+    }
+    if (catalogAdded >= CATALOG_PROBE_MAX) continue;
+    if (fill.size >= RPC_SNAPSHOT_MAX - 1) break;
+    mergeErc20Probe(fill, tokenToProbe(t));
+    catalogAdded += 1;
+  }
+
+  return [native, ...fill.values()].slice(0, RPC_SNAPSHOT_MAX);
+}
+
 /**
  * On-chain native (always) plus Li.FI catalog ERC-20s on mainnets.
  * Testnets skip the catalog — Li.FI does not index them — and probe ETH via RPC.
@@ -224,39 +485,9 @@ export async function loadWalletBalancesRpcForChain(
   holder: `0x${string}`,
   chainId: number,
 ): Promise<WalletBalEntry[]> {
-  const probes: OnChainBalanceProbe[] = [nativeProbeForChain(chainId)];
-  const seen = new Set<string>([ETH_PLACEHOLDER, '0x0000000000000000000000000000000000000000']);
-
-  if (usesLifiPortfolio(chainId)) {
-    try {
-      const res = await getTokens({
-        chains: [chainId],
-        chainTypes: [ChainType.EVM],
-        extended: true,
-        orderBy: 'volumeUSD24H',
-      });
-      const catalogTokens = res.tokens?.[chainId] ?? [];
-      probes[0] = mergeNativeCatalogMeta(probes[0]!, nativeTokenFromCatalog(catalogTokens), chainId);
-      for (const t of catalogTokens) {
-        const key = t.address.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        probes.push({
-          address: t.address,
-          decimals: t.decimals,
-          symbol: t.symbol,
-          name: t.name,
-          logoURI: t.logoURI,
-          priceUSD: t.priceUSD,
-        });
-        if (probes.length >= 80) break;
-      }
-    } catch {
-      /* native-only probe is enough to show gas balance */
-    }
-  }
-
-  const rows = await snapshotHeldTokensOnChain(chainId, holder, probes);
+  const probes = await collectBalanceProbes({ chainId, holder });
+  const rows = await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX);
+  rememberHeldProbes(chainId, holder, rows.map(r => ({ ...r, chainId })));
   return enrichNativeRows(chainId, rows.map(r => ({ ...r, chainId })));
 }
 
@@ -294,11 +525,11 @@ export async function loadWalletBalancesMap(
   }
 }
 
-/** LiFi balances merged with on-chain native (+ RPC when Li.FI is empty or stale). */
+/** LiFi addresses/metadata merged with on-chain balances. RPC is the amount source of truth. */
 export async function loadWalletBalancesForChain(
   address: string,
   chainId: number,
-  options?: { refreshRpc?: boolean },
+  options?: { refreshRpc?: boolean; explorerApiKey?: string },
 ): Promise<{ rows: WalletBalEntry[]; error: string | null }> {
   const holder = getAddress(address);
   const now = Date.now();
@@ -306,13 +537,15 @@ export async function loadWalletBalancesForChain(
     if (now - pack.at >= RPC_BALANCE_OVERRIDE_TTL_MS) rpcFresh.delete(cid);
   }
 
+  if (options?.refreshRpc) rpcFresh.delete(chainId);
+
   const cached = rpcFresh.get(chainId);
-  if (cached && now - cached.at < RPC_BALANCE_OVERRIDE_TTL_MS) {
+  if (!options?.refreshRpc && cached && now - cached.at < RPC_BALANCE_OVERRIDE_TTL_MS) {
     const rows = await enrichNativeRows(chainId, [...cached.rows].sort(compareByUsd));
     return { rows, error: null };
   }
 
-  let chainRows: WalletBalEntry[] = [];
+  let lifiRows: WalletBalEntry[] = [];
   let lifiError: string | null = null;
   const skipLifi = !usesLifiPortfolio(chainId);
 
@@ -320,37 +553,36 @@ export async function loadWalletBalancesForChain(
     try {
       const raw = await getWalletBalances(holder);
       const all = Object.values(parseLifiWalletBalances(raw)).flat();
-      chainRows = all.filter(r => r.chainId === chainId);
+      lifiRows = all.filter(r => r.chainId === chainId);
     } catch (e) {
       lifiError = summarizeApiError(e);
     }
   }
 
-  /* Testnets, empty Li.FI (unindexed chain), or an explicit RPC refresh. */
-  const needRpc = skipLifi || options?.refreshRpc || chainRows.length === 0 || lifiError != null;
-  if (needRpc) {
-    try {
-      if (chainRows.length === 0) {
-        chainRows = await loadWalletBalancesRpcForChain(holder, chainId);
-      } else {
-        const probes = [nativeProbeForChain(chainId), ...chainRows.map(balEntryToProbe)];
-        chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes)).map(r => ({
-          ...r,
-          chainId,
-        }));
-      }
-      rpcFresh.set(chainId, { at: now, rows: chainRows });
-      lifiError = null;
-    } catch (e) {
-      if (chainRows.length === 0) {
-        return { rows: [], error: lifiError ?? summarizeApiError(e) };
-      }
+  try {
+    const extra = options?.refreshRpc
+      ? await discoverHeldTokenProbes(chainId, holder, options.explorerApiKey)
+      : [];
+    const probes = await collectBalanceProbes({
+      chainId,
+      holder,
+      lifiRows,
+      extra,
+    });
+    const chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX)).map(
+      r => ({ ...r, chainId }),
+    );
+    rememberHeldProbes(chainId, holder, chainRows);
+    rpcFresh.set(chainId, { at: Date.now(), rows: chainRows });
+    const rows = await enrichNativeRows(chainId, [...chainRows].sort(compareByUsd));
+    return { rows, error: null };
+  } catch (e) {
+    if (lifiRows.length === 0) {
+      return { rows: [], error: lifiError ?? summarizeApiError(e) };
     }
+    lifiRows.sort(compareByUsd);
+    return { rows: await enrichNativeRows(chainId, lifiRows), error: null };
   }
-
-  chainRows.sort(compareByUsd);
-  chainRows = await enrichNativeRows(chainId, chainRows);
-  return { rows: chainRows, error: null };
 }
 
 export function invalidateRpcBalanceCache(chainId?: number): void {
