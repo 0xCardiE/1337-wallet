@@ -6,7 +6,8 @@ import type { ExtendedChain, LiFiStep, Token, TokenExtended } from '@lifi/types'
 import { getUnlockedAccount, getActiveAccountMeta, getSessionPrivateKey } from '../lib/accountSession';
 import { isHardwareAccount } from '../lib/accounts';
 import type { AppSettings } from '../lib/storageState';
-import { effectiveSlippageRatio } from '../lib/storageState';
+import { effectiveActiveChainId, effectiveSlippageRatio } from '../lib/storageState';
+import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
 import { sortEvmChainIds, sortExtendedChains } from '../lib/chainPopularity';
 import { loadEvmMainnetChains } from '../lib/lifiBootstrap';
 import { summarizeApiError } from '../lib/errors';
@@ -334,6 +335,8 @@ export function SwapView({
   const meta = getActiveAccountMeta();
   const hw = Boolean(meta && isHardwareAccount(meta));
   const canSend = Boolean(getSessionPrivateKey() || hw);
+  const activeChainId = effectiveActiveChainId(settings);
+  const needsConfirm = shouldConfirmInWalletSend(settings) && !hw;
 
   const [evmChains, setEvmChains] = useState<ExtendedChain[]>([]);
   const [balancesRecord, setBalancesRecord] = useState<Record<number, BalEntry[]> | null>(null);
@@ -362,6 +365,8 @@ export function SwapView({
   const [quoteBusy, setQuoteBusy] = useState(false);
   /** After a completed swap, show a non-actionable "Success" until the form changes. */
   const [swapSuccessCta, setSwapSuccessCta] = useState(false);
+  /** Instant off: first tap reviews, second tap executes. */
+  const [reviewing, setReviewing] = useState(false);
 
   const [execBusy, setExecBusy] = useState(false);
   const [execLog, setExecLog] = useState<string | null>(null);
@@ -386,6 +391,8 @@ export function SwapView({
   const persistRestoreFromRef = useRef<{ chainId: number; address: string } | null>(null);
   /** Re-apply persisted "to" token once destination catalog loads. */
   const persistRestoreToRef = useRef<{ chainId: number; address: string } | null>(null);
+  /** Last wallet network applied as Swap from/to default. */
+  const appliedWalletChainRef = useRef<number | null>(null);
 
   const balancesRecordRef = useRef<Record<number, BalEntry[]> | null>(null);
   const rpcFreshRef = useRef<Map<number, { at: number; rows: BalEntry[] }>>(new Map());
@@ -561,6 +568,8 @@ export function SwapView({
     persistRestoreToRef.current = null;
     flipPreferredFromBalRef.current = null;
     flipPreferredToTokenRef.current = null;
+    appliedWalletChainRef.current = null;
+    setReviewing(false);
     setFromChainId(null);
     setToChainId(null);
     setFromToken(null);
@@ -574,33 +583,69 @@ export function SwapView({
     let cancelled = false;
     void loadSwapUi(walletLower).then(saved => {
       if (cancelled) return;
-      if (!saved) {
+      const ids = new Set(evmChains.map(c => c.id));
+      const preferred = ids.has(activeChainId) ? activeChainId : (evmChains[0]?.id ?? null);
+      if (preferred == null) {
         setSwapUiHydrated(true);
         return;
       }
-      const ids = new Set(evmChains.map(c => c.id));
-      let fromId = saved.fromChainId;
-      let toId = saved.toChainId;
-      if (!ids.has(fromId)) fromId = evmChains[0]!.id;
-      if (!ids.has(toId)) toId = fromId;
-      setFromChainId(fromId);
-      setToChainId(toId);
-      setAmountStr(saved.amountStr);
-      persistRestoreFromRef.current = { chainId: fromId, address: saved.fromTokenAddress };
-      persistRestoreToRef.current = { chainId: toId, address: saved.toTokenAddress };
+      setFromChainId(preferred);
+      setToChainId(preferred);
+      if (saved && saved.fromChainId === preferred) {
+        setAmountStr(saved.amountStr);
+        persistRestoreFromRef.current = { chainId: preferred, address: saved.fromTokenAddress };
+        if (saved.toChainId === preferred) {
+          persistRestoreToRef.current = { chainId: preferred, address: saved.toTokenAddress };
+        }
+      }
       setSwapUiHydrated(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [addr, evmChains]);
+  }, [addr, evmChains, activeChainId]);
 
   useEffect(() => {
     if (!swapUiHydrated) return;
     if (!fromChainId && chainChoices.length) {
-      setFromChainId(chainChoices[0]!);
+      const preferred = chainChoices.includes(activeChainId) ? activeChainId : chainChoices[0]!;
+      setFromChainId(preferred);
     }
-  }, [swapUiHydrated, chainChoices, fromChainId]);
+  }, [swapUiHydrated, chainChoices, fromChainId, activeChainId]);
+
+  useEffect(() => {
+    if (!swapUiHydrated) {
+      appliedWalletChainRef.current = null;
+      return;
+    }
+    if (!evmChains.some(c => c.id === activeChainId)) return;
+    const prev = appliedWalletChainRef.current;
+    appliedWalletChainRef.current = activeChainId;
+    if (prev === activeChainId) return;
+    setFromChainId(activeChainId);
+    setToChainId(activeChainId);
+    if (prev != null) {
+      setAmountStr('');
+      setQuote(null);
+      setQuoteErr(null);
+      setReviewing(false);
+      setSwapSuccessCta(false);
+      persistRestoreFromRef.current = null;
+      persistRestoreToRef.current = null;
+    }
+  }, [activeChainId, swapUiHydrated, evmChains]);
+
+  useEffect(() => {
+    setReviewing(false);
+  }, [
+    amountStr,
+    fromChainId,
+    toChainId,
+    fromToken?.address,
+    toToken?.address,
+    quote,
+    needsConfirm,
+  ]);
 
   useEffect(() => {
     if (!swapUiHydrated) return;
@@ -1095,6 +1140,7 @@ export function SwapView({
   );
 
   const execute = async () => {
+    setReviewing(false);
     setSwapSuccessCta(false);
     setExecLog(null);
     setExecTx(null);
@@ -1466,14 +1512,53 @@ export function SwapView({
                       </strong>
                     </p>
                   )}
-                  <button
-                    type="button"
-                    className="primary w1337-swap-btn"
-                    disabled={execBusy || !canSend || !quote.transactionRequest || !!quoteErr}
-                    onClick={() => void execute()}
-                  >
-                    {execBusy ? (hw ? 'Confirm on device…' : 'Working…') : 'Swap'}
-                  </button>
+                  {reviewing && !execBusy ? (
+                    <div className="w1337-ms-confirm">
+                      <p className="muted" style={{ margin: 0, fontSize: 12 }}>
+                        Instant is off. Review this swap, then confirm to sign.
+                      </p>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          className="ghost"
+                          style={{ flex: 1 }}
+                          onClick={() => setReviewing(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className="primary"
+                          style={{ flex: 1 }}
+                          disabled={!canSend || !quote.transactionRequest || !!quoteErr}
+                          onClick={() => void execute()}
+                        >
+                          Swap
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="primary w1337-swap-btn"
+                      disabled={execBusy || !canSend || !quote.transactionRequest || !!quoteErr}
+                      onClick={() => {
+                        if (needsConfirm && !reviewing) {
+                          setReviewing(true);
+                          return;
+                        }
+                        void execute();
+                      }}
+                    >
+                      {execBusy
+                        ? hw
+                          ? 'Confirm on device…'
+                          : 'Working…'
+                        : needsConfirm
+                          ? 'Review swap'
+                          : 'Swap'}
+                    </button>
+                  )}
                   <HardwareSignHint show={hw} />
                 </div>
               )}

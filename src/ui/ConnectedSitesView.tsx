@@ -13,6 +13,7 @@ import { patchSettings, type AppSettings } from '../lib/storageState';
 import { shortAddress } from '../lib/accounts';
 import { describeError } from '../lib/utils';
 import { ScreenHeader } from './ScreenHeader';
+import { SimpleSelect1337 } from './Select1337';
 
 export function ConnectedSitesView({
   settings,
@@ -26,6 +27,12 @@ export function ConnectedSitesView({
   const [sites, setSites] = useState<ConnectedSite[]>([]);
   const [busyOrigin, setBusyOrigin] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  const compatOptions = (Object.keys(DAPP_COMPAT_LABELS) as DappCompatMode[]).map(id => ({
+    value: id,
+    label: DAPP_COMPAT_LABELS[id],
+  }));
 
   const reload = useCallback(async () => {
     setSites(await fetchConnectedSites());
@@ -89,19 +96,17 @@ export function ConnectedSitesView({
                         {site.addresses.map(a => shortAddress(a)).join(', ')}
                       </span>
                     </div>
-                    <label className="w1337-connected-sites__compat">
-                      <span className="muted">Provider</span>
-                      <select
+                    <div className="w1337-connected-sites__compat">
+                      <SimpleSelect1337
+                        id={`compat:${site.origin}`}
+                        label="Provider"
+                        openMenu={openMenu}
+                        setOpenMenu={setOpenMenu}
                         value={mode}
-                        onChange={e => void setCompat(site.origin, e.target.value as DappCompatMode)}
-                      >
-                        {(Object.keys(DAPP_COMPAT_LABELS) as DappCompatMode[]).map(id => (
-                          <option key={id} value={id}>
-                            {DAPP_COMPAT_LABELS[id]}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                        options={compatOptions}
+                        onChange={v => void setCompat(site.origin, v as DappCompatMode)}
+                      />
+                    </div>
                     <button
                       type="button"
                       className="ghost"

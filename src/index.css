@@ -6015,6 +6015,7 @@ button.w1337-quick-send-inline__send--busy {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-card);
+  overflow: visible;
 }
 
 .w1337-connected-sites__copy {
@@ -6041,7 +6042,7 @@ button.w1337-quick-send-inline__send--busy {
   font-size: 11px;
 }
 
-.w1337-connected-sites__compat select {
+.w1337-connected-sites__compat .w1337-dd {
   width: 100%;
 }
 
