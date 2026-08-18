@@ -37,6 +37,9 @@ const KNOWN_SAFE_SELECTORS = new Set([
   '0x23b872dd', // transferFrom
   '0x42842e0e', // safeTransferFrom(address,address,uint256)
   '0xb88d4fde', // safeTransferFrom(address,address,uint256,bytes)
+  '0xe63d38ed', // disperseEther
+  '0xc73a2d60', // disperseToken
+  '0x51ba162c', // disperseTokenSimple
 ]);
 
 const PERMIT_PRIMARY_TYPES = new Set([

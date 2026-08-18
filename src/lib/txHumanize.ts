@@ -7,6 +7,7 @@ import {
   type TokenMeta,
   type TxRiskReport,
 } from './txRisk';
+import { CREATEX_ADDRESS, DISPERSE_CREATEX_CALLDATA } from './disperseCreate2';
 
 function shortAddress(addr: string): string {
   if (addr.length < 12) return addr;
@@ -40,6 +41,10 @@ const SELECTOR_LABELS: Record<string, string> = {
   '0x5ae401dc': 'multicall',
   '0xac9650d8': 'multicall',
   '0x3593564c': 'execute',
+  '0xe63d38ed': 'disperseEther',
+  '0xc73a2d60': 'disperseToken',
+  '0x51ba162c': 'disperseTokenSimple',
+  '0x26307668': 'deployCreate2',
 };
 
 function friendlyVerb(base: string): string | undefined {
@@ -58,6 +63,10 @@ function friendlyVerb(base: string): string | undefined {
   if (n === 'withdraw' || n === 'withdraweth') return 'Withdrew';
   if (n === 'bridge' || n.startsWith('startbridge') || n.includes('bridge')) return 'Bridged';
   if (n === 'claim' || n.startsWith('claim')) return 'Claimed';
+  if (n === 'disperseether' || n === 'dispersetoken' || n === 'dispersetokensimple') {
+    return 'Sent a Disperse batch';
+  }
+  if (n === 'deploycreate2') return 'Deploy a contract via CreateX';
   return undefined;
 }
 
@@ -152,6 +161,16 @@ export function humanizePendingRequest(args: {
         value > 0n
           ? `Deploy a contract and send ${formatEther(value)} ${symbol}`
           : 'Deploy a contract',
+    };
+  }
+
+  if (
+    getAddress(to) === getAddress(CREATEX_ADDRESS) &&
+    data.toLowerCase() === DISPERSE_CREATEX_CALLDATA.toLowerCase()
+  ) {
+    return {
+      headline: 'Deploy Disperse.app on this chain',
+      detail: 'CreateX CREATE2 · later users share this address',
     };
   }
 

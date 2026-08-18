@@ -9,7 +9,14 @@ import { isHardwareAccount, shortAddress } from '../lib/accounts';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import { chainById } from '../lib/chainCatalog';
 import { parseAddressList } from '../lib/backgroundSign';
-import { DISPERSE_ADDRESS, disperseErc20, disperseNative, isDisperseDeployed } from '../lib/disperse';
+import {
+  DISPERSE_CREATE2_ADDRESS,
+  deployDisperseViaCreateX,
+  disperseErc20,
+  disperseNative,
+  resolveDisperse,
+  type DisperseResolution,
+} from '../lib/disperse';
 import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
 import { describeError } from '../lib/utils';
 
@@ -22,6 +29,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
   const chainId = effectiveActiveChainId(settings);
   const chain = chainById(chainId);
   const needsConfirm = shouldConfirmInWalletSend(settings) && !hw;
+  const needsDeployConfirm = !hw;
 
   const [addressesRaw, setAddressesRaw] = useState('');
   const [amountStr, setAmountStr] = useState('');
@@ -29,18 +37,20 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
-  const [disperseOn, setDisperseOn] = useState<boolean | null>(null);
+  const [probe, setProbe] = useState<DisperseResolution | null>(null);
   const [pending, setPending] = useState<{
     recipients: `0x${string}`[];
     amount: bigint;
     token: `0x${string}` | null;
   } | null>(null);
+  const [pendingDeploy, setPendingDeploy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    setDisperseOn(null);
-    void isDisperseDeployed(chainId).then(ok => {
-      if (!cancelled) setDisperseOn(ok);
+    setProbe(null);
+    setPendingDeploy(false);
+    void resolveDisperse(chainId, { refresh: true }).then(next => {
+      if (!cancelled) setProbe(next);
     });
     return () => {
       cancelled = true;
@@ -50,6 +60,12 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
   useEffect(() => {
     setPending(null);
   }, [addressesRaw, amountStr, tokenAddr, chainId]);
+
+  async function refreshProbe() {
+    const next = await resolveDisperse(chainId, { refresh: true });
+    setProbe(next);
+    return next;
+  }
 
   async function sendViaDisperse(
     recipients: `0x${string}`[],
@@ -105,8 +121,12 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
       );
       return;
     }
-    if (!disperseOn) {
-      setErr('Disperse.app is not on this network. Switch chain to send a batch.');
+    if (!probe?.address) {
+      setErr(
+        probe?.canDeploy
+          ? 'Deploy Disperse.app on this network first, then send the batch.'
+          : 'Disperse.app is not on this network. Switch chain to send a batch.',
+      );
       return;
     }
 
@@ -148,12 +168,62 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     }
   }
 
+  async function runDeploy() {
+    setBusy(true);
+    setErr(null);
+    setLog([]);
+    try {
+      const { hash, alreadyPresent } = await deployDisperseViaCreateX(chainId);
+      const next = await refreshProbe();
+      if (alreadyPresent && next.address) {
+        setLog([`Disperse.app is already at ${next.address}.`]);
+      } else if (hash) {
+        setLog([`Deployed Disperse.app → ${hash}`]);
+      }
+      setPendingDeploy(false);
+    } catch (e) {
+      try {
+        const next = await refreshProbe();
+        if (next.address) {
+          setLog([`Disperse.app is already at ${next.address}.`]);
+          setPendingDeploy(false);
+          setErr(null);
+          return;
+        }
+      } catch {
+        /* keep original error */
+      }
+      setErr(describeError(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startOrDeploy() {
+    setErr(null);
+    setLog([]);
+    if (!canSend) {
+      setErr(
+        hw
+          ? 'Unlock the wallet and keep the device ready.'
+          : 'Wallet must be unlocked with a private key.',
+      );
+      return;
+    }
+    if (needsDeployConfirm) {
+      setPendingDeploy(true);
+      return;
+    }
+    void runDeploy();
+  }
+
   const previewCount = addressesRaw
     .split(/[\n,;]+/)
     .map(s => s.trim())
     .filter(Boolean).length;
   const nativeSymbol = chain?.nativeCurrency.symbol ?? 'ETH';
-  const formLocked = busy || pending != null;
+  const formLocked = busy || pending != null || pendingDeploy;
+  const disperseOn = Boolean(probe?.address);
 
   return (
     <div className="w1337-send-panel">
@@ -166,15 +236,21 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
         {nativeSymbol} is refunded to you. Network: {chain?.name ?? chainId}.
       </p>
 
-      {disperseOn ? (
+      {probe?.address ? (
         <p className="w1337-ms-note w1337-ms-note--ok">
-          Using Disperse.app ({shortAddress(DISPERSE_ADDRESS)}).
+          Using Disperse.app ({shortAddress(probe.address)}
+          {probe.source === 'create2' ? ', via CreateX' : ''}).
           {tokenAddr.trim() ? ' ERC-20 needs an approve first, then the batch.' : ''}
         </p>
-      ) : disperseOn === false ? (
+      ) : probe?.canDeploy ? (
         <p className="w1337-ms-note w1337-ms-note--warn">
-          Disperse.app is not deployed on this network. Switch to Ethereum, Base, Arbitrum,
-          Optimism, Polygon, or another chain that has it.
+          Disperse.app is not on this network yet. You can deploy it once via CreateX at{' '}
+          {shortAddress(DISPERSE_CREATE2_ADDRESS)}. You pay gas; later users share that address.
+        </p>
+      ) : probe ? (
+        <p className="w1337-ms-note w1337-ms-note--warn">
+          Disperse.app is not deployed on this network, and CreateX is not here either. Switch to
+          Ethereum, Base, Arbitrum, Optimism, Polygon, or another chain that has Disperse or CreateX.
         </p>
       ) : (
         <p className="muted" style={{ fontSize: 12 }}>
@@ -224,7 +300,35 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
 
       {err ? <p className="error">{err}</p> : null}
 
-      {pending ? (
+      {pendingDeploy ? (
+        <div className="w1337-ms-confirm">
+          <p className="muted" style={{ margin: 0, fontSize: 12 }}>
+            Deploy Disperse.app on {chain?.name ?? `chain ${chainId}`} via CreateX
+            {unlocked?.address ? ` from ${shortAddress(unlocked.address)}` : ''}. Later users share{' '}
+            {shortAddress(DISPERSE_CREATE2_ADDRESS)}.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className="ghost"
+              style={{ flex: 1 }}
+              disabled={busy}
+              onClick={() => setPendingDeploy(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary"
+              style={{ flex: 1 }}
+              disabled={busy || !canSend}
+              onClick={() => void runDeploy()}
+            >
+              {busy ? 'Deploying…' : 'Confirm deploy'}
+            </button>
+          </div>
+        </div>
+      ) : pending ? (
         <div className="w1337-ms-confirm">
           <p className="muted" style={{ margin: 0, fontSize: 12 }}>
             Send {amountStr} {pending.token ? 'tokens' : nativeSymbol} to {pending.recipients.length}{' '}
@@ -252,6 +356,16 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
             </button>
           </div>
         </div>
+      ) : probe?.canDeploy && !probe.address ? (
+        <button
+          type="button"
+          className="primary"
+          style={{ width: '100%', marginTop: 12 }}
+          disabled={busy || !canSend}
+          onClick={() => startOrDeploy()}
+        >
+          {busy ? 'Deploying…' : needsDeployConfirm ? 'Review deploy' : 'Deploy Disperse'}
+        </button>
       ) : (
         <button
           type="button"
@@ -260,7 +374,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
           disabled={
             busy ||
             !canSend ||
-            disperseOn !== true ||
+            !disperseOn ||
             !addressesRaw.trim() ||
             !amountStr.trim()
           }

@@ -48,6 +48,10 @@ const KNOWN_SELECTORS: Record<string, string> = {
   '0xac9650d8': 'multicall(bytes[])',
   '0x1f0464d1': 'multicall(bytes32,bytes[])',
   '0x82ad56cb': 'aggregate3((address,bool,bytes)[])',
+  '0xe63d38ed': 'disperseEther(address[],uint256[])',
+  '0xc73a2d60': 'disperseToken(address,address[],uint256[])',
+  '0x51ba162c': 'disperseTokenSimple(address,address[],uint256[])',
+  '0x26307668': 'deployCreate2(bytes32,bytes)',
 };
 
 const DECODE_ABIS = [
@@ -92,6 +96,32 @@ const DECODE_ABIS = [
         ],
         name: 'transferFrom',
         outputs: [{ type: 'bool' }],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+    ] as const,
+  },
+  {
+    name: 'Disperse',
+    abi: [
+      {
+        inputs: [
+          { name: 'recipients', type: 'address[]' },
+          { name: 'values', type: 'uint256[]' },
+        ],
+        name: 'disperseEther',
+        outputs: [],
+        stateMutability: 'payable',
+        type: 'function',
+      },
+      {
+        inputs: [
+          { name: 'token', type: 'address' },
+          { name: 'recipients', type: 'address[]' },
+          { name: 'values', type: 'uint256[]' },
+        ],
+        name: 'disperseToken',
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function',
       },
