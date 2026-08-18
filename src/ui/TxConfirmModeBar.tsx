@@ -65,7 +65,7 @@ export function TxConfirmModeToggle({
         onClick={() => void toggleInstant()}
       >
         <ThunderIcon />
-        {instantOn ? 'Instant On' : 'Instant Off'}
+        <span className="w1337-instant-toggle__label">{instantOn ? 'Instant On' : 'Instant Off'}</span>
       </button>
       {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>

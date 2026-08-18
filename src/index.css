@@ -644,6 +644,106 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   background: var(--bg);
   min-width: 0;
   max-width: 100%;
+  --dock-sub-h: 1.4em;
+  --dock-sub-o: 1;
+  --dock-meta-gap: 1px;
+  --dock-acct-py: 10px;
+  --dock-dapp-py-t: 10px;
+  --dock-dapp-py-b: 12px;
+  --dock-icon: 32px;
+  --dock-instant-label-w: 9em;
+  --dock-instant-label-o: 1;
+  --dock-instant-px: 10px;
+  --dock-instant-gap: 4px;
+}
+
+/* Peek only when the window is short (popup / laptop). Tall monitors keep the full dock. */
+@media (hover: hover) and (pointer: fine) and (max-height: 900px) {
+  .w1337-wallet-dock:not(:hover):not(:focus-within):not(:has(.w1337-acct-trigger--open)) {
+    --dock-sub-h: 0px;
+    --dock-sub-o: 0;
+    --dock-meta-gap: 0px;
+    --dock-acct-py: 7px;
+    --dock-dapp-py-t: 6px;
+    --dock-dapp-py-b: 6px;
+    --dock-icon: 22px;
+    --dock-instant-label-w: 0px;
+    --dock-instant-label-o: 0;
+    --dock-instant-px: 7px;
+    --dock-instant-gap: 0px;
+  }
+}
+
+.w1337-wallet-dock .w1337-acct-trigger__main,
+.w1337-wallet-dock .w1337-dapp-bar__meta {
+  gap: var(--dock-meta-gap);
+}
+
+.w1337-wallet-dock .w1337-acct-trigger__sub,
+.w1337-wallet-dock .w1337-dapp-bar__sub {
+  max-height: var(--dock-sub-h);
+  opacity: var(--dock-sub-o);
+  overflow: hidden;
+  transition:
+    max-height 0.18s ease,
+    opacity 0.14s ease;
+}
+
+.w1337-wallet-dock button.w1337-acct-trigger--dock {
+  padding: var(--dock-acct-py) 14px;
+  transition: padding 0.18s ease, background 0.12s ease;
+}
+
+.w1337-wallet-dock .w1337-dapp-bar--embedded {
+  padding-top: var(--dock-dapp-py-t);
+  padding-bottom: var(--dock-dapp-py-b);
+  transition: padding 0.18s ease;
+}
+
+.w1337-wallet-dock .w1337-dapp-bar__icon {
+  width: var(--dock-icon);
+  height: var(--dock-icon);
+  transition: width 0.18s ease, height 0.18s ease;
+}
+
+.w1337-wallet-dock .w1337-instant-toggle__label {
+  display: inline-block;
+  max-width: 9em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) {
+  padding-left: var(--dock-instant-px);
+  padding-right: var(--dock-instant-px);
+  gap: var(--dock-instant-gap);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    padding 0.16s ease,
+    gap 0.16s ease;
+}
+
+.w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) .w1337-instant-toggle__label {
+  max-width: var(--dock-instant-label-w);
+  opacity: var(--dock-instant-label-o);
+  transition:
+    max-width 0.16s ease,
+    opacity 0.14s ease,
+    margin 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w1337-wallet-dock .w1337-acct-trigger__sub,
+  .w1337-wallet-dock .w1337-dapp-bar__sub,
+  .w1337-wallet-dock button.w1337-acct-trigger--dock,
+  .w1337-wallet-dock .w1337-dapp-bar--embedded,
+  .w1337-wallet-dock .w1337-dapp-bar__icon,
+  .w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) .w1337-instant-toggle__label {
+    transition: none;
+  }
 }
 
 .w1337-acct-sheet-mount {
