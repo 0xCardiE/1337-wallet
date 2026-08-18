@@ -191,7 +191,7 @@ export function NftApprovalsPanel({ settings }: { settings: AppSettings }) {
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
       <p className="w1337-tools-empty muted">
-        Add a free <strong>Etherscan API key</strong> in Settings to scan NFT operators on{' '}
+        Add an <strong>Etherscan API key</strong> in Settings to scan NFT operators on{' '}
         {chain?.name ?? chainId}.
       </p>
     );

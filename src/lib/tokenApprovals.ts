@@ -1,8 +1,16 @@
 import { decodeFunctionResult, encodeFunctionData, getAddress, isAddress } from 'viem';
 import { ERC20_ABI, MULTICALL3_ABI, MULTICALL3_ADDRESS } from './abis';
 import { chainJsonRpcCall } from './ethereum';
-import { chainById } from './chainCatalog';
 import { etherscanV2Get } from './etherscanV2';
+import {
+  blockscoutApiOrigin,
+  blockscoutGet,
+  catalogExplorerOrigin,
+  etherscanCommunityAccess,
+  explorerErrorMessage,
+  isBlockscoutOrigin,
+  isEtherscanCoverageError,
+} from './explorerApis';
 import type { WalletBalEntry } from './walletBalances';
 import { formatTokenAmount } from './walletBalances';
 
@@ -43,14 +51,7 @@ type SpenderCandidate = {
 };
 
 function explorerOrigin(chainId: number): string | undefined {
-  const c = chainById(chainId);
-  const url = c?.blockExplorerUrls[0]?.trim();
-  if (!url) return undefined;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return undefined;
-  }
+  return catalogExplorerOrigin(chainId);
 }
 
 export function padTopicAddress(addr: string): string {
@@ -125,39 +126,46 @@ export async function recentApprovalFromBlock(chainId: number): Promise<number> 
   return w.fromBlock;
 }
 
-export async function fetchExplorerLogs(params: {
-  chainId: number;
-  fromBlock: number;
-  toBlock?: number | 'latest';
-  topic0: string;
-  topic1?: string;
-  address?: string;
-  explorerApiKey?: string;
-}): Promise<RawApprovalLog[]> {
+function logsQuery(
+  params: {
+    chainId: number;
+    fromBlock: number;
+    toBlock?: number | 'latest';
+    topic0: string;
+    topic1?: string;
+    address?: string;
+    explorerApiKey?: string;
+  },
+  dest: 'etherscan' | 'blockscout',
+): URLSearchParams {
   const toBlock = params.toBlock ?? 'latest';
   const query = new URLSearchParams({
-    chainid: String(params.chainId),
     module: 'logs',
     action: 'getLogs',
     fromBlock: String(params.fromBlock),
     toBlock: toBlock === 'latest' ? 'latest' : String(toBlock),
     topic0: params.topic0,
   });
+  if (dest === 'etherscan') query.set('chainid', String(params.chainId));
   if (params.address) query.set('address', getAddress(params.address));
   if (params.topic1) {
     query.set('topic1', params.topic1);
     query.set('topic0_1_opr', 'and');
   }
-  if (params.explorerApiKey?.trim()) query.set('apikey', params.explorerApiKey.trim());
+  if (dest === 'etherscan' && params.explorerApiKey?.trim()) {
+    query.set('apikey', params.explorerApiKey.trim());
+  }
+  return query;
+}
 
-  const json = await etherscanV2Get(query);
+function parseLogResult(json: {
+  status?: string;
+  message?: string;
+  result?: unknown;
+}): RawApprovalLog[] {
   const result = json.result;
-
   if (json.status !== '1' || !Array.isArray(result)) {
-    const msg =
-      typeof result === 'string'
-        ? result
-        : json.message ?? 'Etherscan returned no approval logs';
+    const msg = explorerErrorMessage(json) || 'Explorer returned no approval logs';
     if (/no records found|no logs found/i.test(msg)) return [];
     if (/query timeout|timeout/i.test(msg)) {
       throw new Error(
@@ -172,6 +180,40 @@ export async function fetchExplorerLogs(params: {
     throw new Error(msg);
   }
   return result as RawApprovalLog[];
+}
+
+export async function fetchExplorerLogs(params: {
+  chainId: number;
+  fromBlock: number;
+  toBlock?: number | 'latest';
+  topic0: string;
+  topic1?: string;
+  address?: string;
+  explorerApiKey?: string;
+}): Promise<RawApprovalLog[]> {
+  const catalog = catalogExplorerOrigin(params.chainId);
+  const scout = blockscoutApiOrigin(params.chainId);
+  const key = params.explorerApiKey?.trim();
+  const access = etherscanCommunityAccess(params.chainId);
+  const catalogIsScout = !!catalog && isBlockscoutOrigin(catalog);
+
+  const fromScout = async (origin: string) =>
+    parseLogResult(await blockscoutGet(origin, logsQuery(params, 'blockscout')));
+
+  if (catalogIsScout && catalog) return fromScout(catalog);
+
+  if (key && access !== 'none') {
+    try {
+      return parseLogResult(await etherscanV2Get(logsQuery(params, 'etherscan')));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (scout && isEtherscanCoverageError(msg)) return fromScout(scout);
+      throw e;
+    }
+  }
+
+  if (scout) return fromScout(scout);
+  throw new Error('Add an Etherscan API key in Settings to scan approvals.');
 }
 
 function parseSpenderCandidates(

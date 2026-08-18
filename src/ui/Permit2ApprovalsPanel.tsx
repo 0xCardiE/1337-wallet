@@ -219,7 +219,7 @@ export function Permit2ApprovalsPanel({ settings }: { settings: AppSettings }) {
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
       <p className="w1337-tools-empty muted">
-        Add a free <strong>Etherscan API key</strong> in Settings to scan Permit2 on{' '}
+        Add an <strong>Etherscan API key</strong> in Settings to scan Permit2 on{' '}
         {chain?.name ?? chainId}.
       </p>
     );

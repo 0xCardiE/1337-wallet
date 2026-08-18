@@ -300,8 +300,9 @@ export function SettingsView({
             autoComplete="off"
           />
           <p className="muted" style={{ fontSize: 12 }}>
-            One Etherscan v2 key loads normal txs on Ethereum, Base, Arbitrum, Optimism, Polygon,
-            BSC, and other *scan chains. Blockscout chains work without a key.
+            One Etherscan v2 key. Free coverage includes Ethereum, Arbitrum, Polygon, and most *scan
+            chains. Optimism, Base, Scroll, zkSync, Ink, and Gnosis fall back to Blockscout when
+            Etherscan Free does not cover them. BSC and Avalanche still need a paid Etherscan plan.
           </p>
 
           <label htmlFor="thegraph-key" style={{ marginTop: 16 }}>

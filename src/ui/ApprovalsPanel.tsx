@@ -388,8 +388,9 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
       <p className="w1337-tools-empty muted">
-        Add a free <strong>Etherscan API key</strong> in Settings to scan token approvals on{' '}
-        {chain?.name ?? chainId}. One key works across Etherscan-family chains.
+        Add an <strong>Etherscan API key</strong> in Settings to scan token approvals on{' '}
+        {chain?.name ?? chainId}. Optimism, Base, and other Blockscout-backed chains work without a
+        key.
       </p>
     );
   }

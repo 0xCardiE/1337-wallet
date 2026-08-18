@@ -588,9 +588,9 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
       <p className="w1337-tools-empty muted">
-        Add a free <strong>Etherscan API key</strong> in Settings to load transaction history on{' '}
-        {chain?.name ?? chainId}. One key works across Etherscan-family chains (Ethereum, Base,
-        Arbitrum, …).
+        Add an <strong>Etherscan API key</strong> in Settings to load transaction history on{' '}
+        {chain?.name ?? chainId}. A free key covers Ethereum, Arbitrum, Polygon, and most *scan
+        chains. BSC and Avalanche need a paid Etherscan plan.
       </p>
     );
   }

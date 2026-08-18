@@ -57,7 +57,7 @@ export interface AppSettings {
   replaceMetaMask?: boolean;
   /** Per-origin EIP-6963 / is1337 override. Missing origin = follow replaceMetaMask. */
   dappCompatByOrigin?: Record<string, DappCompatMode>;
-  /** Optional Etherscan API v2 key — one key covers most *scan explorers for tx history. */
+  /** Optional Etherscan API v2 key. Free tier is chain-limited — see docs/explorer-history.md. */
   explorerApiKey?: string;
   /** Optional The Graph API key for ENS subgraph (100k free queries/mo). */
   theGraphApiKey?: string;

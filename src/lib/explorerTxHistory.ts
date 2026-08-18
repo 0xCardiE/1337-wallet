@@ -1,6 +1,17 @@
 import { formatUnits, getAddress, isAddress } from 'viem';
 import { chainById } from './chainCatalog';
 import { etherscanV2Get } from './etherscanV2';
+import {
+  blockscoutApiOrigin,
+  blockscoutGet,
+  catalogExplorerOrigin,
+  etherscanCommunityAccess,
+  explorerErrorMessage,
+  isBlockscoutOrigin,
+  isEtherscanCoverageError,
+} from './explorerApis';
+
+export { needsExplorerApiKey } from './explorerApis';
 
 export const TX_HISTORY_PAGE_SIZE = 50;
 
@@ -28,8 +39,6 @@ export type TxHistoryPageResult = {
   hasMore: boolean;
 };
 
-type ExplorerApiKind = 'etherscan-v2' | 'blockscout';
-
 type RawExplorerTx = {
   hash?: string;
   from?: string;
@@ -47,22 +56,6 @@ type RawExplorerTx = {
   functionName?: string;
   input?: string;
 };
-
-function explorerOrigin(chainId: number): string | undefined {
-  const c = chainById(chainId);
-  const url = c?.blockExplorerUrls[0]?.trim();
-  if (!url) return undefined;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return undefined;
-  }
-}
-
-function apiKind(origin: string): ExplorerApiKind {
-  if (/blockscout/i.test(origin)) return 'blockscout';
-  return 'etherscan-v2';
-}
 
 function parseOptionalBigInt(v: string | undefined): bigint | undefined {
   if (!v?.trim()) return undefined;
@@ -168,10 +161,7 @@ async function fetchEtherscanV2Page(
 
   const json = await etherscanV2Get(params);
   if (json.status !== '1' || !Array.isArray(json.result)) {
-    const msg =
-      typeof json.result === 'string'
-        ? json.result
-        : json.message ?? 'Explorer returned no transactions';
+    const msg = explorerErrorMessage(json) || 'Explorer returned no transactions';
     if (/no transactions found/i.test(msg)) return [];
     throw new Error(msg);
   }
@@ -191,22 +181,19 @@ async function fetchBlockscoutPage(
     offset: String(TX_HISTORY_PAGE_SIZE),
     sort: 'desc',
   });
-  const res = await fetch(`${origin}/api?${params.toString()}`);
-  if (!res.ok) throw new Error(`Blockscout API HTTP ${res.status}`);
-  const json = (await res.json()) as {
-    status?: string;
-    message?: string;
-    result?: RawExplorerTx[];
-  };
+  const json = await blockscoutGet(origin, params);
   if (json.status !== '1' || !Array.isArray(json.result)) {
-    if (/no transactions found/i.test(json.message ?? '')) return [];
-    throw new Error(json.message ?? 'Blockscout returned no transactions');
+    const msg = explorerErrorMessage(json);
+    if (/no transactions found/i.test(msg)) return [];
+    throw new Error(msg || 'Blockscout returned no transactions');
   }
-  return json.result;
+  return json.result as RawExplorerTx[];
 }
 
 /**
  * Fetch one page of normal transactions (newest first). No RPC scanning.
+ * Etherscan v2 when the free tier covers the chain; Blockscout when it does not
+ * (or when the catalog explorer is already Blockscout).
  */
 export async function fetchAddressTxHistoryPage(params: {
   chainId: number;
@@ -219,21 +206,33 @@ export async function fetchAddressTxHistoryPage(params: {
     throw new Error('Invalid history page');
   }
 
-  const origin = explorerOrigin(params.chainId);
-  if (!origin) {
-    throw new Error(`No block explorer configured for chain ${params.chainId}.`);
-  }
+  const catalog = catalogExplorerOrigin(params.chainId);
+  const scout = blockscoutApiOrigin(params.chainId);
+  const key = params.explorerApiKey?.trim();
+  const access = etherscanCommunityAccess(params.chainId);
+  const catalogIsScout = !!catalog && isBlockscoutOrigin(catalog);
 
-  const kind = apiKind(origin);
-  const raw =
-    kind === 'blockscout'
-      ? await fetchBlockscoutPage(origin, params.address, params.page)
-      : await fetchEtherscanV2Page(
-          params.chainId,
-          params.address,
-          params.explorerApiKey,
-          params.page,
-        );
+  let raw: RawExplorerTx[];
+  if (catalogIsScout && catalog) {
+    raw = await fetchBlockscoutPage(catalog, params.address, params.page);
+  } else if (key && access !== 'none') {
+    try {
+      raw = await fetchEtherscanV2Page(params.chainId, params.address, key, params.page);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (scout && isEtherscanCoverageError(msg)) {
+        raw = await fetchBlockscoutPage(scout, params.address, params.page);
+      } else {
+        throw e;
+      }
+    }
+  } else if (scout) {
+    raw = await fetchBlockscoutPage(scout, params.address, params.page);
+  } else if (!catalog) {
+    throw new Error(`No block explorer configured for chain ${params.chainId}.`);
+  } else {
+    throw new Error('Add an Etherscan API key in Settings to load transaction history.');
+  }
 
   const rows = normalizeRows(raw, params.address);
   return {
@@ -255,13 +254,7 @@ export function formatTxValue(value: bigint, chainId: number): string {
 }
 
 export function txExplorerLink(chainId: number, hash: string): string | undefined {
-  const origin = explorerOrigin(chainId);
+  const origin = catalogExplorerOrigin(chainId);
   if (!origin || !/^0x[a-fA-F0-9]{64}$/.test(hash)) return undefined;
   return `${origin}/tx/${hash}`;
-}
-
-export function needsExplorerApiKey(chainId: number): boolean {
-  const origin = explorerOrigin(chainId);
-  if (!origin) return true;
-  return apiKind(origin) === 'etherscan-v2';
 }

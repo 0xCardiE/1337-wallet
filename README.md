@@ -64,7 +64,7 @@ Local keys are password-encrypted in extension storage. Ledger/Trezor accounts k
 
 **Supply chain:** install scripts are allowlisted; popup and background bundles run in LavaMoat SES compartments. Details: [docs/wallet-security.md](docs/wallet-security.md) (see “Supply chain & LavaMoat”). Also [MetaMask comparison](docs/wallet-comparison-metamask.md).
 
-**Product scope:** [docs/signer.md](docs/signer.md) — 1337 is a signer, not a Foundry/Etherscan lab.
+**Product scope:** [docs/signer.md](docs/signer.md) — 1337 is a signer, not a Foundry/Etherscan lab. History coverage: [docs/explorer-history.md](docs/explorer-history.md).
 
 ## Wallet pain research tool
 

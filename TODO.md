@@ -141,6 +141,7 @@ Product, UX, infra, and platform work that is not a security control.
 | [~] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Confirm sheet + History titles. See `src/lib/txHumanize.ts`. Expand known selectors as needed |
 | [ ] | P2 | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts` |
 | [ ] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts |
+| [x] | P1 | Blockscout fallback when Etherscan Free excludes the chain | 1337 | Medium | OP/Base/Scroll/zkSync/Ink/Gnosis via per-instance Blockscout. BSC/Avalanche have no instance. `explorerApis.ts`. See `docs/explorer-history.md` |
 | [ ] | P2 | Four-byte + contract source in approval (expand) | 1337 + Rabby | Low | Already partial via `fourByteDirectory.ts`, `explorerContractSource.ts` — expand coverage and surface in action UI |
 | [ ] | P3 | EIP-7702 / smart-account path | Ambire | High | `AccountOp`-style abstraction, delegation UI, `sign7702` on signers. Needs relayer/bundler strategy |
 | [ ] | P3 | Cross-browser builds (Firefox / Safari) | Ambire | High | `WEB_ENGINE` env, gecko manifest transforms, Safari converter. Only if store expansion is a goal |
@@ -196,6 +197,7 @@ Product, UX, infra, and platform work that is not a security control.
 - [docs/signer.md](./docs/signer.md) — **signer, not a lab** (product guideline)
 - [docs/wallet-security.md](./docs/wallet-security.md) — security model
 - [docs/wallet-comparison-metamask.md](./docs/wallet-comparison-metamask.md) — MetaMask comparison
+- [docs/explorer-history.md](./docs/explorer-history.md) — Etherscan Free vs paid, Blockscout fallback
 - [website/src/app/integrate/page.tsx](./website/src/app/integrate/page.tsx) — dapp integration (EIP-6963)
 
 ---
@@ -204,6 +206,8 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-08-19 | Blockscout fallback for History/Approvals when Etherscan Free excludes the chain (`explorerApis.ts`) |
+| 2026-08-19 | Document Etherscan Free vs paid chain coverage + Blockscout/RPC notes (`docs/explorer-history.md`) |
 | 2026-08-19 | Confirm sheet Send/Swap/Unknown cards, full page URL, checksum warnings; connected sites + per-origin MetaMask-compat; Swap/Gas on hardware |
 | 2026-08-17 | Signer guideline (`docs/signer.md`): confirm-time humanize/simulate/hints, Inspect, Approvals+=NFT+Permit2; lab tools deferred until asked |
 | 2026-08-16 | Hardware gaps section (Multisend, ENS, Gas, Swap); Multisend Instant confirm-per-recipient |
