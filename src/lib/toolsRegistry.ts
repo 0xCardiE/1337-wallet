@@ -1,5 +1,7 @@
 /** Catalog of Tools-tab modules. 1337 is a signer — see docs/signer.md. */
 
+import type { ChainKind } from './chainCatalog';
+
 export const TOOL_IDS = [
   'inspect',
   'approvals',
@@ -16,6 +18,8 @@ export type ToolDefinition = {
   label: string;
   description: string;
   defaultEnabled: boolean;
+  /** Li.Fi / ENS live on mainnets — hide the tab while a testnet is active. */
+  mainnetOnly?: boolean;
 };
 
 export const TOOL_CATALOG: ToolDefinition[] = [
@@ -36,12 +40,14 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     label: 'Swap',
     description: 'Cross-chain swaps via LI.FI.',
     defaultEnabled: true,
+    mainnetOnly: true,
   },
   {
     id: 'ens',
     label: 'ENS',
     description: 'Resolve names and manage your .eth portfolio.',
     defaultEnabled: true,
+    mainnetOnly: true,
   },
   {
     id: 'multisend',
@@ -54,6 +60,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     label: 'Gas',
     description: 'Top up gas on another chain when you are stuck.',
     defaultEnabled: true,
+    mainnetOnly: true,
   },
 ];
 
@@ -77,6 +84,19 @@ export function effectiveEnabledTools(settings: { enabledTools?: string[] }): To
   const normalized = normalizeEnabledTools(settings.enabledTools);
   if (normalized == null) return defaultEnabledToolIds();
   return TOOL_CATALOG.map(t => t.id).filter(id => normalized.includes(id));
+}
+
+export function toolAvailableOnChain(id: ToolId, kind: ChainKind | undefined): boolean {
+  if (kind !== 'testnet') return true;
+  return TOOL_CATALOG.find(t => t.id === id)?.mainnetOnly !== true;
+}
+
+/** User-enabled tools that make sense on the active network. */
+export function visibleToolsForChain(
+  settings: { enabledTools?: string[] },
+  kind: ChainKind | undefined,
+): ToolId[] {
+  return effectiveEnabledTools(settings).filter(id => toolAvailableOnChain(id, kind));
 }
 
 export function isToolEnabled(

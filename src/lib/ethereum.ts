@@ -554,14 +554,27 @@ export async function snapshotHeldTokensOnChain(
 
   let native = 0n;
   let erc20: Erc20BalanceMap = new Map();
-  try {
-    const r = await multicallNativeAndErc20Balances(chainId, holder, tokenAddresses);
-    native = r.native;
-    erc20 = r.erc20;
-  } catch {
-    const r = await parallelNativeAndErc20Balances(chainId, holder, tokenAddresses);
-    native = r.native;
-    erc20 = r.erc20;
+  /* Native is always `eth_getBalance` — Multicall3 getEthBalance can succeed:false
+     (allowFailure) and look like a zero wallet. Inspect / Networks already use this. */
+  const nativeP = nativeTpl ? getNativeBalance(holder, chainId) : Promise.resolve(0n);
+  if (tokenAddresses.length === 0) {
+    native = await nativeP;
+  } else {
+    try {
+      const [n, r] = await Promise.all([
+        nativeP,
+        multicallNativeAndErc20Balances(chainId, holder, tokenAddresses),
+      ]);
+      native = n;
+      erc20 = r.erc20;
+    } catch {
+      const [n, r] = await Promise.all([
+        nativeP.catch(() => 0n),
+        parallelNativeAndErc20Balances(chainId, holder, tokenAddresses),
+      ]);
+      native = n > 0n ? n : r.native;
+      erc20 = r.erc20;
+    }
   }
 
   const out: Array<OnChainBalanceProbe & { amount: string; chainId: number }> = [];

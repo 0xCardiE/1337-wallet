@@ -212,9 +212,13 @@ async function enrichNativeRows(
   });
 }
 
+function usesLifiPortfolio(chainId: number): boolean {
+  return chainById(chainId)?.kind !== 'testnet';
+}
+
 /**
- * Li.FI `/wallets/{address}/balances` can fail (424 / upstream 410). Fall back to
- * Li.FI token catalog + on-chain RPC multicall for the active chain.
+ * On-chain native (always) plus Li.FI catalog ERC-20s on mainnets.
+ * Testnets skip the catalog — Li.FI does not index them — and probe ETH via RPC.
  */
 export async function loadWalletBalancesRpcForChain(
   holder: `0x${string}`,
@@ -223,31 +227,33 @@ export async function loadWalletBalancesRpcForChain(
   const probes: OnChainBalanceProbe[] = [nativeProbeForChain(chainId)];
   const seen = new Set<string>([ETH_PLACEHOLDER, '0x0000000000000000000000000000000000000000']);
 
-  try {
-    const res = await getTokens({
-      chains: [chainId],
-      chainTypes: [ChainType.EVM],
-      extended: true,
-      orderBy: 'volumeUSD24H',
-    });
-    const catalogTokens = res.tokens?.[chainId] ?? [];
-    probes[0] = mergeNativeCatalogMeta(probes[0]!, nativeTokenFromCatalog(catalogTokens), chainId);
-    for (const t of catalogTokens) {
-      const key = t.address.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      probes.push({
-        address: t.address,
-        decimals: t.decimals,
-        symbol: t.symbol,
-        name: t.name,
-        logoURI: t.logoURI,
-        priceUSD: t.priceUSD,
+  if (usesLifiPortfolio(chainId)) {
+    try {
+      const res = await getTokens({
+        chains: [chainId],
+        chainTypes: [ChainType.EVM],
+        extended: true,
+        orderBy: 'volumeUSD24H',
       });
-      if (probes.length >= 80) break;
+      const catalogTokens = res.tokens?.[chainId] ?? [];
+      probes[0] = mergeNativeCatalogMeta(probes[0]!, nativeTokenFromCatalog(catalogTokens), chainId);
+      for (const t of catalogTokens) {
+        const key = t.address.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        probes.push({
+          address: t.address,
+          decimals: t.decimals,
+          symbol: t.symbol,
+          name: t.name,
+          logoURI: t.logoURI,
+          priceUSD: t.priceUSD,
+        });
+        if (probes.length >= 80) break;
+      }
+    } catch {
+      /* native-only probe is enough to show gas balance */
     }
-  } catch {
-    /* native-only probe is enough to show gas balance */
   }
 
   const rows = await snapshotHeldTokensOnChain(chainId, holder, probes);
@@ -288,30 +294,13 @@ export async function loadWalletBalancesMap(
   }
 }
 
-/** LiFi balances merged with optional on-chain RPC refresh for one chain. */
+/** LiFi balances merged with on-chain native (+ RPC when Li.FI is empty or stale). */
 export async function loadWalletBalancesForChain(
   address: string,
   chainId: number,
   options?: { refreshRpc?: boolean },
 ): Promise<{ rows: WalletBalEntry[]; error: string | null }> {
   const holder = getAddress(address);
-  let chainRows: WalletBalEntry[] = [];
-  let lifiError: string | null = null;
-
-  try {
-    const raw = await getWalletBalances(holder);
-    const all = Object.values(parseLifiWalletBalances(raw)).flat();
-    chainRows = all.filter(r => r.chainId === chainId);
-  } catch (e) {
-    lifiError = summarizeApiError(e);
-    try {
-      chainRows = await loadWalletBalancesRpcForChain(holder, chainId);
-      lifiError = null;
-    } catch {
-      return { rows: [], error: lifiError };
-    }
-  }
-
   const now = Date.now();
   for (const [cid, pack] of [...rpcFresh.entries()]) {
     if (now - pack.at >= RPC_BALANCE_OVERRIDE_TTL_MS) rpcFresh.delete(cid);
@@ -319,13 +308,44 @@ export async function loadWalletBalancesForChain(
 
   const cached = rpcFresh.get(chainId);
   if (cached && now - cached.at < RPC_BALANCE_OVERRIDE_TTL_MS) {
-    chainRows = cached.rows;
-  } else if (options?.refreshRpc && chainRows.length > 0) {
-    const probes = chainRows.map(balEntryToProbe);
-    const fresh = await snapshotHeldTokensOnChain(chainId, holder, probes);
-    const rows = fresh.map(r => ({ ...r, chainId }));
-    rpcFresh.set(chainId, { at: now, rows });
-    chainRows = rows;
+    const rows = await enrichNativeRows(chainId, [...cached.rows].sort(compareByUsd));
+    return { rows, error: null };
+  }
+
+  let chainRows: WalletBalEntry[] = [];
+  let lifiError: string | null = null;
+  const skipLifi = !usesLifiPortfolio(chainId);
+
+  if (!skipLifi) {
+    try {
+      const raw = await getWalletBalances(holder);
+      const all = Object.values(parseLifiWalletBalances(raw)).flat();
+      chainRows = all.filter(r => r.chainId === chainId);
+    } catch (e) {
+      lifiError = summarizeApiError(e);
+    }
+  }
+
+  /* Testnets, empty Li.FI (unindexed chain), or an explicit RPC refresh. */
+  const needRpc = skipLifi || options?.refreshRpc || chainRows.length === 0 || lifiError != null;
+  if (needRpc) {
+    try {
+      if (chainRows.length === 0) {
+        chainRows = await loadWalletBalancesRpcForChain(holder, chainId);
+      } else {
+        const probes = [nativeProbeForChain(chainId), ...chainRows.map(balEntryToProbe)];
+        chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes)).map(r => ({
+          ...r,
+          chainId,
+        }));
+      }
+      rpcFresh.set(chainId, { at: now, rows: chainRows });
+      lifiError = null;
+    } catch (e) {
+      if (chainRows.length === 0) {
+        return { rows: [], error: lifiError ?? summarizeApiError(e) };
+      }
+    }
   }
 
   chainRows.sort(compareByUsd);

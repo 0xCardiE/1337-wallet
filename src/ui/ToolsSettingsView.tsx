@@ -57,7 +57,7 @@ export function ToolsSettingsView({
         <div className="settings-body">
           <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
             1337 is a signer. Hide anything you do not use. Confirm-time decode and simulation are
-            always on.
+            always on. Swap, ENS, and Gas hide automatically on testnets.
           </p>
           {TOOL_CATALOG.map(tool => (
             <div key={tool.id} className="w1337-settings-gate-row">

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { AppSettings } from '../lib/storageState';
+import { chainById } from '../lib/chainCatalog';
+import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import {
-  effectiveEnabledTools,
   TOOL_CATALOG,
+  visibleToolsForChain,
   type ToolId,
 } from '../lib/toolsRegistry';
 import { ApprovalsPanel } from './ApprovalsPanel';
@@ -13,14 +14,17 @@ import { MultiSendView } from './MultiSendView';
 import { SwapView } from './SwapView';
 
 export function ToolsView({ settings }: { settings: AppSettings }) {
-  const enabled = useMemo(() => effectiveEnabledTools(settings), [settings.enabledTools]);
+  const chainKind = chainById(effectiveActiveChainId(settings))?.kind;
+  const enabled = useMemo(
+    () => visibleToolsForChain(settings, chainKind),
+    [settings.enabledTools, chainKind],
+  );
   const [tab, setTab] = useState<ToolId>(() => enabled[0] ?? 'inspect');
+  const activeTab = enabled.includes(tab) ? tab : (enabled[0] ?? 'inspect');
 
   useEffect(() => {
-    if (!enabled.includes(tab)) {
-      setTab(enabled[0] ?? 'inspect');
-    }
-  }, [enabled, tab]);
+    if (tab !== activeTab) setTab(activeTab);
+  }, [tab, activeTab]);
 
   if (enabled.length === 0) {
     return (
@@ -37,8 +41,8 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
           <button
             key={t.id}
             type="button"
-            className={`w1337-tools-tabs__btn${tab === t.id ? ' w1337-tools-tabs__btn--on' : ''}`}
-            aria-current={tab === t.id ? 'page' : undefined}
+            className={`w1337-tools-tabs__btn${activeTab === t.id ? ' w1337-tools-tabs__btn--on' : ''}`}
+            aria-current={activeTab === t.id ? 'page' : undefined}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -47,12 +51,12 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
       </nav>
 
       <div className="w1337-tools-panel">
-        {tab === 'inspect' ? <InspectView settings={settings} /> : null}
-        {tab === 'approvals' ? <ApprovalsPanel settings={settings} /> : null}
-        {tab === 'swap' ? <SwapView settings={settings} embedded /> : null}
-        {tab === 'ens' ? <EnsView settings={settings} /> : null}
-        {tab === 'multisend' ? <MultiSendView settings={settings} /> : null}
-        {tab === 'gas' ? <GasStationView settings={settings} /> : null}
+        {activeTab === 'inspect' ? <InspectView settings={settings} /> : null}
+        {activeTab === 'approvals' ? <ApprovalsPanel settings={settings} /> : null}
+        {activeTab === 'swap' ? <SwapView settings={settings} embedded /> : null}
+        {activeTab === 'ens' ? <EnsView settings={settings} /> : null}
+        {activeTab === 'multisend' ? <MultiSendView settings={settings} /> : null}
+        {activeTab === 'gas' ? <GasStationView settings={settings} /> : null}
       </div>
     </div>
   );
