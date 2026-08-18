@@ -20,6 +20,19 @@ These are daily signer jobs. Prefer the confirm sheet, History, or a small Inspe
 
 Default Tools (on unless the user hides them): Inspect, Approvals, Swap, ENS, Multisend, Gas Station.
 
+### Multisend is Disperse.app, not a CREATE2 lab
+
+Multisend always batches through [Disperse.app](https://disperse.app) (one tx, plus an ERC-20 approve if needed). The contract takes no fee; leftover native is refunded to the sender. Local, imported, and hardware accounts all use this path.
+
+On each chain we `eth_getCode` in order:
+
+1. **Legacy** `0xD152f549545093347A162Dce210e7293f1452150` — 2018 `CREATE` on Ethereum and many L2s.
+2. **CreateX CREATE2** `0x0A7AA7F49F5d39A48614774f278a630Df4A8F6A6` — same salt + bytecode Disperse.app plants when the legacy address is empty. CreateX itself is `0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed`.
+3. **Neither, but CreateX is on the chain** — offer the first user a one-time **Deploy Disperse** (pinned `deployCreate2` calldata). They pay gas; later users share that CREATE2 address. Confirm sheet: “Deploy Disperse.app on this chain.”
+4. **No Disperse and no CreateX** — cannot batch; switch network.
+
+This is signer behavior (you are sending a batch). It is **not** a CREATE2 / factory lab: users do not pick salt, bytecode, or a factory. Implementation: `src/lib/disperse.ts`, `src/lib/disperseCreate2.ts`.
+
 ## What does not belong in Tools
 
 Do not ship these as wallet tabs. They are a lab. Add only if users ask, and then as **opt-in** modules.
@@ -27,7 +40,7 @@ Do not ship these as wallet tabs. They are a lab. Add only if users ask, and the
 - Calldata / ABI encode-decode, selector and event lookup
 - Read / Write Contract (Etherscan or `cast call` / `cast send`)
 - Storage slot / storage layout (`cast storage`)
-- CREATE / CREATE2, keccak, unit converters, block/time converters
+- CREATE / CREATE2, keccak, unit converters, block/time converters (Multisend’s pinned CreateX plant is not this)
 - Standalone signature r/s/v tools
 - RPC tester / compare / chain-id lookup (Networks + Doctor already cover this)
 - Standalone paste-a-hash decoder (History + explorer link)

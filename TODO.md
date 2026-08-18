@@ -119,7 +119,7 @@ Ledger/Trezor work for dapp signing and Quick Send, but several Tools flows stil
 
 | Done | P | Item | Notes |
 |------|---|------|-------|
-| [ ] | P1 | Multisend on hardware | Today: local key only (`MultiSendView`). Needs per-recipient device confirms (or a batched contract path). |
+| [x] | P1 | Multisend on hardware | Disperse.app batch (`MultiSendView`). One device confirm (plus ERC-20 approve). First-user CreateX deploy when the contract is missing — `docs/signer.md`. |
 | [ ] | P1 | ENS register / records on hardware | Today: blocked; points users to app.ens.domains. `EnsView.tsx` |
 | [ ] | P2 | Gas Station execute on hardware | Verify / wire device signing for Gas Station actions if missing |
 | [ ] | P2 | Swap execute on hardware | Verify LiFi swap path signs via HW approval sheet end-to-end |
@@ -157,7 +157,7 @@ Product, UX, infra, and platform work that is not a security control.
 | [ ] | ABI encode/decode, selector / event lookup | `cast` / 4byte.directory |
 | [ ] | Read / Write Contract | Etherscan or `cast call` / `cast send` |
 | [ ] | Storage slot / layout | `cast storage` |
-| [ ] | CREATE / CREATE2, keccak, converters | Foundry |
+| [ ] | CREATE / CREATE2, keccak, converters | Foundry. Multisend’s pinned CreateX plant of Disperse is not this. |
 | [ ] | Standalone signature / calldata lab | Confirm sheet already decodes what you sign |
 | [ ] | Tenderly-style asset-diff simulation | Needs a third-party sim API |
 | [ ] | Other-address multichain activity | Explorer / DeBank |
@@ -203,6 +203,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-08-18 | Multisend: Disperse.app on local + hardware; probe legacy then CreateX CREATE2; first user may deploy if both empty (`docs/signer.md`) |
 | 2026-08-17 | Signer guideline (`docs/signer.md`): confirm-time humanize/simulate/hints, Inspect, Approvals+=NFT+Permit2; lab tools deferred until asked |
 | 2026-08-16 | Hardware gaps section (Multisend, ENS, Gas, Swap); Multisend Instant confirm-per-recipient |
 | 2026-08-14 | Split TODO into Security vs Features |

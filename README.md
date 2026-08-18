@@ -15,7 +15,7 @@ Product positioning, privacy claims, and promo copy live in **[brand/product.man
 - **Inspect** — paste an address, token, ENS name, or tx hash from Tools
 - **Approvals** — review and revoke ERC-20, NFT operators, and Permit2
 - **Swaps** — cross-chain token swaps powered by LI.FI
-- **Multi-send** — paste a list of addresses and send native or ERC-20 to each (local key accounts)
+- **Multi-send** — paste a list of addresses and batch native or ERC-20 via [Disperse.app](https://disperse.app) (local and hardware). If Disperse is missing but [CreateX](https://createx.rocks) is on the chain, the first user can deploy it once for everyone — [docs/signer.md](docs/signer.md#multisend-is-disperseapp-not-a-create2-lab)
 - **Networks** — 20 popular chains with pre-filled public RPCs; switch endpoint from a dropdown
 - **Dapp connect** — optional MetaMask drop-in (`window.ethereum`) for connecting to websites
 - **UI** — opens in the **side panel** by default; switch to popup in Settings
