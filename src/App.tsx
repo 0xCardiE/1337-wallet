@@ -108,7 +108,7 @@ export function App() {
                 ? 'instant'
                 : overlay === 'toolsSettings'
                   ? 'toolsSettings'
-              : mainTab;
+              : 'main';
 
   let shell: ReactNode;
   if (screen === 'load') {

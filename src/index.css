@@ -71,7 +71,9 @@ body,
   width: var(--popup-width);
   min-width: var(--popup-width);
   max-width: min(440px, 100vw);
-  overflow-x: hidden;
+  /* Clip both axes. overflow-x:hidden alone computes overflow-y to auto and
+     flashes a viewport scrollbar (right-edge jump) on screen changes. */
+  overflow: hidden;
   font-family: var(--font);
   font-size: 14px;
   line-height: 1.5;
@@ -102,12 +104,16 @@ html.w1337-wide-surface #root {
   margin-right: auto;
   min-height: 100%;
   height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 html.w1337-wide-surface,
 html.w1337-wide-surface {
   min-height: 100dvh;
   height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 
 .sr-only {
@@ -187,14 +193,14 @@ h2 {
 .wallet-shell {
   position: relative;
   isolation: isolate;
-  min-height: var(--popup-min-height);
+  min-height: 0;
   height: 100%;
   background: var(--bg);
   color: var(--text);
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .wallet-shell > *,
@@ -217,12 +223,13 @@ h2 {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: var(--popup-min-height);
+  min-height: 0;
   box-sizing: border-box;
 }
 
 .settings-body {
   flex: 1;
+  min-height: 0;
 }
 
 .settings-wallet-footer {
@@ -1084,42 +1091,41 @@ button.bfox-main-header__addr:hover:not(:disabled) {
 .screen-body {
   padding: 16px;
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 /* ── Route transitions (logo + content ease in) ───────────────────── */
 .w1337-route-root {
-  min-height: var(--popup-min-height);
+  min-height: 0;
   height: 100%;
   width: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .w1337-route-layer {
   width: 100%;
   max-width: 100%;
-  min-height: var(--popup-min-height);
+  min-height: 0;
   height: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  animation: w1337-route-enter 380ms cubic-bezier(0.22, 1, 0.32, 1) both;
-  will-change: opacity, transform, filter;
+  overflow: hidden;
+  animation: w1337-route-enter 220ms ease-out both;
 }
 
 @keyframes w1337-route-enter {
   0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.982);
-    filter: blur(2px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -1254,12 +1260,15 @@ button.bfox-main-header__addr:hover:not(:disabled) {
 
 /* ── Full-screen loading splash ───────────────────────────────────── */
 .loading-screen {
-  min-height: var(--popup-min-height);
+  min-height: 0;
+  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  overflow: hidden;
 }
 
 .w1337-loading-screen {
@@ -1304,7 +1313,7 @@ button.bfox-main-header__addr:hover:not(:disabled) {
   position: relative;
   isolation: isolate;
   flex: 1;
-  min-height: var(--popup-min-height);
+  min-height: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -1313,6 +1322,8 @@ button.bfox-main-header__addr:hover:not(:disabled) {
   padding: 32px 24px 0;
   box-sizing: border-box;
   overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .unlock-screen--loading {
@@ -2958,6 +2969,7 @@ button.w1337-mm-tabs__btn--on:hover:not(:disabled) {
   padding-bottom: 12px;
   overflow: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 /* Dapp connection footer — pinned to bottom of wallet shell */
@@ -3124,19 +3136,22 @@ html.w1337-surface--popup .w1337-route-layer {
   overflow: hidden;
 }
 
-html.w1337-surface--popup .wallet-shell.w1337--main {
+html.w1337-surface--popup .wallet-shell {
   flex: 1;
   min-height: 0;
   height: 100%;
   max-height: var(--popup-min-height);
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
+html.w1337-surface--popup .screen-body,
 html.w1337-surface--popup .w1337-body--main {
   flex: 0 0 auto;
   min-height: 0;
   overflow: visible;
+  scrollbar-gutter: auto;
 }
 
 html.w1337-surface--popup .w1337-main-header,
