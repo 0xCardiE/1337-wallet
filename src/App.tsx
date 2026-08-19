@@ -195,9 +195,9 @@ export function App() {
         settings={settings}
         onSaved={() => void refresh()}
       >
-        {mainTab === 'assets' ? (
+        <div hidden={mainTab !== 'assets'} className="w1337-tab-panel">
           <WalletHomeView settings={settings} onSaved={() => void refresh()} />
-        ) : null}
+        </div>
         {mainTab === 'history' ? <HistoryPanel settings={settings} /> : null}
         {mainTab === 'tools' ? <ToolsView settings={settings} /> : null}
       </WalletLayout>

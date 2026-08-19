@@ -4394,6 +4394,10 @@ button.w1337-dd__option--on:hover:not(:disabled) {
   margin-bottom: 6px;
 }
 
+.w1337-tab-panel[hidden] {
+  display: none !important;
+}
+
 .w1337-refresh-icon {
   flex-shrink: 0;
   padding: 4px;
@@ -4617,6 +4621,21 @@ button.ghost.w1337-token-row__unhide {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+.w1337-token-fold__bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-card);
+}
+
+.w1337-token-fold__bar .w1337-token-fold__head {
+  flex: 1;
+}
+
+.w1337-token-fold__bar .w1337-refresh-icon {
+  margin-right: 8px;
 }
 
 .w1337-token-fold + .w1337-token-fold {

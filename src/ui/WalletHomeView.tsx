@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAddress } from 'viem';
 import { getUnlockedAccount } from '../lib/accountSession';
 import {
   forgetHeldProbes,
   fmtTokenAmount,
   fmtUsdValue,
-  invalidateRpcBalanceCache,
+  hydrateAssetBalanceCache,
   isNativeWalletToken,
+  loadNativeBalanceForChain,
   loadWalletBalancesForChain,
+  MAIN_STALE_MS,
+  OTHER_STALE_MS,
+  peekMainBalances,
+  peekMainSnap,
+  peekOtherBalances,
+  rememberMainBalances,
+  rememberOtherBalances,
   type WalletBalEntry,
 } from '../lib/walletBalances';
 import {
@@ -32,6 +40,21 @@ function hiddenSetOf(hidden: HiddenTokenMeta[]): Set<string> {
   return new Set(hidden.map(h => h.address.toLowerCase()));
 }
 
+function splitRows(
+  rows: WalletBalEntry[],
+  hidden: HiddenTokenMeta[],
+  touched: Set<string>,
+): { main: WalletBalEntry[]; other: WalletBalEntry[] } {
+  const skip = hiddenSetOf(hidden);
+  const ctx = { hidden: skip, touched };
+  const main = rows.filter(r => isMainAssetRow(r, ctx));
+  const mainAddrs = new Set(main.map(r => r.address.toLowerCase()));
+  const other = rows.filter(
+    r => !mainAddrs.has(r.address.toLowerCase()) && !skip.has(r.address.toLowerCase()),
+  );
+  return { main, other };
+}
+
 export function WalletHomeView({
   settings,
 }: {
@@ -41,68 +64,153 @@ export function WalletHomeView({
   const account = getUnlockedAccount();
   const addr = account ? getAddress(account.address) : null;
   const chainId = effectiveActiveChainId(settings);
+  const loadGen = useRef(0);
 
   const [mainRows, setMainRows] = useState<WalletBalEntry[]>([]);
   const [otherRows, setOtherRows] = useState<WalletBalEntry[]>([]);
   const [hidden, setHidden] = useState<HiddenTokenMeta[]>([]);
-  const [busy, setBusy] = useState(true);
+  const [mainBusy, setMainBusy] = useState(true);
+  const [otherBusy, setOtherBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [otherOpen, setOtherOpen] = useState(false);
   const [hiddenOpen, setHiddenOpen] = useState(false);
 
-  const refresh = useCallback(
-    async (opts?: { dust?: boolean }) => {
+  const applyMain = useCallback(
+    (
+      rows: WalletBalEntry[],
+      hiddenRows: HiddenTokenMeta[],
+      touched: Set<string>,
+      opts?: { allowEmpty?: boolean },
+    ) => {
       if (!addr) return;
-      setBusy(true);
-      setErr(null);
+      const { main } = splitRows(rows, hiddenRows, touched);
+      if (main.length === 0 && opts?.allowEmpty === false) return;
+      setMainRows(main);
+      rememberMainBalances(chainId, addr, main);
+    },
+    [addr, chainId],
+  );
+
+  const refreshMain = useCallback(async (force = false) => {
+    if (!addr) return;
+    const gen = loadGen.current;
+    const snap = peekMainSnap(chainId, addr);
+    if (snap?.rows.length) setMainRows(snap.rows);
+    const nativeNeedsUsd = snap?.rows.some(r => isNativeWalletToken(r) && !r.priceUSD);
+    if (!force && snap?.rows.length && Date.now() - snap.at < MAIN_STALE_MS && !nativeNeedsUsd) {
+      setMainBusy(false);
+      return;
+    }
+
+    setMainBusy(true);
+    setErr(null);
+    // Native first so Assets is never blank while Li.FI + token RPCs catch up.
+    if (peekMainBalances(chainId, addr).length === 0) {
+      void loadNativeBalanceForChain(addr, chainId)
+        .then(native => {
+          if (gen !== loadGen.current || !native) return;
+          if (peekMainBalances(chainId, addr).length > 0) return;
+          setMainRows(prev => (prev.length > 0 ? prev : [native]));
+        })
+        .catch(() => {});
+    }
+    try {
+      const [hiddenRows, touchedAddrs] = await Promise.all([
+        loadHiddenTokens(chainId, addr),
+        loadTouchedTokenAddresses(chainId, addr),
+      ]);
+      if (gen !== loadGen.current) return;
+      setHidden(hiddenRows);
+
+      const { rows: next, error } = await loadWalletBalancesForChain(addr, chainId, {
+        refreshRpc: true,
+        explorerApiKey: settings.explorerApiKey,
+        skipAddresses: hiddenSetOf(hiddenRows),
+        promoteAddresses: touchedAddrs,
+        includeDustProbes: false,
+      });
+      if (gen !== loadGen.current) return;
+      applyMain(next, hiddenRows, touchedAddrs, { allowEmpty: !error });
+      setErr(error);
+    } catch (e) {
+      if (gen !== loadGen.current) return;
+      if (peekMainBalances(chainId, addr).length === 0) {
+        setErr(e instanceof Error ? e.message : 'Could not load balances');
+      }
+    } finally {
+      if (gen === loadGen.current) setMainBusy(false);
+    }
+  }, [addr, chainId, settings.explorerApiKey, applyMain]);
+
+  const refreshOther = useCallback(
+    async (force: boolean) => {
+      if (!addr) return;
+      const cached = peekOtherBalances(chainId, addr);
+      if (cached) setOtherRows(cached.rows);
+      if (!force && cached && Date.now() - cached.at < OTHER_STALE_MS) return;
+      const gen = loadGen.current;
+      setOtherBusy(true);
       try {
         const [hiddenRows, touchedAddrs] = await Promise.all([
           loadHiddenTokens(chainId, addr),
           loadTouchedTokenAddresses(chainId, addr),
         ]);
+        if (gen !== loadGen.current) return;
         setHidden(hiddenRows);
-        const skip = hiddenSetOf(hiddenRows);
-        invalidateRpcBalanceCache(chainId);
-        const includeDust = opts?.dust === true;
         const { rows: next, error } = await loadWalletBalancesForChain(addr, chainId, {
           refreshRpc: true,
           explorerApiKey: settings.explorerApiKey,
-          skipAddresses: skip,
+          skipAddresses: hiddenSetOf(hiddenRows),
           promoteAddresses: touchedAddrs,
-          includeDustProbes: includeDust,
+          includeDustProbes: true,
         });
-        const ctx = { hidden: skip, touched: touchedAddrs };
-        const nextMain = next.filter(r => isMainAssetRow(r, ctx));
-        const mainAddrs = new Set(nextMain.map(r => r.address.toLowerCase()));
-        setMainRows(nextMain);
-        const nextOther = next.filter(
-          r => !mainAddrs.has(r.address.toLowerCase()) && !skip.has(r.address.toLowerCase()),
-        );
-        if (includeDust) setOtherRows(nextOther);
-        else {
-          setOtherRows(prev =>
-            prev.filter(
-              r => !skip.has(r.address.toLowerCase()) && !mainAddrs.has(r.address.toLowerCase()),
-            ),
-          );
+        if (gen !== loadGen.current) return;
+        const split = splitRows(next, hiddenRows, touchedAddrs);
+        // Other must never rewrite the main list — a partial dust snapshot used to blank Assets.
+        if (!error || split.other.length > 0 || !peekOtherBalances(chainId, addr)) {
+          setOtherRows(split.other);
+          rememberOtherBalances(chainId, addr, split.other);
         }
-        setErr(error);
       } finally {
-        setBusy(false);
+        if (gen === loadGen.current) setOtherBusy(false);
       }
     },
     [addr, chainId, settings.explorerApiKey],
   );
 
   useEffect(() => {
-    invalidateRpcBalanceCache(chainId);
+    loadGen.current += 1;
+    const gen = loadGen.current;
     setExpandedKey(null);
-    setOtherOpen(false);
     setHiddenOpen(false);
-    setOtherRows([]);
-    void refresh({ dust: true });
-  }, [addr, chainId, refresh]);
+    setErr(null);
+    if (!addr) {
+      setMainRows([]);
+      setOtherRows([]);
+      setMainBusy(false);
+      return;
+    }
+    const memoryMain = peekMainBalances(chainId, addr);
+    const memoryOther = peekOtherBalances(chainId, addr);
+    setMainRows(memoryMain);
+    setOtherRows(memoryOther?.rows ?? []);
+    setMainBusy(memoryMain.length === 0);
+    void loadHiddenTokens(chainId, addr).then(rows => {
+      if (gen === loadGen.current) setHidden(rows);
+    });
+    void (async () => {
+      await hydrateAssetBalanceCache();
+      if (gen !== loadGen.current) return;
+      const cachedMain = peekMainBalances(chainId, addr);
+      const cachedOther = peekOtherBalances(chainId, addr);
+      if (cachedMain.length) setMainRows(cachedMain);
+      if (cachedOther) setOtherRows(cachedOther.rows);
+      void refreshMain(false);
+    })();
+    // Hydrate + fetch for this account/chain only — do not reset when refreshMain identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addr, chainId]);
 
   async function onHide(t: WalletBalEntry) {
     if (!addr) return;
@@ -114,8 +222,12 @@ export function WalletHomeView({
     });
     forgetHeldProbes(chainId, addr, [t.address]);
     setHidden(nextHidden);
-    setMainRows(prev => prev.filter(r => r.address.toLowerCase() !== t.address.toLowerCase()));
-    setOtherRows(prev => prev.filter(r => r.address.toLowerCase() !== t.address.toLowerCase()));
+    const nextMain = mainRows.filter(r => r.address.toLowerCase() !== t.address.toLowerCase());
+    const nextOther = otherRows.filter(r => r.address.toLowerCase() !== t.address.toLowerCase());
+    setMainRows(nextMain);
+    setOtherRows(nextOther);
+    rememberMainBalances(chainId, addr, nextMain);
+    rememberOtherBalances(chainId, addr, nextOther);
     if (expandedKey === tokenRowKey(t)) setExpandedKey(null);
   }
 
@@ -123,7 +235,9 @@ export function WalletHomeView({
     if (!addr) return;
     const nextHidden = await unhideToken(chainId, addr, token.address);
     setHidden(nextHidden);
-    void refresh({ dust: true });
+    void refreshMain(true);
+    const cached = peekOtherBalances(chainId, addr);
+    if (cached) void refreshOther(true);
   }
 
   function toggleSend(t: WalletBalEntry) {
@@ -131,22 +245,28 @@ export function WalletHomeView({
     setExpandedKey(prev => (prev === key ? null : key));
   }
 
+  function toggleOther() {
+    const next = !otherOpen;
+    setOtherOpen(next);
+    if (next) void refreshOther(false);
+  }
+
   const empty =
-    !busy && mainRows.length === 0 && otherRows.length === 0 && hidden.length === 0 && !err;
+    !mainBusy && mainRows.length === 0 && otherRows.length === 0 && hidden.length === 0 && !err;
 
   return (
     <div className="w1337-home">
       <div className="w1337-home-refresh-row">
         <RefreshIconButton
-          busy={busy}
+          busy={mainBusy}
           ariaLabel="Refresh balances"
-          onClick={() => void refresh({ dust: otherOpen })}
+          onClick={() => void refreshMain(true)}
         />
       </div>
 
       {err ? <p className="error w1337-home-error">{err}</p> : null}
 
-      {busy && mainRows.length === 0 && otherRows.length === 0 ? (
+      {mainBusy && mainRows.length === 0 ? (
         <p className="muted w1337-home-loading">Loading balances…</p>
       ) : null}
 
@@ -168,32 +288,37 @@ export function WalletHomeView({
             onCollapse={() => setExpandedKey(null)}
             onSent={() => {
               if (!addr) return;
-              void markTokensTouched(chainId, addr, [t.address]).then(() =>
-                refresh({ dust: otherOpen }),
-              );
+              void markTokensTouched(chainId, addr, [t.address]).then(() => refreshMain(true));
             }}
           />
         ))}
       </ul>
 
-      {otherRows.length > 0 ? (
-        <div className="w1337-token-fold">
+      <div className="w1337-token-fold">
+        <div className="w1337-token-fold__bar">
           <button
             type="button"
             className="w1337-token-fold__head"
             aria-expanded={otherOpen}
-            onClick={() => {
-              const next = !otherOpen;
-              setOtherOpen(next);
-              if (next) void refresh({ dust: true });
-            }}
+            onClick={toggleOther}
           >
-            Other ({otherRows.length})
+            Other{otherRows.length ? ` (${otherRows.length})` : ''}
             <span className="w1337-token-fold__chev" aria-hidden>
               {otherOpen ? '−' : '+'}
             </span>
           </button>
-          {otherOpen ? (
+          <RefreshIconButton
+            busy={otherBusy}
+            ariaLabel="Refresh other tokens"
+            onClick={() => void refreshOther(true)}
+          />
+        </div>
+        {otherOpen ? (
+          otherBusy && otherRows.length === 0 ? (
+            <p className="muted w1337-home-loading">Loading other tokens…</p>
+          ) : otherRows.length === 0 && !otherBusy ? (
+            <p className="muted w1337-home-empty">No extra tokens on this network.</p>
+          ) : (
             <ul className="w1337-token-list">
               {otherRows.map(t => (
                 <AssetTokenItem
@@ -204,20 +329,18 @@ export function WalletHomeView({
                   expanded={expandedKey === tokenRowKey(t)}
                   onToggle={() => toggleSend(t)}
                   onHide={() => void onHide(t)}
-            hideable={!isNativeWalletToken(t)}
+                  hideable={!isNativeWalletToken(t)}
                   onCollapse={() => setExpandedKey(null)}
                   onSent={() => {
                     if (!addr) return;
-                    void markTokensTouched(chainId, addr, [t.address]).then(() =>
-                      refresh({ dust: true }),
-                    );
+                    void markTokensTouched(chainId, addr, [t.address]).then(() => refreshMain(true));
                   }}
                 />
               ))}
             </ul>
-          ) : null}
-        </div>
-      ) : null}
+          )
+        ) : null}
+      </div>
 
       {hidden.length > 0 ? (
         <div className="w1337-token-fold">

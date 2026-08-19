@@ -4,7 +4,7 @@ import { ChainType } from '@lifi/types';
 import type { Token } from '@lifi/types';
 import { chainById } from './chainCatalog';
 import { chainLogoUri } from './chainLogo';
-import { snapshotHeldTokensOnChain, type OnChainBalanceProbe } from './ethereum';
+import { snapshotHeldTokensOnChain, getNativeBalance, type OnChainBalanceProbe } from './ethereum';
 import { isNativeToken } from './lifiHelpers';
 import { summarizeApiError } from './errors';
 import { etherscanV2Get } from './etherscanV2';
@@ -88,12 +88,152 @@ function formatUnitsStringCompact(raw: string): string {
 
 const RPC_BALANCE_OVERRIDE_TTL_MS = 120_000;
 const RPC_SNAPSHOT_MAX = 150;
-const CATALOG_PROBE_MAX = 80;
 const EXPLORER_PROBE_MAX = 80;
+const CATALOG_TTL_MS = 10 * 60_000;
 
 const rpcFresh = new Map<number, { at: number; rows: WalletBalEntry[] }>();
+
+type BalanceSnap = { at: number; rows: WalletBalEntry[] };
+type SnapBundle = Record<string, { main?: BalanceSnap; other?: BalanceSnap }>;
+
+const SNAP_STORAGE_KEY = '1337_asset_snap_v1';
+/** Last successful snapshots — survive failed refreshes and popup remounts. */
+const lastGoodMain = new Map<string, BalanceSnap>();
+const lastGoodOther = new Map<string, BalanceSnap>();
 /** Token contracts we have seen with a balance — kept after amount-cache invalidation. */
 const knownProbes = new Map<string, OnChainBalanceProbe[]>();
+const catalogCache = new Map<number, { at: number; tokens: Token[] }>();
+
+/** Main list: reuse cache unless older than this; spinner still runs on a background refresh. */
+export const MAIN_STALE_MS = 2 * 60 * 1000;
+/** Other/dust: do not hit explorer on every expand. */
+export const OTHER_STALE_MS = 15 * 60 * 1000;
+
+function holderCacheKey(chainId: number, holder: string): string {
+  return `${chainId}:${holder.toLowerCase()}`;
+}
+
+function isBalanceSnap(value: unknown): value is BalanceSnap {
+  if (!value || typeof value !== 'object') return false;
+  const o = value as { at?: unknown; rows?: unknown };
+  return typeof o.at === 'number' && Array.isArray(o.rows);
+}
+
+let snapHydrate: Promise<void> | null = null;
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+
+function readSnapBundle(): Promise<SnapBundle> {
+  return new Promise(resolve => {
+    try {
+      chrome.storage.local.get([SNAP_STORAGE_KEY], (r: Record<string, unknown>) => {
+        if (chrome.runtime?.lastError) {
+          resolve({});
+          return;
+        }
+        const raw = r[SNAP_STORAGE_KEY];
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+          resolve({});
+          return;
+        }
+        const out: SnapBundle = {};
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+          if (!v || typeof v !== 'object') continue;
+          const rec = v as { main?: unknown; other?: unknown };
+          const main = isBalanceSnap(rec.main) ? rec.main : undefined;
+          const other = isBalanceSnap(rec.other) ? rec.other : undefined;
+          if (main || other) out[k] = { main, other };
+        }
+        resolve(out);
+      });
+    } catch {
+      resolve({});
+    }
+  });
+}
+
+function persistSnaps(): void {
+  const bundle: SnapBundle = {};
+  for (const [k, v] of lastGoodMain) {
+    bundle[k] = { ...(bundle[k] ?? {}), main: v };
+  }
+  for (const [k, v] of lastGoodOther) {
+    bundle[k] = { ...(bundle[k] ?? {}), other: v };
+  }
+  try {
+    chrome.storage.local.set({ [SNAP_STORAGE_KEY]: bundle }, () => {
+      void chrome.runtime?.lastError;
+    });
+  } catch {
+    /* popup / tests without chrome.storage */
+  }
+}
+
+function schedulePersistSnaps(): void {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(persistSnaps, 250);
+}
+
+/** Load last painted balances from disk so Assets is not empty after the popup remounts. */
+export async function hydrateAssetBalanceCache(): Promise<void> {
+  if (!snapHydrate) {
+    snapHydrate = readSnapBundle()
+      .then(bundle => {
+        for (const [k, v] of Object.entries(bundle)) {
+          if (v.main && !lastGoodMain.has(k)) lastGoodMain.set(k, v.main);
+          if (v.other && !lastGoodOther.has(k)) lastGoodOther.set(k, v.other);
+        }
+      })
+      .catch(() => {});
+  }
+  await snapHydrate;
+}
+
+export function peekMainBalances(chainId: number, address: string): WalletBalEntry[] {
+  return lastGoodMain.get(holderCacheKey(chainId, address))?.rows ?? [];
+}
+
+export function peekMainSnap(
+  chainId: number,
+  address: string,
+): BalanceSnap | null {
+  return lastGoodMain.get(holderCacheKey(chainId, address)) ?? null;
+}
+
+export function peekOtherBalances(
+  chainId: number,
+  address: string,
+): BalanceSnap | null {
+  return lastGoodOther.get(holderCacheKey(chainId, address)) ?? null;
+}
+
+export function rememberMainBalances(
+  chainId: number,
+  address: string,
+  rows: WalletBalEntry[],
+): void {
+  lastGoodMain.set(holderCacheKey(chainId, address), { at: Date.now(), rows });
+  schedulePersistSnaps();
+}
+
+export function rememberOtherBalances(
+  chainId: number,
+  address: string,
+  rows: WalletBalEntry[],
+): void {
+  lastGoodOther.set(holderCacheKey(chainId, address), { at: Date.now(), rows });
+  schedulePersistSnaps();
+}
+
+export async function loadNativeBalanceForChain(
+  address: string,
+  chainId: number,
+): Promise<WalletBalEntry | null> {
+  const holder = getAddress(address);
+  const probe = nativeProbeForChain(chainId);
+  const native = await getNativeBalance(holder, chainId);
+  if (native <= 0n) return null;
+  return { ...probe, amount: native.toString(), chainId };
+}
 
 export function fmtTokenAmount(entry: WalletBalEntry): string {
   try {
@@ -206,30 +346,28 @@ function mergeNativeCatalogMeta(
 async function enrichNativeRows(
   chainId: number,
   rows: WalletBalEntry[],
+  lifiRows?: WalletBalEntry[],
 ): Promise<WalletBalEntry[]> {
+  const lifiNative = (lifiRows ?? []).find(r => isNativeWalletToken(r));
   if (!rows.some(r => isNativeWalletToken(r) && (!r.logoURI || !r.priceUSD))) {
     return rows;
   }
 
-  let catalog: Token | undefined;
-  try {
-    const res = await getTokens({
-      chains: [chainId],
-      chainTypes: [ChainType.EVM],
-      extended: true,
-    });
-    catalog = nativeTokenFromCatalog(res.tokens?.[chainId]);
-  } catch {
-    /* chain logo fallback still applies */
+  let catalog = nativeTokenFromCatalog(catalogCache.get(chainId)?.tokens);
+  if (!lifiNative?.priceUSD && !catalog?.priceUSD) {
+    catalog = nativeTokenFromCatalog(await loadCatalogTokens(chainId));
   }
-
   const chain = chainById(chainId);
   return rows.map(row => {
     if (!isNativeWalletToken(row)) return row;
     return {
       ...row,
-      logoURI: row.logoURI || catalog?.logoURI || (chain ? chainLogoUri(chain) : undefined),
-      priceUSD: row.priceUSD || catalog?.priceUSD,
+      logoURI:
+        row.logoURI ||
+        lifiNative?.logoURI ||
+        catalog?.logoURI ||
+        (chain ? chainLogoUri(chain) : undefined),
+      priceUSD: row.priceUSD || lifiNative?.priceUSD || catalog?.priceUSD,
     };
   });
 }
@@ -453,6 +591,8 @@ async function discoverHeldTokenProbes(
 
 async function loadCatalogTokens(chainId: number): Promise<Token[]> {
   if (!usesLifiPortfolio(chainId)) return [];
+  const cached = catalogCache.get(chainId);
+  if (cached && Date.now() - cached.at < CATALOG_TTL_MS) return cached.tokens;
   try {
     const res = await getTokens({
       chains: [chainId],
@@ -460,9 +600,11 @@ async function loadCatalogTokens(chainId: number): Promise<Token[]> {
       extended: true,
       orderBy: 'volumeUSD24H',
     });
-    return res.tokens?.[chainId] ?? [];
+    const tokens = res.tokens?.[chainId] ?? [];
+    catalogCache.set(chainId, { at: Date.now(), tokens });
+    return tokens;
   } catch {
-    return [];
+    return cached?.tokens ?? [];
   }
 }
 
@@ -475,14 +617,22 @@ async function collectBalanceProbes(opts: {
   promoteAddresses?: Set<string>;
   includeDustProbes?: boolean;
 }): Promise<OnChainBalanceProbe[]> {
-  const catalog = await loadCatalogTokens(opts.chainId);
-  const catalogKeys = new Set(catalog.map(t => t.address.toLowerCase()));
+  const includeDust = opts.includeDustProbes === true;
   const skip = opts.skipAddresses ?? new Set<string>();
   const promote = opts.promoteAddresses ?? new Set<string>();
-  const includeDust = opts.includeDustProbes !== false;
-
+  const catalog = includeDust ? await loadCatalogTokens(opts.chainId) : [];
+  const catalogKeys = new Set(catalog.map(t => t.address.toLowerCase()));
+  const lifiNative = (opts.lifiRows ?? []).find(r => isNativeWalletToken(r));
+  const nativeBase = nativeProbeForChain(opts.chainId);
   const native = mergeNativeCatalogMeta(
-    nativeProbeForChain(opts.chainId),
+    {
+      ...nativeBase,
+      name: lifiNative?.name || nativeBase.name,
+      symbol: lifiNative?.symbol || nativeBase.symbol,
+      decimals: lifiNative?.decimals ?? nativeBase.decimals,
+      logoURI: lifiNative?.logoURI || nativeBase.logoURI,
+      priceUSD: lifiNative?.priceUSD,
+    },
     nativeTokenFromCatalog(catalog),
     opts.chainId,
   );
@@ -498,7 +648,6 @@ async function collectBalanceProbes(opts: {
       !includeDust &&
       tokenUsdNumber(row) < DUST_USD &&
       !promote.has(key) &&
-      !catalogKeys.has(key) &&
       !must.has(key)
     ) {
       continue;
@@ -512,36 +661,27 @@ async function collectBalanceProbes(opts: {
     mergeErc20Probe(must, p);
   }
 
-  const fill = new Map(must);
-  let catalogAdded = 0;
   for (const t of catalog) {
     const key = t.address.toLowerCase();
-    if (NATIVE_ADDRS.has(key) || skip.has(key)) continue;
-    if (fill.has(key)) {
-      const prev = fill.get(key)!;
-      const catalogProbe = tokenToProbe(t);
-      fill.set(key, {
-        address: prev.address,
-        decimals: catalogProbe.decimals || prev.decimals,
-        symbol: catalogProbe.symbol || prev.symbol,
-        name: catalogProbe.name || prev.name,
-        logoURI: catalogProbe.logoURI || prev.logoURI,
-        priceUSD: catalogProbe.priceUSD || prev.priceUSD,
-      });
-      continue;
-    }
-    if (catalogAdded >= CATALOG_PROBE_MAX) continue;
-    if (fill.size >= RPC_SNAPSHOT_MAX - 1) break;
-    mergeErc20Probe(fill, tokenToProbe(t));
-    catalogAdded += 1;
+    if (NATIVE_ADDRS.has(key) || skip.has(key) || !must.has(key)) continue;
+    const prev = must.get(key)!;
+    const catalogProbe = tokenToProbe(t);
+    must.set(key, {
+      address: prev.address,
+      decimals: catalogProbe.decimals || prev.decimals,
+      symbol: catalogProbe.symbol || prev.symbol,
+      name: catalogProbe.name || prev.name,
+      logoURI: catalogProbe.logoURI || prev.logoURI,
+      priceUSD: catalogProbe.priceUSD || prev.priceUSD,
+    });
   }
 
-  return [native, ...fill.values()].slice(0, RPC_SNAPSHOT_MAX);
+  return [native, ...must.values()].slice(0, RPC_SNAPSHOT_MAX);
 }
 
 /**
- * On-chain native (always) plus Li.FI catalog ERC-20s on mainnets.
- * Testnets skip the catalog — Li.FI does not index them — and probe ETH via RPC.
+ * On-chain native plus tokens we already know you hold.
+ * Testnets skip Li.FI catalog — it does not index them — and probe ETH via RPC.
  */
 export async function loadWalletBalancesRpcForChain(
   holder: `0x${string}`,
@@ -610,13 +750,11 @@ export async function loadWalletBalancesForChain(
   const promote = new Set(
     [...(options?.promoteAddresses ?? [])].map(a => a.toLowerCase()),
   );
-  const includeDustProbes = options?.includeDustProbes !== false;
+  const includeDustProbes = options?.includeDustProbes === true;
   const now = Date.now();
   for (const [cid, pack] of [...rpcFresh.entries()]) {
     if (now - pack.at >= RPC_BALANCE_OVERRIDE_TTL_MS) rpcFresh.delete(cid);
   }
-
-  if (options?.refreshRpc) rpcFresh.delete(chainId);
 
   const cached = rpcFresh.get(chainId);
   if (!options?.refreshRpc && cached && now - cached.at < RPC_BALANCE_OVERRIDE_TTL_MS) {
@@ -642,9 +780,10 @@ export async function loadWalletBalancesForChain(
   }
 
   try {
-    const extra = options?.refreshRpc
-      ? await discoverHeldTokenProbes(chainId, holder, options.explorerApiKey)
-      : [];
+    const extra =
+      options?.refreshRpc && includeDustProbes
+        ? await discoverHeldTokenProbes(chainId, holder, options.explorerApiKey)
+        : [];
     const probes = await collectBalanceProbes({
       chainId,
       holder,
@@ -658,15 +797,19 @@ export async function loadWalletBalancesForChain(
       .map(r => ({ ...r, chainId }))
       .filter(r => !skip.has(r.address.toLowerCase()));
     rememberHeldProbes(chainId, holder, chainRows, { skip, promote });
-    rpcFresh.set(chainId, { at: Date.now(), rows: chainRows });
-    const rows = await enrichNativeRows(chainId, [...chainRows].sort(compareByUsd));
+    const rows = await enrichNativeRows(chainId, [...chainRows].sort(compareByUsd), lifiRows);
+    rpcFresh.set(chainId, { at: Date.now(), rows });
     return { rows, error: null };
   } catch (e) {
-    if (lifiRows.length === 0) {
-      return { rows: [], error: lifiError ?? summarizeApiError(e) };
+    const cached = lastGoodMain.get(holderCacheKey(chainId, holder));
+    if (lifiRows.length > 0) {
+      lifiRows.sort(compareByUsd);
+      return { rows: await enrichNativeRows(chainId, lifiRows, lifiRows), error: null };
     }
-    lifiRows.sort(compareByUsd);
-    return { rows: await enrichNativeRows(chainId, lifiRows), error: null };
+    if (cached?.rows.length) {
+      return { rows: cached.rows, error: lifiError ?? summarizeApiError(e) };
+    }
+    return { rows: [], error: lifiError ?? summarizeApiError(e) };
   }
 }
 
