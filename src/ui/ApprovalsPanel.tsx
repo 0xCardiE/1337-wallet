@@ -1,10 +1,33 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAddress } from 'viem';
 import { getUnlockedAccount } from '../lib/accountSession';
 import { chainById } from '../lib/chainCatalog';
 import { chainLogoUri } from '../lib/chainLogo';
-import { revokeErc20Approval, waitForChainReceipt } from '../lib/ethereum';
+import {
+  revokeErc20Approval,
+  revokeNftApprovalForAll,
+  revokePermit2Allowance,
+  waitForChainReceipt,
+} from '../lib/ethereum';
 import { needsExplorerApiKey } from '../lib/explorerTxHistory';
+import {
+  mergeNftApprovalRows,
+  refreshLiveNftApprovals,
+  scanNftApprovals,
+  type NftApprovalRow,
+} from '../lib/nftApprovals';
+import { loadNftApprovalsCache, saveNftApprovalsCache } from '../lib/nftApprovalsCache';
+import {
+  formatPermit2Expiration,
+  mergePermit2ApprovalRows,
+  refreshLivePermit2Approvals,
+  scanPermit2Approvals,
+  type Permit2ApprovalRow,
+} from '../lib/permit2Approvals';
+import {
+  loadPermit2ApprovalsCache,
+  savePermit2ApprovalsCache,
+} from '../lib/permit2ApprovalsCache';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import {
   APPROVAL_LOG_LOOKBACK_DAYS,
@@ -28,114 +51,138 @@ import {
   loadTokenApprovalsCache,
   saveTokenApprovalsCache,
 } from '../lib/tokenApprovalsCache';
-import { ApprovalFact, ApprovalsScanOlder, ExternalLinkIcon, olderScanNote } from './ApprovalsScanOlder';
-import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
 import { describeError } from '../lib/utils';
+import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
+import { ApprovalFact, ApprovalsScanOlder, ExternalLinkIcon, olderScanNote } from './ApprovalsScanOlder';
 import { LiFiIcon } from './LiFiIcon';
-import { NftApprovalsPanel } from './NftApprovalsPanel';
-import { Permit2ApprovalsPanel } from './Permit2ApprovalsPanel';
 
 function shortAddress(addr: string): string {
   if (addr.length < 12) return addr;
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-function ApprovalRowItem({
-  row,
+type ApprovalKind = 'token' | 'nft' | 'permit2';
+
+const KIND_LABEL: Record<ApprovalKind, string> = {
+  token: 'Token',
+  nft: 'NFT',
+  permit2: 'Permit2',
+};
+
+function ExplorerAddr({ chainId, address }: { chainId: number; address: string }) {
+  const url = addressExplorerLink(chainId, address);
+  if (!url) return <>{shortAddress(address)}</>;
+  return (
+    <a className="w1337-approvals__link" href={url} target="_blank" rel="noopener noreferrer">
+      {shortAddress(address)} <ExternalLinkIcon />
+    </a>
+  );
+}
+
+function CompactApprovalItem({
+  kind,
+  symbol,
+  logoURI,
+  amount,
+  unlimited,
+  assetLabel,
+  assetAddr,
+  spenderLabel,
+  spenderAddr,
+  lastTx,
+  extra,
   chainId,
   busy,
+  expanded,
+  onToggle,
   onRevoke,
 }: {
-  row: TokenApprovalRow;
+  kind: ApprovalKind;
+  symbol: string;
+  logoURI?: string;
+  amount: string;
+  unlimited: boolean;
+  assetLabel: string;
+  assetAddr: string;
+  spenderLabel: string;
+  spenderAddr: string;
+  lastTx?: string;
+  extra?: { label: string; value: ReactNode };
   chainId: number;
   busy: boolean;
-  onRevoke: (row: TokenApprovalRow) => void;
+  expanded: boolean;
+  onToggle: () => void;
+  onRevoke: () => void;
 }) {
-  const tokenUrl = addressExplorerLink(chainId, row.token);
-  const spenderUrl = addressExplorerLink(chainId, row.spender);
-  const txUrl = row.lastApprovalTx ? txExplorerLink(chainId, row.lastApprovalTx) : undefined;
-
+  const txUrl = lastTx ? txExplorerLink(chainId, lastTx) : undefined;
   return (
-    <li className="w1337-approvals__item">
-      <div className="w1337-approvals__token">
-        <LiFiIcon logoURI={row.tokenLogo} label={row.tokenSymbol} size={28} rounded />
-        <span className="w1337-approvals__token-symbol">{row.tokenSymbol}</span>
-      </div>
-      <dl className="w1337-approvals__facts">
-        <ApprovalFact label="Token">
-          {tokenUrl ? (
-            <a className="w1337-approvals__link" href={tokenUrl} target="_blank" rel="noopener noreferrer">
-              {shortAddress(row.token)} <ExternalLinkIcon />
-            </a>
+    <li className={`w1337-approvals__item${expanded ? ' w1337-approvals__item--open' : ''}`}>
+      <div className="w1337-approvals__row">
+        <button
+          type="button"
+          className="w1337-approvals__main"
+          aria-expanded={expanded}
+          onClick={onToggle}
+        >
+          {logoURI || kind === 'token' || kind === 'permit2' ? (
+            <LiFiIcon logoURI={logoURI} label={symbol} size={32} rounded />
           ) : (
-            shortAddress(row.token)
+            <span className="w1337-approvals__nft-mark" aria-hidden>
+              NFT
+            </span>
           )}
-        </ApprovalFact>
-        <ApprovalFact label="Spender">
-          {spenderUrl ? (
-            <a className="w1337-approvals__link" href={spenderUrl} target="_blank" rel="noopener noreferrer">
-              {shortAddress(row.spender)} <ExternalLinkIcon />
-            </a>
-          ) : (
-            shortAddress(row.spender)
-          )}
-        </ApprovalFact>
-        <ApprovalFact label="Allowance">
-          <span className={`w1337-approvals__allowance${row.unlimited ? ' w1337-approvals__allowance--warn' : ''}`}>
-            {formatAllowance(row.allowance, row.tokenDecimals, row.unlimited)}
+          <div className="w1337-approvals__meta">
+            <span className="w1337-approvals__token-symbol">{symbol}</span>
+            <span className="w1337-approvals__kind">{KIND_LABEL[kind]}</span>
+          </div>
+          <span
+            className={`w1337-approvals__amt${unlimited ? ' w1337-approvals__allowance--warn' : ''}`}
+          >
+            {amount}
           </span>
-        </ApprovalFact>
-        {txUrl ? (
-          <ApprovalFact label="Last tx">
-            <a className="w1337-approvals__link" href={txUrl} target="_blank" rel="noopener noreferrer">
-              View <ExternalLinkIcon />
-            </a>
+        </button>
+        <button
+          type="button"
+          className="w1337-approvals__revoke"
+          disabled={busy}
+          onClick={onRevoke}
+        >
+          {busy ? '…' : 'Revoke'}
+        </button>
+        <button
+          type="button"
+          className="w1337-approvals__toggle"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Hide approval details' : 'Show approval details'}
+          onClick={onToggle}
+        >
+          {expanded ? '−' : '+'}
+        </button>
+      </div>
+      {expanded ? (
+        <dl className="w1337-approvals__facts">
+          <ApprovalFact label="Type">{KIND_LABEL[kind]}</ApprovalFact>
+          <ApprovalFact label={assetLabel}>
+            <ExplorerAddr chainId={chainId} address={assetAddr} />
           </ApprovalFact>
-        ) : null}
-      </dl>
-      <button
-        type="button"
-        className="w1337-approvals__revoke"
-        disabled={busy}
-        onClick={() => onRevoke(row)}
-      >
-        Revoke
-      </button>
+          <ApprovalFact label={spenderLabel}>
+            <ExplorerAddr chainId={chainId} address={spenderAddr} />
+          </ApprovalFact>
+          {extra ? <ApprovalFact label={extra.label}>{extra.value}</ApprovalFact> : null}
+          {txUrl ? (
+            <ApprovalFact label="Last tx">
+              <a className="w1337-approvals__link" href={txUrl} target="_blank" rel="noopener noreferrer">
+                View <ExternalLinkIcon />
+              </a>
+            </ApprovalFact>
+          ) : null}
+        </dl>
+      ) : null}
     </li>
   );
 }
 
 export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
-  const [kind, setKind] = useState<'tokens' | 'nfts' | 'permit2'>('tokens');
-  return (
-    <div>
-      <nav className="w1337-approvals-kinds" aria-label="Approval type">
-        {(
-          [
-            ['tokens', 'Tokens'],
-            ['nfts', 'NFTs'],
-            ['permit2', 'Permit2'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={`w1337-approvals-kinds__btn${kind === id ? ' w1337-approvals-kinds__btn--on' : ''}`}
-            aria-current={kind === id ? 'page' : undefined}
-            onClick={() => setKind(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-      {kind === 'tokens' ? <TokenApprovalsPanel settings={settings} /> : null}
-      {kind === 'nfts' ? <NftApprovalsPanel settings={settings} /> : null}
-      {kind === 'permit2' ? <Permit2ApprovalsPanel settings={settings} /> : null}
-    </div>
-  );
-}
-
-function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   const account = getUnlockedAccount();
   const addr = account ? getAddress(account.address) : null;
   const chainId = effectiveActiveChainId(settings);
@@ -144,29 +191,34 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   const chainLogo = chain ? chainLogoUri(chain) : undefined;
 
   const [walletTokens, setWalletTokens] = useState<WalletBalEntry[]>([]);
-  const [rows, setRows] = useState<TokenApprovalRow[]>([]);
+  const [tokenRows, setTokenRows] = useState<TokenApprovalRow[]>([]);
+  const [nftRows, setNftRows] = useState<NftApprovalRow[]>([]);
+  const [permitRows, setPermitRows] = useState<Permit2ApprovalRow[]>([]);
   const [scannedTokens, setScannedTokens] = useState<string[]>([]);
   const [scanningTokens, setScanningTokens] = useState<string[]>([]);
-  const [fromBlock, setFromBlock] = useState<number | null>(null);
+  const [tokenFrom, setTokenFrom] = useState<number | null>(null);
+  const [nftFrom, setNftFrom] = useState<number | null>(null);
+  const [permitFrom, setPermitFrom] = useState<number | null>(null);
+  const [permitAvailable, setPermitAvailable] = useState(true);
   const [latestBlock, setLatestBlock] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [revokingKey, setRevokingKey] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [olderNote, setOlderNote] = useState<string | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const scanningRef = useRef(false);
 
-  const visibleRows = useMemo(
-    () => filterRowsForWalletTokens(rows, walletTokens),
-    [rows, walletTokens],
+  const visibleTokens = useMemo(
+    () => filterRowsForWalletTokens(tokenRows, walletTokens),
+    [tokenRows, walletTokens],
   );
-
   const unscanned = useMemo(
     () => findUnscannedTokens(walletTokens, scannedTokens),
     [walletTokens, scannedTokens],
   );
 
-  const persist = useCallback(
+  const persistTokens = useCallback(
     async (next: {
       rows: TokenApprovalRow[];
       scannedTokenAddresses: string[];
@@ -183,6 +235,31 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     [addr, chainId],
   );
 
+  const persistNfts = useCallback(
+    async (next: { rows: NftApprovalRow[]; fromBlock: number }) => {
+      if (!addr) return;
+      await saveNftApprovalsCache(chainId, addr, {
+        rows: next.rows,
+        fromBlock: next.fromBlock,
+        updatedAt: Date.now(),
+      });
+    },
+    [addr, chainId],
+  );
+
+  const persistPermit = useCallback(
+    async (next: { rows: Permit2ApprovalRow[]; fromBlock: number; available: boolean }) => {
+      if (!addr) return;
+      await savePermit2ApprovalsCache(chainId, addr, {
+        rows: next.rows,
+        fromBlock: next.fromBlock,
+        available: next.available,
+        updatedAt: Date.now(),
+      });
+    },
+    [addr, chainId],
+  );
+
   const loadBalances = useCallback(async () => {
     if (!addr) return [];
     const { rows: bals, error } = await loadWalletBalancesForChain(addr, chainId);
@@ -193,11 +270,8 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
 
   const scanTokens = useCallback(
     async (tokens: WalletBalEntry[], opts?: { window?: ApprovalLogWindow }) => {
-      if (!addr) return;
-      if (tokens.length === 0) return;
-
+      if (!addr || tokens.length === 0) return [];
       const win = opts?.window ?? (await recentApprovalWindow(chainId));
-
       setScanningTokens(tokens.map(walletTokenKey));
       try {
         const incoming = await scanTokenApprovals({
@@ -214,26 +288,22 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
             );
           },
         });
-
         let nextRows: TokenApprovalRow[] = [];
-        setRows(prev => {
+        setTokenRows(prev => {
           nextRows = mergeApprovalRows(prev, incoming);
           return nextRows;
         });
-
         let nextScanned: string[] = [];
         setScannedTokens(prev => {
           nextScanned = [...new Set([...prev, ...tokens.map(walletTokenKey)])];
           return nextScanned;
         });
-
         let nextFrom = win.fromBlock;
-        setFromBlock(prev => {
+        setTokenFrom(prev => {
           nextFrom = prev == null ? win.fromBlock : Math.min(prev, win.fromBlock);
           return nextFrom;
         });
-
-        await persist({
+        await persistTokens({
           rows: nextRows,
           scannedTokenAddresses: nextScanned,
           fromBlock: nextFrom,
@@ -243,14 +313,16 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
         setScanningTokens([]);
       }
     },
-    [addr, apiKey, chainId, persist],
+    [addr, apiKey, chainId, persistTokens],
   );
 
   const loadInitial = useCallback(async () => {
     if (!addr) return;
     if (needsExplorerApiKey(chainId) && !apiKey) {
       setWalletTokens([]);
-      setRows([]);
+      setTokenRows([]);
+      setNftRows([]);
+      setPermitRows([]);
       setScannedTokens([]);
       setHydrated(true);
       return;
@@ -259,47 +331,130 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     setBusy(true);
     setErr(null);
     try {
-      const [cached, latest] = await Promise.all([
+      const [tokenCached, nftCached, permitCached, latest] = await Promise.all([
         loadTokenApprovalsCache(chainId, addr),
+        loadNftApprovalsCache(chainId, addr),
+        loadPermit2ApprovalsCache(chainId, addr),
         getLatestBlockNumber(chainId).catch(() => null),
       ]);
       if (latest != null) setLatestBlock(latest);
-      if (cached) {
-        setRows(cached.rows);
-        setScannedTokens(cached.scannedTokenAddresses);
-        setFromBlock(cached.fromBlock);
+
+      if (tokenCached) {
+        setTokenRows(tokenCached.rows);
+        setScannedTokens(tokenCached.scannedTokenAddresses);
+        setTokenFrom(tokenCached.fromBlock);
+      }
+      if (nftCached) {
+        setNftRows(nftCached.rows);
+        setNftFrom(nftCached.fromBlock);
+      }
+      if (permitCached) {
+        setPermitFrom(permitCached.fromBlock);
+        setPermitAvailable(permitCached.available);
+        setPermitRows(permitCached.available ? permitCached.rows : []);
       }
 
       const bals = await loadBalances();
-      if (cached?.rows.length) {
-        const refreshed = await refreshLiveAllowances({
+      const win = tokenCached && nftCached && permitCached ? null : await recentApprovalWindow(chainId);
+
+      const tokenLive = tokenCached?.rows.length
+        ? refreshLiveAllowances({
+            chainId,
+            owner: addr,
+            rows: filterRowsForWalletTokens(tokenCached.rows, bals),
+          }).then(async refreshed => {
+            setTokenRows(refreshed);
+            await persistTokens({
+              rows: refreshed,
+              scannedTokenAddresses: tokenCached.scannedTokenAddresses,
+              fromBlock: tokenCached.fromBlock,
+            });
+          })
+        : Promise.resolve();
+
+      const nftLive = (async () => {
+        if (nftCached) {
+          const live = await refreshLiveNftApprovals({
+            chainId,
+            owner: addr,
+            rows: nftCached.rows,
+          });
+          setNftRows(live);
+          await persistNfts({ rows: live, fromBlock: nftCached.fromBlock });
+          return;
+        }
+        if (!win) return;
+        const incoming = await scanNftApprovals({
           chainId,
           owner: addr,
-          rows: filterRowsForWalletTokens(cached.rows, bals),
+          fromBlock: win.fromBlock,
+          toBlock: win.toBlock,
+          explorerApiKey: apiKey,
         });
-        setRows(refreshed);
-        await persist({
-          rows: refreshed,
-          scannedTokenAddresses: cached.scannedTokenAddresses,
-          fromBlock: cached.fromBlock,
+        setNftRows(incoming);
+        setNftFrom(win.fromBlock);
+        await persistNfts({ rows: incoming, fromBlock: win.fromBlock });
+      })();
+
+      const permitLive = (async () => {
+        if (permitCached) {
+          if (!permitCached.available) {
+            setPermitRows([]);
+            return;
+          }
+          const live = await refreshLivePermit2Approvals({
+            chainId,
+            owner: addr,
+            rows: permitCached.rows,
+          });
+          setPermitRows(live);
+          await persistPermit({
+            rows: live,
+            fromBlock: permitCached.fromBlock,
+            available: true,
+          });
+          return;
+        }
+        if (!win) return;
+        const next = await scanPermit2Approvals({
+          chainId,
+          owner: addr,
+          fromBlock: win.fromBlock,
+          toBlock: win.toBlock,
+          explorerApiKey: apiKey,
         });
-      }
+        setPermitRows(next.rows);
+        setPermitAvailable(next.available);
+        setPermitFrom(win.fromBlock);
+        await persistPermit({
+          rows: next.rows,
+          fromBlock: win.fromBlock,
+          available: next.available,
+        });
+      })();
+
+      await Promise.all([tokenLive, nftLive, permitLive]);
     } catch (e) {
       setErr(describeError(e));
     } finally {
       setBusy(false);
       setHydrated(true);
     }
-  }, [addr, apiKey, chainId, loadBalances, persist]);
+  }, [addr, apiKey, chainId, loadBalances, persistNfts, persistPermit, persistTokens]);
 
   useEffect(() => {
     setHydrated(false);
-    setRows([]);
+    setTokenRows([]);
+    setNftRows([]);
+    setPermitRows([]);
     setScannedTokens([]);
-    setFromBlock(null);
+    setTokenFrom(null);
+    setNftFrom(null);
+    setPermitFrom(null);
     setLatestBlock(null);
     setWalletTokens([]);
     setOlderNote(null);
+    setExpandedKey(null);
     void loadInitial();
   }, [chainId, addr, apiKey, loadInitial]);
 
@@ -320,22 +475,89 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   }, [addr, apiKey, busy, chainId, hydrated, scanTokens, unscanned]);
 
   async function scanOlder() {
-    if (!addr || fromBlock == null || scanningRef.current) return;
-    const win = olderApprovalWindow(chainId, fromBlock);
-    if (!win) return;
+    if (!addr || scanningRef.current) return;
+    const tokenWin = tokenFrom != null ? olderApprovalWindow(chainId, tokenFrom) : null;
+    const nftWin = nftFrom != null ? olderApprovalWindow(chainId, nftFrom) : null;
+    const permitWin = permitFrom != null ? olderApprovalWindow(chainId, permitFrom) : null;
+    if (!tokenWin && !nftWin && !permitWin) return;
     scanningRef.current = true;
     setBusy(true);
     setErr(null);
     setOlderNote(null);
     try {
-      const bals = walletTokens.length > 0 ? walletTokens : await loadBalances();
-      const existingKeys = new Set(
-        rows.map(r => `${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+      const existingToken = new Set(
+        tokenRows.map(r => `${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
       );
-      const incoming = (await scanTokens(bals, { window: win })) ?? [];
-      const found = incoming.filter(
-        r => !existingKeys.has(`${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
-      ).length;
+      const existingNft = new Set(
+        nftRows.map(r => `${r.contract.toLowerCase()}:${r.operator.toLowerCase()}`),
+      );
+      const existingPermit = new Set(
+        permitRows.map(r => `${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+      );
+      let found = 0;
+
+      const bals = walletTokens.length > 0 ? walletTokens : await loadBalances();
+      const jobs: Promise<void>[] = [];
+      if (tokenWin) {
+        jobs.push(
+          (async () => {
+            const incoming = (await scanTokens(bals, { window: tokenWin })) ?? [];
+            found += incoming.filter(
+              r => !existingToken.has(`${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+            ).length;
+          })(),
+        );
+      }
+      if (nftWin) {
+        jobs.push(
+          (async () => {
+            const incoming = await scanNftApprovals({
+              chainId,
+              owner: addr,
+              fromBlock: nftWin.fromBlock,
+              toBlock: nftWin.toBlock,
+              explorerApiKey: apiKey,
+            });
+            const merged = mergeNftApprovalRows(nftRows, incoming);
+            const nextFrom = nftFrom == null ? nftWin.fromBlock : Math.min(nftFrom, nftWin.fromBlock);
+            setNftRows(merged);
+            setNftFrom(nextFrom);
+            await persistNfts({ rows: merged, fromBlock: nextFrom });
+            found += incoming.filter(
+              r => !existingNft.has(`${r.contract.toLowerCase()}:${r.operator.toLowerCase()}`),
+            ).length;
+          })(),
+        );
+      }
+      if (permitWin && permitAvailable) {
+        jobs.push(
+          (async () => {
+            const next = await scanPermit2Approvals({
+              chainId,
+              owner: addr,
+              fromBlock: permitWin.fromBlock,
+              toBlock: permitWin.toBlock,
+              explorerApiKey: apiKey,
+            });
+            setPermitAvailable(next.available);
+            if (!next.available) {
+              setPermitRows([]);
+              await persistPermit({ rows: [], fromBlock: permitWin.fromBlock, available: false });
+              return;
+            }
+            const merged = mergePermit2ApprovalRows(permitRows, next.rows);
+            const nextFrom =
+              permitFrom == null ? permitWin.fromBlock : Math.min(permitFrom, permitWin.fromBlock);
+            setPermitRows(merged);
+            setPermitFrom(nextFrom);
+            await persistPermit({ rows: merged, fromBlock: nextFrom, available: true });
+            found += next.rows.filter(
+              r => !existingPermit.has(`${r.token.toLowerCase()}:${r.spender.toLowerCase()}`),
+            ).length;
+          })(),
+        );
+      }
+      await Promise.all(jobs);
       setOlderNote(olderScanNote(found));
       const latest = await getLatestBlockNumber(chainId).catch(() => null);
       if (latest != null) setLatestBlock(latest);
@@ -347,8 +569,8 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     }
   }
 
-  async function onRevoke(row: TokenApprovalRow) {
-    const key = `${row.token}:${row.spender}`;
+  async function onRevokeToken(row: TokenApprovalRow) {
+    const key = `token:${row.token}:${row.spender}`;
     setRevokingKey(key);
     setErr(null);
     try {
@@ -359,7 +581,7 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
       });
       if (!hash) return;
       await waitForChainReceipt(hash, chainId);
-      setRows(prev => {
+      setTokenRows(prev => {
         const next = prev.filter(
           r =>
             !(
@@ -367,13 +589,76 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
               r.spender.toLowerCase() === row.spender.toLowerCase()
             ),
         );
-        void persist({
+        void persistTokens({
           rows: next,
           scannedTokenAddresses: scannedTokens,
-          fromBlock: fromBlock ?? 0,
+          fromBlock: tokenFrom ?? 0,
         });
         return next;
       });
+      if (expandedKey === key) setExpandedKey(null);
+    } catch (e) {
+      setErr(describeError(e));
+    } finally {
+      setRevokingKey(null);
+    }
+  }
+
+  async function onRevokeNft(row: NftApprovalRow) {
+    const key = `nft:${row.contract}:${row.operator}`;
+    setRevokingKey(key);
+    setErr(null);
+    try {
+      const hash = await revokeNftApprovalForAll({
+        chainId,
+        contract: row.contract,
+        operator: row.operator,
+      });
+      if (hash) await waitForChainReceipt(hash, chainId);
+      setNftRows(prev => {
+        const next = prev.filter(
+          r =>
+            !(
+              r.contract.toLowerCase() === row.contract.toLowerCase() &&
+              r.operator.toLowerCase() === row.operator.toLowerCase()
+            ),
+        );
+        if (nftFrom != null) void persistNfts({ rows: next, fromBlock: nftFrom });
+        return next;
+      });
+      if (expandedKey === key) setExpandedKey(null);
+    } catch (e) {
+      setErr(describeError(e));
+    } finally {
+      setRevokingKey(null);
+    }
+  }
+
+  async function onRevokePermit(row: Permit2ApprovalRow) {
+    const key = `permit2:${row.token}:${row.spender}`;
+    setRevokingKey(key);
+    setErr(null);
+    try {
+      const hash = await revokePermit2Allowance({
+        chainId,
+        token: row.token,
+        spender: row.spender,
+      });
+      if (hash) await waitForChainReceipt(hash, chainId);
+      setPermitRows(prev => {
+        const next = prev.filter(
+          r =>
+            !(
+              r.token.toLowerCase() === row.token.toLowerCase() &&
+              r.spender.toLowerCase() === row.spender.toLowerCase()
+            ),
+        );
+        if (permitFrom != null) {
+          void persistPermit({ rows: next, fromBlock: permitFrom, available: permitAvailable });
+        }
+        return next;
+      });
+      if (expandedKey === key) setExpandedKey(null);
     } catch (e) {
       setErr(describeError(e));
     } finally {
@@ -382,13 +667,13 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
   }
 
   if (!addr) {
-    return <p className="w1337-tools-empty muted">Unlock wallet to view token approvals.</p>;
+    return <p className="w1337-tools-empty muted">Unlock wallet to view approvals.</p>;
   }
 
   if (needsExplorerApiKey(chainId) && !apiKey) {
     return (
       <p className="w1337-tools-empty muted">
-        Add an <strong>Etherscan API key</strong> in Settings to scan token approvals on{' '}
+        Add an <strong>Etherscan API key</strong> in Settings to scan approvals on{' '}
         {chain?.name ?? chainId}. Optimism, Base, and other Blockscout-backed chains work without a
         key.
       </p>
@@ -399,6 +684,8 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
     scanningTokens.length > 0
       ? `Scanning ${scanningTokens.length} token${scanningTokens.length === 1 ? '' : 's'}…`
       : null;
+  const fromCandidates = [tokenFrom, nftFrom, permitFrom].filter((n): n is number => n != null);
+  const fromBlock = fromCandidates.length ? Math.min(...fromCandidates) : null;
   const scannedDays =
     fromBlock != null && latestBlock != null
       ? scannedLookbackDays(chainId, latestBlock, fromBlock)
@@ -406,6 +693,9 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
         ? APPROVAL_LOG_LOOKBACK_DAYS
         : null;
   const scanBusy = busy || scanningTokens.length > 0;
+  const total =
+    visibleTokens.length + nftRows.length + (permitAvailable ? permitRows.length : 0);
+  const empty = hydrated && !busy && scanningTokens.length === 0 && total === 0 && !err;
 
   return (
     <div className="w1337-approvals">
@@ -417,9 +707,9 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
           <div>
             <p className="w1337-tx-history__head-title">{chain?.name ?? `Chain ${chainId}`}</p>
             <p className="w1337-tx-history__head-sub muted">
-              {visibleRows.length > 0
-                ? `${visibleRows.length} active approval${visibleRows.length === 1 ? '' : 's'}`
-                : 'Token approvals'}
+              {total > 0
+                ? `${total} active approval${total === 1 ? '' : 's'}`
+                : 'Approvals'}
               {scannedDays != null ? ` · ~${scannedDays} days` : ''}
             </p>
           </div>
@@ -429,29 +719,92 @@ function TokenApprovalsPanel({ settings }: { settings: AppSettings }) {
       {err ? <p className="error">{err}</p> : null}
       {scanningLabel ? <p className="w1337-tools-empty muted">{scanningLabel}</p> : null}
 
-      {!hydrated || (busy && visibleRows.length === 0 && scanningTokens.length === 0) ? (
-        <p className="w1337-tools-empty muted">Loading wallet tokens…</p>
+      {!hydrated || (busy && total === 0 && scanningTokens.length === 0) ? (
+        <p className="w1337-tools-empty muted">Loading approvals…</p>
       ) : null}
 
-      {hydrated && !busy && scanningTokens.length === 0 && visibleRows.length === 0 && !err ? (
+      {empty ? (
         <p className="w1337-tools-empty muted">
           {walletTokens.length === 0
             ? 'No tokens in wallet on this network.'
-            : 'No active approvals found for your current wallet tokens.'}
+            : 'No active approvals found.'}
         </p>
       ) : null}
 
-      {visibleRows.length > 0 ? (
+      {total > 0 ? (
         <ul className="w1337-approvals__list">
-          {visibleRows.map(row => {
-            const key = `${row.token}:${row.spender}`;
+          {visibleTokens.map(row => {
+            const key = `token:${row.token}:${row.spender}`;
             return (
-              <ApprovalRowItem
+              <CompactApprovalItem
                 key={key}
-                row={row}
+                kind="token"
+                symbol={row.tokenSymbol}
+                logoURI={row.tokenLogo}
+                amount={formatAllowance(row.allowance, row.tokenDecimals, row.unlimited)}
+                unlimited={row.unlimited}
+                assetLabel="Token"
+                assetAddr={row.token}
+                spenderLabel="Spender"
+                spenderAddr={row.spender}
+                lastTx={row.lastApprovalTx}
                 chainId={chainId}
                 busy={revokingKey === key}
-                onRevoke={onRevoke}
+                expanded={expandedKey === key}
+                onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
+                onRevoke={() => void onRevokeToken(row)}
+              />
+            );
+          })}
+          {permitAvailable
+            ? permitRows.map(row => {
+                const key = `permit2:${row.token}:${row.spender}`;
+                return (
+                  <CompactApprovalItem
+                    key={key}
+                    kind="permit2"
+                    symbol={row.tokenSymbol}
+                    amount={formatAllowance(row.amount, row.tokenDecimals, row.unlimited)}
+                    unlimited={row.unlimited}
+                    assetLabel="Token"
+                    assetAddr={row.token}
+                    spenderLabel="Spender"
+                    spenderAddr={row.spender}
+                    lastTx={row.lastApprovalTx}
+                    extra={{
+                      label: 'Expires',
+                      value: formatPermit2Expiration(row.expiration),
+                    }}
+                    chainId={chainId}
+                    busy={revokingKey === key}
+                    expanded={expandedKey === key}
+                    onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
+                    onRevoke={() => void onRevokePermit(row)}
+                  />
+                );
+              })
+            : null}
+          {nftRows.map(row => {
+            const key = `nft:${row.contract}:${row.operator}`;
+            const symbol = row.symbol || row.collectionName;
+            return (
+              <CompactApprovalItem
+                key={key}
+                kind="nft"
+                symbol={symbol}
+                amount="All"
+                unlimited
+                assetLabel="Collection"
+                assetAddr={row.contract}
+                spenderLabel="Operator"
+                spenderAddr={row.operator}
+                lastTx={row.lastApprovalTx}
+                extra={{ label: 'Scope', value: 'Entire collection' }}
+                chainId={chainId}
+                busy={revokingKey === key}
+                expanded={expandedKey === key}
+                onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
+                onRevoke={() => void onRevokeNft(row)}
               />
             );
           })}

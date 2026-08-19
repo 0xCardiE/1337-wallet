@@ -32,7 +32,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
   {
     id: 'approvals',
     label: 'Approvals',
-    description: 'Review and revoke ERC-20, NFT, and Permit2 allowances.',
+    description: 'Review and revoke token, NFT, and Permit2 allowances in one list.',
     defaultEnabled: true,
   },
   {
