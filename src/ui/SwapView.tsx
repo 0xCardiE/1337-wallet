@@ -17,6 +17,7 @@ import { snapshotHeldTokensOnChain } from '../lib/ethereum';
 import type { OnChainBalanceProbe } from '../lib/ethereum';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
 import { appendSwapToHistory, loadSwapHistory, type SwapHistoryEntry } from '../lib/swapHistory';
+import { markTokensTouched } from '../lib/assetTokenPrefs';
 import { loadSwapUi, saveSwapUi } from '../lib/swapUiPersist';
 import { loadWalletBalancesMap } from '../lib/walletBalances';
 import { ScreenHeader } from './ScreenHeader';
@@ -1218,6 +1219,9 @@ export function SwapView({
       scheduleStaggeredBalanceReload();
       void (async () => {
         try {
+          const wallet = getAddress(addr);
+          await markTokensTouched(fromC, wallet, [step.action.fromToken.address]);
+          await markTokensTouched(step.action.toChainId, wallet, [step.action.toToken.address]);
           const next = await appendSwapToHistory({
             wallet: getAddress(addr),
             txHash: hex,

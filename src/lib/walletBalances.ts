@@ -103,18 +103,27 @@ export function fmtTokenAmount(entry: WalletBalEntry): string {
   }
 }
 
+/** Below this USD value a token is dust unless the user has used it. */
+export const DUST_USD = 0.01;
+
 export function fmtUsdValue(entry: WalletBalEntry): string | null {
+  const usd = tokenUsdNumber(entry);
+  if (usd <= 0) return null;
+  return usd.toLocaleString(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  });
+}
+
+/** Fiat value of a balance using Li.FI `priceUSD` when present. */
+export function tokenUsdNumber(entry: WalletBalEntry): number {
   try {
     const n = Number(formatUnits(BigInt(entry.amount || '0'), entry.decimals));
     const usd = n * Number(entry.priceUSD || 0);
-    if (!Number.isFinite(usd) || usd <= 0) return null;
-    return usd.toLocaleString(undefined, {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    });
+    return Number.isFinite(usd) && usd > 0 ? usd : 0;
   } catch {
-    return null;
+    return 0;
   }
 }
 
@@ -233,10 +242,36 @@ function knownProbeKey(chainId: number, holder: string): string {
   return `${chainId}:${holder.toLowerCase()}`;
 }
 
-function rememberHeldProbes(chainId: number, holder: string, rows: WalletBalEntry[]): void {
+function rememberHeldProbes(
+  chainId: number,
+  holder: string,
+  rows: WalletBalEntry[],
+  opts?: { skip?: Set<string>; promote?: Set<string> },
+): void {
+  const skip = opts?.skip ?? new Set<string>();
+  const promote = opts?.promote ?? new Set<string>();
   knownProbes.set(
     knownProbeKey(chainId, holder),
-    rows.filter(r => !isNativeWalletToken(r)).map(balEntryToProbe),
+    rows
+      .filter(r => {
+        if (isNativeWalletToken(r)) return false;
+        const addr = r.address.toLowerCase();
+        if (skip.has(addr)) return false;
+        if (promote.has(addr)) return true;
+        return tokenUsdNumber(r) >= DUST_USD;
+      })
+      .map(balEntryToProbe),
+  );
+}
+
+export function forgetHeldProbes(chainId: number, holder: string, addresses: string[]): void {
+  const key = knownProbeKey(chainId, holder);
+  const cur = knownProbes.get(key);
+  if (!cur?.length) return;
+  const skip = new Set(addresses.map(a => a.toLowerCase()));
+  knownProbes.set(
+    key,
+    cur.filter(p => !skip.has(p.address.toLowerCase())),
   );
 }
 
@@ -436,8 +471,16 @@ async function collectBalanceProbes(opts: {
   holder: `0x${string}`;
   lifiRows?: WalletBalEntry[];
   extra?: OnChainBalanceProbe[];
+  skipAddresses?: Set<string>;
+  promoteAddresses?: Set<string>;
+  includeDustProbes?: boolean;
 }): Promise<OnChainBalanceProbe[]> {
   const catalog = await loadCatalogTokens(opts.chainId);
+  const catalogKeys = new Set(catalog.map(t => t.address.toLowerCase()));
+  const skip = opts.skipAddresses ?? new Set<string>();
+  const promote = opts.promoteAddresses ?? new Set<string>();
+  const includeDust = opts.includeDustProbes !== false;
+
   const native = mergeNativeCatalogMeta(
     nativeProbeForChain(opts.chainId),
     nativeTokenFromCatalog(catalog),
@@ -445,16 +488,35 @@ async function collectBalanceProbes(opts: {
   );
   const must = new Map<string, OnChainBalanceProbe>();
   for (const p of knownProbes.get(knownProbeKey(opts.chainId, opts.holder)) ?? []) {
+    if (skip.has(p.address.toLowerCase())) continue;
     mergeErc20Probe(must, p);
   }
-  for (const row of opts.lifiRows ?? []) mergeErc20Probe(must, balEntryToProbe(row));
-  for (const p of opts.extra ?? []) mergeErc20Probe(must, p);
+  for (const row of opts.lifiRows ?? []) {
+    const key = row.address.toLowerCase();
+    if (skip.has(key)) continue;
+    if (
+      !includeDust &&
+      tokenUsdNumber(row) < DUST_USD &&
+      !promote.has(key) &&
+      !catalogKeys.has(key) &&
+      !must.has(key)
+    ) {
+      continue;
+    }
+    mergeErc20Probe(must, balEntryToProbe(row));
+  }
+  for (const p of opts.extra ?? []) {
+    const key = p.address.toLowerCase();
+    if (skip.has(key)) continue;
+    if (!includeDust && !catalogKeys.has(key) && !must.has(key) && !promote.has(key)) continue;
+    mergeErc20Probe(must, p);
+  }
 
   const fill = new Map(must);
   let catalogAdded = 0;
   for (const t of catalog) {
     const key = t.address.toLowerCase();
-    if (NATIVE_ADDRS.has(key)) continue;
+    if (NATIVE_ADDRS.has(key) || skip.has(key)) continue;
     if (fill.has(key)) {
       const prev = fill.get(key)!;
       const catalogProbe = tokenToProbe(t);
@@ -487,7 +549,11 @@ export async function loadWalletBalancesRpcForChain(
 ): Promise<WalletBalEntry[]> {
   const probes = await collectBalanceProbes({ chainId, holder });
   const rows = await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX);
-  rememberHeldProbes(chainId, holder, rows.map(r => ({ ...r, chainId })));
+  rememberHeldProbes(
+    chainId,
+    holder,
+    rows.map(r => ({ ...r, chainId })),
+  );
   return enrichNativeRows(chainId, rows.map(r => ({ ...r, chainId })));
 }
 
@@ -529,9 +595,22 @@ export async function loadWalletBalancesMap(
 export async function loadWalletBalancesForChain(
   address: string,
   chainId: number,
-  options?: { refreshRpc?: boolean; explorerApiKey?: string },
+  options?: {
+    refreshRpc?: boolean;
+    explorerApiKey?: string;
+    skipAddresses?: Iterable<string>;
+    promoteAddresses?: Iterable<string>;
+    includeDustProbes?: boolean;
+  },
 ): Promise<{ rows: WalletBalEntry[]; error: string | null }> {
   const holder = getAddress(address);
+  const skip = new Set(
+    [...(options?.skipAddresses ?? [])].map(a => a.toLowerCase()),
+  );
+  const promote = new Set(
+    [...(options?.promoteAddresses ?? [])].map(a => a.toLowerCase()),
+  );
+  const includeDustProbes = options?.includeDustProbes !== false;
   const now = Date.now();
   for (const [cid, pack] of [...rpcFresh.entries()]) {
     if (now - pack.at >= RPC_BALANCE_OVERRIDE_TTL_MS) rpcFresh.delete(cid);
@@ -541,7 +620,10 @@ export async function loadWalletBalancesForChain(
 
   const cached = rpcFresh.get(chainId);
   if (!options?.refreshRpc && cached && now - cached.at < RPC_BALANCE_OVERRIDE_TTL_MS) {
-    const rows = await enrichNativeRows(chainId, [...cached.rows].sort(compareByUsd));
+    const rows = await enrichNativeRows(
+      chainId,
+      [...cached.rows].filter(r => !skip.has(r.address.toLowerCase())).sort(compareByUsd),
+    );
     return { rows, error: null };
   }
 
@@ -553,7 +635,7 @@ export async function loadWalletBalancesForChain(
     try {
       const raw = await getWalletBalances(holder);
       const all = Object.values(parseLifiWalletBalances(raw)).flat();
-      lifiRows = all.filter(r => r.chainId === chainId);
+      lifiRows = all.filter(r => r.chainId === chainId && !skip.has(r.address.toLowerCase()));
     } catch (e) {
       lifiError = summarizeApiError(e);
     }
@@ -568,11 +650,14 @@ export async function loadWalletBalancesForChain(
       holder,
       lifiRows,
       extra,
+      skipAddresses: skip,
+      promoteAddresses: promote,
+      includeDustProbes,
     });
-    const chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX)).map(
-      r => ({ ...r, chainId }),
-    );
-    rememberHeldProbes(chainId, holder, chainRows);
+    const chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX))
+      .map(r => ({ ...r, chainId }))
+      .filter(r => !skip.has(r.address.toLowerCase()));
+    rememberHeldProbes(chainId, holder, chainRows, { skip, promote });
     rpcFresh.set(chainId, { at: Date.now(), rows: chainRows });
     const rows = await enrichNativeRows(chainId, [...chainRows].sort(compareByUsd));
     return { rows, error: null };
