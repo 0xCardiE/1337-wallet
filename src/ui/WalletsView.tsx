@@ -45,11 +45,8 @@ export function WalletsView({
           {walletAddress ? (
             <div className="w1337-wallets-active">
               <strong>Active wallet</strong>
-              <p className="mono w1337-wallets-active__addr">{walletAddress}</p>
-              <div className="row w1337-wallets-active__row">
-                <p className="muted">
-                  Your address on EVM chains — use this to receive funds.
-                </p>
+              <div className="w1337-wallets-active__field">
+                <p className="mono w1337-wallets-active__addr">{walletAddress}</p>
                 <button
                   type="button"
                   className="ghost"
@@ -58,20 +55,20 @@ export function WalletsView({
                   {copyFlash === 'addr' ? 'Copied' : 'Copy'}
                 </button>
               </div>
+              <p className="muted w1337-wallets-active__hint">
+                Your address on EVM chains — use this to receive funds.
+              </p>
 
               {walletPrivateKey ? (
                 <>
                   <label htmlFor="wallet-privkey">Private key</label>
-                  <p
-                    id="wallet-privkey"
-                    className="mono w1337-wallets-active__pk"
-                    aria-label="Private key hidden"
-                  >
-                    ••••••••••••••••••••••••••••••••
-                  </p>
-                  <div className="row w1337-wallets-active__row">
-                    <p className="muted">
-                      Hidden for safety — copy only when you need to back up or import elsewhere.
+                  <div className="w1337-wallets-active__field">
+                    <p
+                      id="wallet-privkey"
+                      className="mono w1337-wallets-active__pk"
+                      aria-label="Private key hidden"
+                    >
+                      ••••••••••••••••••••••••••••••••
                     </p>
                     <button
                       type="button"
@@ -81,6 +78,9 @@ export function WalletsView({
                       {copyFlash === 'pk' ? 'Copied' : 'Copy'}
                     </button>
                   </div>
+                  <p className="muted w1337-wallets-active__hint">
+                    Hidden for safety — copy only when you need to back up or import elsewhere.
+                  </p>
                 </>
               ) : null}
             </div>

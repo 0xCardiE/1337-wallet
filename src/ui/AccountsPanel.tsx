@@ -135,7 +135,6 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                 onClick={() =>
                   void run('switch', async () => {
                     await switchActiveAccount(account.id);
-                    setMsg(`Active: ${account.label}`);
                   })
                 }
               >
@@ -230,7 +229,7 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
           style={{ marginTop: 8 }}
           aria-label="Derivation path"
         />
-        <div className="row" style={{ marginTop: 8 }}>
+        <div className="row bfox-hw-actions" style={{ marginTop: 8 }}>
           <button
             type="button"
             className="ghost"

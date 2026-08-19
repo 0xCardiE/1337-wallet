@@ -4602,6 +4602,13 @@ button.w1337-token-row__main:hover:not(:disabled) {
   cursor: pointer;
 }
 
+.w1337-token-row__hide--slot {
+  visibility: hidden;
+  pointer-events: none;
+  border-color: transparent;
+  background: transparent;
+}
+
 button.w1337-token-row__hide:hover:not(:disabled),
 button.w1337-token-row__unhide:hover:not(:disabled) {
   border-color: rgba(248, 113, 113, 0.45);
@@ -4671,6 +4678,13 @@ button.w1337-token-fold__head:hover:not(:disabled) {
 }
 
 .w1337-token-fold .w1337-token-list {
+  border-top: 1px solid var(--border);
+}
+
+.w1337-token-fold .w1337-home-loading,
+.w1337-token-fold .w1337-home-empty {
+  margin: 0;
+  padding: 10px 12px;
   border-top: 1px solid var(--border);
 }
 
@@ -6243,9 +6257,9 @@ button.w1337-quick-send-inline__send--busy {
 .w1337-wallets-active {
   margin-bottom: 18px;
   padding: 12px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--acc) 42%, var(--border));
   border-radius: var(--radius-md);
-  background: var(--bg-card);
+  background: rgba(34, 197, 94, 0.08);
   font-size: 12px;
   line-height: 1.45;
 }
@@ -6254,14 +6268,33 @@ button.w1337-quick-send-inline__send--busy {
   color: var(--text);
 }
 
+.w1337-wallets-active__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.w1337-wallets-active strong + .w1337-wallets-active__field {
+  margin-top: 10px;
+}
+
+.w1337-wallets-active__field .ghost {
+  flex-shrink: 0;
+}
+
 .w1337-wallets-active__addr {
-  margin: 10px 0 4px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font-size: 12px;
   word-break: break-all;
 }
 
 .w1337-wallets-active__pk {
-  margin: 4px 0 6px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   font-size: 12px;
   letter-spacing: 0.08em;
   user-select: none;
@@ -6269,15 +6302,24 @@ button.w1337-quick-send-inline__send--busy {
   opacity: 0.95;
 }
 
-.w1337-wallets-active__row {
-  margin-bottom: 0;
-  align-items: flex-start;
+.w1337-wallets-active__hint {
+  font-size: 11px;
+  margin: 6px 0 0;
 }
 
-.w1337-wallets-active__row .muted {
-  font-size: 11px;
-  margin: 0;
-  flex: 1 1 auto;
+.w1337-wallets-active label {
+  display: block;
+  margin-top: 12px;
+}
+
+.bfox-hw-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bfox-hw-actions .ghost {
+  width: 100%;
 }
 
 .bfox-accounts-panel {

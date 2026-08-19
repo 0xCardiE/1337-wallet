@@ -440,7 +440,9 @@ function AssetTokenItem({
           >
             ×
           </button>
-        ) : null}
+        ) : (
+          <span className="w1337-token-row__hide w1337-token-row__hide--slot" aria-hidden />
+        )}
       </div>
       {expanded ? (
         <QuickSendInline
