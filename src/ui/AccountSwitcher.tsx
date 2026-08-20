@@ -5,10 +5,12 @@ import {
   getActiveAccountId,
   getActiveAccountMeta,
 } from '../lib/accountSession';
-import { accountKindLabel, shortAddress } from '../lib/accounts';
+import { accountKindLabel, isKeyBackedAccount, shortAddress } from '../lib/accounts';
+import type { AppSettings } from '../lib/storageState';
 import { AccountLabel } from './AccountLabel';
 import { switchActiveAccount } from '../lib/walletManager';
 import { PassportScoreBadge } from './PassportScoreBadge';
+import { TxConfirmModeToggle } from './TxConfirmModeBar';
 
 function ChevronUpIcon() {
   return (
@@ -46,17 +48,30 @@ function CheckIcon() {
   );
 }
 
-export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
+export function AccountSwitcher({
+  settings,
+  onChanged,
+}: {
+  settings: AppSettings;
+  onChanged?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [, setTick] = useState(0);
   const accounts = getAccountsMeta();
   const active = getActiveAccountMeta();
   const activeId = getActiveAccountId();
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const bump = () => setTick(t => t + 1);
+    window.addEventListener('1337-account-changed', bump);
+    return () => window.removeEventListener('1337-account-changed', bump);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -160,7 +175,7 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
                 {accounts.map(account => {
                   const selected = account.id === activeId;
                   return (
-                    <li key={account.id}>
+                    <li key={account.id} className="w1337-acct-sheet-item">
                       <button
                         type="button"
                         className={`w1337-acct-sheet-row${selected ? ' w1337-acct-sheet-row--on' : ''}`}
@@ -192,6 +207,14 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
                           </span>
                         ) : null}
                       </button>
+                      {isKeyBackedAccount(account) ? (
+                        <TxConfirmModeToggle
+                          settings={settings}
+                          account={account}
+                          onSaved={onChanged}
+                          compact
+                        />
+                      ) : null}
                     </li>
                   );
                 })}
@@ -212,36 +235,39 @@ export function AccountSwitcher({ onChanged }: { onChanged?: () => void }) {
 
   return (
     <>
-      <button
-        type="button"
-        className={`w1337-acct-trigger w1337-acct-trigger--dock${open ? ' w1337-acct-trigger--open' : ''}`}
-        onClick={() => scheduleOpen()}
-        onDoubleClick={() => onTriggerDoubleClick(active.address)}
-        title={`${active.address} · double-click to copy`}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-      >
-        <span className="w1337-acct-trigger__main">
-          <span
-            className={`w1337-acct-trigger__label${
-              copiedId === 'dock' ? ' w1337-acct-trigger__label--copied' : ''
-            }`}
-          >
-            {copiedId === 'dock' ? (
-              'Copied!'
-            ) : (
-              <AccountLabel account={active} fallback="Account" />
-            )}
+      <div className="w1337-acct-dock">
+        <button
+          type="button"
+          className={`w1337-acct-trigger w1337-acct-trigger--dock${open ? ' w1337-acct-trigger--open' : ''}`}
+          onClick={() => scheduleOpen()}
+          onDoubleClick={() => onTriggerDoubleClick(active.address)}
+          title={`${active.address} · double-click to copy`}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+        >
+          <span className="w1337-acct-trigger__main">
+            <span
+              className={`w1337-acct-trigger__label${
+                copiedId === 'dock' ? ' w1337-acct-trigger__label--copied' : ''
+              }`}
+            >
+              {copiedId === 'dock' ? (
+                'Copied!'
+              ) : (
+                <AccountLabel account={active} fallback="Account" />
+              )}
+            </span>
+            <span className="w1337-acct-trigger__sub mono">
+              {accountKindLabel(active.kind)} · {shortAddress(active.address)}
+            </span>
           </span>
-          <span className="w1337-acct-trigger__sub mono">
-            {accountKindLabel(active.kind)} · {shortAddress(active.address)}
+          <PassportScoreBadge address={active.address} />
+          <span className="w1337-acct-trigger__chev" aria-hidden>
+            <ChevronUpIcon />
           </span>
-        </span>
-        <PassportScoreBadge address={active.address} />
-        <span className="w1337-acct-trigger__chev" aria-hidden>
-          <ChevronUpIcon />
-        </span>
-      </button>
+        </button>
+        <TxConfirmModeToggle settings={settings} account={active} onSaved={onChanged} />
+      </div>
       {sheet}
     </>
   );

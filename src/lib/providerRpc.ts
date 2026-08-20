@@ -21,7 +21,8 @@ import {
   patchSettings,
   type AppSettings,
 } from './storageState';
-import { shouldQueueDappApproval } from './txConfirmMode';
+import { accountInstantEnabled, shouldQueueDappApproval } from './txConfirmMode';
+import { getActiveAccount } from './accounts';
 import {
   connectAddress,
   disconnectAddress,
@@ -125,7 +126,7 @@ export async function handleProviderRpc(
   const { id, method, params = [] } = request;
   let chainId = 1;
   try {
-    const { settings } = await loadPersisted();
+    const { settings, accounts, activeAccountId } = await loadPersisted();
     chainId = effectiveActiveChainId(settings);
     const sessionAddr = pk
       ? getAddress(addressFromPrivateKey(pk))
@@ -298,6 +299,10 @@ export async function handleProviderRpc(
       const mustConfirm = shouldQueueDappApproval(settings, {
         hardware: opts?.hardware,
         hasLocalKey: Boolean(pk),
+        instantOn: accountInstantEnabled(
+          getActiveAccount(accounts, activeAccountId),
+          settings,
+        ),
         request,
         chainId,
         origin,

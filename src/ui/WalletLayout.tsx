@@ -87,7 +87,7 @@ export function WalletLayout({
 
       <DevErrorPanel />
       <footer className="w1337-wallet-dock" aria-label="Wallet status">
-        {account ? <AccountSwitcher onChanged={onSaved} /> : null}
+        {account ? <AccountSwitcher settings={settings} onChanged={onSaved} /> : null}
         <DappConnectionBar settings={settings} onSaved={onSaved} embedded />
       </footer>
       <TxApprovalSheet settings={settings} />

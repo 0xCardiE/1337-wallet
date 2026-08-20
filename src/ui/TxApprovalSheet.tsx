@@ -35,7 +35,8 @@ import { simulateTransaction, type TxSimResult } from '../lib/txSimulate';
 import { chainById } from '../lib/chainCatalog';
 import { chainJsonRpcCall } from '../lib/ethereum';
 import { executeHardwareSignRequest } from '../lib/hardwareSign';
-import { effectiveTxConfirmMode, type AppSettings } from '../lib/storageState';
+import { accountInstantEnabled } from '../lib/txConfirmMode';
+import type { AppSettings } from '../lib/storageState';
 import {
   effectiveActiveInstantGates,
   effectiveHighValueNative,
@@ -873,7 +874,7 @@ function ApprovalContent({
     [pending.request],
   );
 
-  const instantOn = effectiveTxConfirmMode(settings) === 'speed';
+  const instantOn = accountInstantEnabled(getActiveAccountMeta(), settings);
   const pausedHits = instantOn
     ? risk.hits.filter(id => effectiveActiveInstantGates(settings).has(id))
     : [];

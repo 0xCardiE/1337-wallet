@@ -137,6 +137,7 @@ export function App() {
   } else if (overlay === 'wallets') {
     shell = (
       <WalletsView
+        settings={settings}
         onChanged={() => void refresh()}
         onBack={() => setOverlay('settings')}
       />

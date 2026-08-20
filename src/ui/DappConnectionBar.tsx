@@ -9,7 +9,6 @@ import { chainById } from '../lib/chainCatalog';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import { isUnlocked } from '../lib/accountSession';
 import { useCallback, useEffect, useState } from 'react';
-import { TxConfirmModeToggle } from './TxConfirmModeBar';
 
 /**
  * Site favicon from the active tab (or Google s2 fallback). Falls back to a
@@ -157,7 +156,6 @@ export function DappConnectionBar({
       </div>
 
       <div className="w1337-dapp-bar__actions">
-        <TxConfirmModeToggle settings={settings} onSaved={onSaved} />
         {connected ? (
           <button
             type="button"

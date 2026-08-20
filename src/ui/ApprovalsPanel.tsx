@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAddress } from 'viem';
-import { getUnlockedAccount } from '../lib/accountSession';
+import { getActiveAccountMeta, getUnlockedAccount } from '../lib/accountSession';
+import { isHardwareAccount } from '../lib/accounts';
 import { chainById } from '../lib/chainCatalog';
 import { chainLogoUri } from '../lib/chainLogo';
 import {
@@ -52,6 +53,7 @@ import {
   saveTokenApprovalsCache,
 } from '../lib/tokenApprovalsCache';
 import { describeError } from '../lib/utils';
+import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
 import { loadWalletBalancesForChain, type WalletBalEntry } from '../lib/walletBalances';
 import { ApprovalFact, ApprovalsScanOlder, ExternalLinkIcon, olderScanNote } from './ApprovalsScanOlder';
 import { LiFiIcon } from './LiFiIcon';
@@ -94,8 +96,10 @@ function CompactApprovalItem({
   chainId,
   busy,
   expanded,
+  reviewing,
   onToggle,
   onRevoke,
+  onCancelReview,
 }: {
   kind: ApprovalKind;
   symbol: string;
@@ -111,8 +115,10 @@ function CompactApprovalItem({
   chainId: number;
   busy: boolean;
   expanded: boolean;
+  reviewing: boolean;
   onToggle: () => void;
   onRevoke: () => void;
+  onCancelReview: () => void;
 }) {
   const txUrl = lastTx ? txExplorerLink(chainId, lastTx) : undefined;
   return (
@@ -147,7 +153,7 @@ function CompactApprovalItem({
           disabled={busy}
           onClick={onRevoke}
         >
-          {busy ? '…' : 'Revoke'}
+          {busy ? '…' : reviewing ? 'Confirm' : 'Revoke'}
         </button>
         <button
           type="button"
@@ -178,6 +184,14 @@ function CompactApprovalItem({
           ) : null}
         </dl>
       ) : null}
+      {reviewing ? (
+        <div className="w1337-approvals__confirm">
+          <p className="muted">Instant is off. Review this revoke, then confirm to sign.</p>
+          <button type="button" className="ghost" onClick={onCancelReview}>
+            Cancel
+          </button>
+        </div>
+      ) : null}
     </li>
   );
 }
@@ -185,6 +199,9 @@ function CompactApprovalItem({
 export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
   const account = getUnlockedAccount();
   const addr = account ? getAddress(account.address) : null;
+  const meta = getActiveAccountMeta();
+  const hw = Boolean(meta && isHardwareAccount(meta));
+  const needsConfirm = shouldConfirmInWalletSend(settings) && !hw;
   const chainId = effectiveActiveChainId(settings);
   const chain = chainById(chainId);
   const apiKey = settings.explorerApiKey?.trim();
@@ -207,7 +224,29 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
   const [hydrated, setHydrated] = useState(false);
   const [olderNote, setOlderNote] = useState<string | null>(null);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [reviewingKey, setReviewingKey] = useState<string | null>(null);
   const scanningRef = useRef(false);
+
+  useEffect(() => {
+    if (!needsConfirm) setReviewingKey(null);
+  }, [needsConfirm]);
+
+  function requestRevoke(key: string, run: () => void) {
+    if (needsConfirm && reviewingKey !== key) {
+      setReviewingKey(key);
+      setExpandedKey(key);
+      setErr(null);
+      return;
+    }
+    setReviewingKey(null);
+    run();
+  }
+
+  function toggleRow(key: string) {
+    const closing = expandedKey === key;
+    setExpandedKey(closing ? null : key);
+    if (closing || reviewingKey !== key) setReviewingKey(null);
+  }
 
   const visibleTokens = useMemo(
     () => filterRowsForWalletTokens(tokenRows, walletTokens),
@@ -455,6 +494,7 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
     setWalletTokens([]);
     setOlderNote(null);
     setExpandedKey(null);
+    setReviewingKey(null);
     void loadInitial();
   }, [chainId, addr, apiKey, loadInitial]);
 
@@ -751,8 +791,10 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
                 chainId={chainId}
                 busy={revokingKey === key}
                 expanded={expandedKey === key}
-                onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
-                onRevoke={() => void onRevokeToken(row)}
+                reviewing={reviewingKey === key}
+                onToggle={() => toggleRow(key)}
+                onRevoke={() => requestRevoke(key, () => void onRevokeToken(row))}
+                onCancelReview={() => setReviewingKey(null)}
               />
             );
           })}
@@ -778,8 +820,10 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
                     chainId={chainId}
                     busy={revokingKey === key}
                     expanded={expandedKey === key}
-                    onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
-                    onRevoke={() => void onRevokePermit(row)}
+                    reviewing={reviewingKey === key}
+                    onToggle={() => toggleRow(key)}
+                    onRevoke={() => requestRevoke(key, () => void onRevokePermit(row))}
+                    onCancelReview={() => setReviewingKey(null)}
                   />
                 );
               })
@@ -803,8 +847,10 @@ export function ApprovalsPanel({ settings }: { settings: AppSettings }) {
                 chainId={chainId}
                 busy={revokingKey === key}
                 expanded={expandedKey === key}
-                onToggle={() => setExpandedKey(prev => (prev === key ? null : key))}
-                onRevoke={() => void onRevokeNft(row)}
+                reviewing={reviewingKey === key}
+                onToggle={() => toggleRow(key)}
+                onRevoke={() => requestRevoke(key, () => void onRevokeNft(row))}
+                onCancelReview={() => setReviewingKey(null)}
               />
             );
           })}

@@ -577,6 +577,22 @@ export async function renameAccount(accountId: string, label: string): Promise<v
   setAccountsMeta(accounts, getActiveAccountId());
 }
 
+export async function setAccountInstant(accountId: string, instant: boolean): Promise<void> {
+  const current = getAccountsMeta().find(a => a.id === accountId);
+  if (!current) throw new Error('Account not found.');
+  if (!isKeyBackedKind(current.kind)) {
+    throw new Error('Hardware wallets always confirm on the device.');
+  }
+  const accounts = getAccountsMeta().map(a =>
+    a.id === accountId ? { ...a, instant } : a,
+  );
+  await saveAccountsState({
+    accounts,
+    activeAccountId: getActiveAccountId(),
+  });
+  setAccountsMeta(accounts, getActiveAccountId());
+}
+
 export async function lockManagedWallet(): Promise<void> {
   await clearSessionInBackground();
   clearAccountSession();

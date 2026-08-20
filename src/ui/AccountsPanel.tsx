@@ -8,6 +8,7 @@ import {
 import {
   accountKindLabel,
   DEFAULT_ETH_DERIVATION_PATH,
+  isKeyBackedAccount,
   shortAddress,
 } from '../lib/accounts';
 import { connectLedgerAddress } from '../lib/ledger';
@@ -25,10 +26,18 @@ import { AccountActionSheet, type AccountAction } from './AccountActionSheet';
 import { AccountLabel } from './AccountLabel';
 import { PassportScoreBadge } from './PassportScoreBadge';
 import { Segment1337 } from './Select1337';
+import { TxConfirmModeToggle } from './TxConfirmModeBar';
+import type { AppSettings } from '../lib/storageState';
 
 type AddMode = 'derive' | 'importKey' | 'import' | 'generate';
 
-export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
+export function AccountsPanel({
+  settings,
+  onChanged,
+}: {
+  settings: AppSettings;
+  onChanged: () => void;
+}) {
   const [importKey, setImportKey] = useState('');
   const [label, setLabel] = useState('');
   const [path, setPath] = useState(DEFAULT_ETH_DERIVATION_PATH);
@@ -144,6 +153,14 @@ export function AccountsPanel({ onChanged }: { onChanged: () => void }) {
                 </span>
               </button>
               <PassportScoreBadge address={account.address} />
+              {isKeyBackedAccount(account) ? (
+                <TxConfirmModeToggle
+                  settings={settings}
+                  account={account}
+                  onSaved={onChanged}
+                  compact
+                />
+              ) : null}
               <div className="bfox-account-manage-actions">
                 <button
                   type="button"

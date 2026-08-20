@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-  effectiveTxConfirmMode,
-  patchSettings,
-  type AppSettings,
-  type TxConfirmMode,
-} from '../lib/storageState';
+import { isKeyBackedAccount, type WalletAccount } from '../lib/accounts';
+import { accountInstantEnabled } from '../lib/txConfirmMode';
+import { setAccountInstant } from '../lib/walletManager';
+import type { AppSettings } from '../lib/storageState';
 
 const INSTANT_HINT =
-  'When on, sign ordinary dapp requests immediately. Risk gates in Settings still pause Instant for unlimited approvals, SIWE mismatch, and similar.';
+  'When on, this wallet signs ordinary dapp requests immediately. Hardware wallets always confirm on the device. Risk gates in Settings still pause Instant for unlimited approvals, SIWE mismatch, and similar.';
 
 function ThunderIcon() {
   return (
@@ -26,30 +24,35 @@ function ThunderIcon() {
 
 export function TxConfirmModeToggle({
   settings,
+  account,
   onSaved,
+  compact,
 }: {
   settings: AppSettings;
-  onSaved: () => void;
+  account: WalletAccount;
+  onSaved?: () => void;
+  compact?: boolean;
 }) {
-  const [mode, setMode] = useState<TxConfirmMode>(() => effectiveTxConfirmMode(settings));
+  const canInstant = isKeyBackedAccount(account);
+  const [on, setOn] = useState(() => accountInstantEnabled(account, settings));
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    setMode(effectiveTxConfirmMode(settings));
-  }, [settings.txConfirmMode]);
+    setOn(accountInstantEnabled(account, settings));
+  }, [account, settings]);
 
-  const instantOn = mode === 'speed';
+  if (!canInstant) return null;
 
   async function toggleInstant() {
-    const nextMode: TxConfirmMode = instantOn ? 'normal' : 'speed';
-    const prev = mode;
-    setMode(nextMode);
+    const next = !on;
+    setOn(next);
     setErr(null);
     try {
-      await patchSettings({ txConfirmMode: nextMode });
-      onSaved();
+      await setAccountInstant(account.id, next);
+      window.dispatchEvent(new Event('1337-account-changed'));
+      onSaved?.();
     } catch (e) {
-      setMode(prev);
+      setOn(!next);
       setErr(e instanceof Error ? e.message : String(e));
     }
   }
@@ -58,14 +61,21 @@ export function TxConfirmModeToggle({
     <>
       <button
         type="button"
-        className={`w1337-instant-toggle${instantOn ? ' w1337-instant-toggle--on' : ''}`}
-        aria-pressed={instantOn}
-        aria-label={instantOn ? 'Instant signing on' : 'Instant signing off — confirm before signing'}
+        className={`w1337-instant-toggle${on ? ' w1337-instant-toggle--on' : ''}${compact ? ' w1337-instant-toggle--compact' : ''}`}
+        aria-pressed={on}
+        aria-label={
+          on
+            ? `Instant signing on for ${account.label}`
+            : `Instant signing off for ${account.label} — confirm before signing`
+        }
         title={INSTANT_HINT}
-        onClick={() => void toggleInstant()}
+        onClick={e => {
+          e.stopPropagation();
+          void toggleInstant();
+        }}
       >
         <ThunderIcon />
-        <span className="w1337-instant-toggle__label">{instantOn ? 'Instant On' : 'Instant Off'}</span>
+        <span className="w1337-instant-toggle__label">{on ? 'Instant On' : 'Instant Off'}</span>
       </button>
       {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>

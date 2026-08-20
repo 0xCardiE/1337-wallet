@@ -1,3 +1,5 @@
+import { isHardwareAccount, isKeyBackedAccount, type WalletAccount } from './accounts';
+import { getActiveAccountMeta } from './accountSession';
 import { effectiveTxConfirmMode, type AppSettings } from './storageState';
 import {
   effectiveActiveInstantGates,
@@ -6,12 +8,28 @@ import {
 import { classifyRequest } from './txRisk';
 import type { ProviderRequest } from '../provider/types';
 
+/**
+ * Instant is per software wallet. Hardware never auto-signs.
+ * Unset `account.instant` still follows the legacy global toggle.
+ */
+export function accountInstantEnabled(
+  account: WalletAccount | undefined,
+  settings: AppSettings,
+): boolean {
+  if (!account || isHardwareAccount(account) || !isKeyBackedAccount(account)) return false;
+  if (account.instant === true) return true;
+  if (account.instant === false) return false;
+  return effectiveTxConfirmMode(settings) === 'speed';
+}
+
 /** Whether a dapp provider sign/send should queue the approval sheet. */
 export function shouldQueueDappApproval(
   settings: AppSettings,
   opts: {
     hardware?: boolean;
     hasLocalKey: boolean;
+    /** Active software wallet Instant. False/undefined means confirm. */
+    instantOn?: boolean;
     request?: ProviderRequest;
     chainId?: number;
     origin?: string;
@@ -19,7 +37,7 @@ export function shouldQueueDappApproval(
 ): boolean {
   if (opts.hardware) return true;
   if (!opts.hasLocalKey) return true;
-  if (effectiveTxConfirmMode(settings) === 'normal') return true;
+  if (!opts.instantOn) return true;
   if (settings.instantFullyUngated) return false;
   if (!opts.request || opts.chainId == null) return false;
 
@@ -35,6 +53,9 @@ export function shouldQueueDappApproval(
 }
 
 /** Whether in-wallet sends (inline send, etc.) need an extra confirm step. */
-export function shouldConfirmInWalletSend(settings: AppSettings): boolean {
-  return effectiveTxConfirmMode(settings) === 'normal';
+export function shouldConfirmInWalletSend(
+  settings: AppSettings,
+  account?: WalletAccount,
+): boolean {
+  return !accountInstantEnabled(account ?? getActiveAccountMeta(), settings);
 }

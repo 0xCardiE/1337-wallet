@@ -183,8 +183,8 @@ export function SettingsView({
                 <strong>Instant signing gates</strong>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
                   {settings.instantFullyUngated
-                    ? 'Fully ungated — Instant auto-signs every dapp request.'
-                    : `${INSTANT_GATE_IDS.length - (settings.instantUngatedGates?.length ?? 0)} of ${INSTANT_GATE_IDS.length} risks still pause Instant.`}
+                    ? 'Fully ungated — Instant wallets auto-sign every dapp request.'
+                    : `${INSTANT_GATE_IDS.length - (settings.instantUngatedGates?.length ?? 0)} of ${INSTANT_GATE_IDS.length} risks still pause Instant wallets.`}
                 </p>
               </div>
               <button type="button" className="ghost" onClick={onOpenInstantGates}>

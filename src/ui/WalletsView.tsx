@@ -3,11 +3,14 @@ import { getAddress } from 'viem';
 import { getSessionPrivateKey, getUnlockedAccount } from '../lib/accountSession';
 import { AccountsPanel } from './AccountsPanel';
 import { ScreenHeader } from './ScreenHeader';
+import type { AppSettings } from '../lib/storageState';
 
 export function WalletsView({
+  settings,
   onChanged,
   onBack,
 }: {
+  settings: AppSettings;
   onChanged: () => void;
   onBack: () => void;
 }) {
@@ -86,7 +89,7 @@ export function WalletsView({
             </div>
           ) : null}
 
-          <AccountsPanel onChanged={onChanged} />
+          <AccountsPanel settings={settings} onChanged={onChanged} />
 
           {err ? <p className="error">{err}</p> : null}
         </div>

@@ -7,6 +7,11 @@ export interface WalletAccount {
   kind: AccountKind;
   /** BIP-44 path for hardware wallets */
   derivationPath?: string;
+  /**
+   * Per-account Instant. Only for local/imported keys.
+   * `undefined` inherits the legacy global `txConfirmMode` until the user toggles.
+   */
+  instant?: boolean;
   createdAt: number;
 }
 
@@ -76,6 +81,8 @@ export function normalizeAccount(raw: unknown): WalletAccount | null {
     typeof row.createdAt === 'number' && Number.isFinite(row.createdAt)
       ? row.createdAt
       : Date.now();
+  const instant =
+    isKeyBackedKind(kind) && typeof row.instant === 'boolean' ? row.instant : undefined;
   return {
     id,
     address: address as `0x${string}`,
@@ -83,6 +90,7 @@ export function normalizeAccount(raw: unknown): WalletAccount | null {
     kind,
     derivationPath,
     createdAt,
+    ...(instant !== undefined ? { instant } : {}),
   };
 }
 

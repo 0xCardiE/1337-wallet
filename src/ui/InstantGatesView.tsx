@@ -75,8 +75,9 @@ export function InstantGatesView({
       <div className="screen-body settings-panel">
         <div className="settings-body">
           <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
-            Instant auto-signs ordinary dapp requests. Checked items still pause Instant and open
-            the approval sheet. Uncheck to ungate that risk. Does not apply in Normal mode.
+            Instant auto-signs ordinary dapp requests on software wallets that have Instant on.
+            Checked items still pause Instant and open the confirm sheet. Uncheck to ungate that
+            risk. Does not apply when Instant is off, or on hardware wallets.
           </p>
 
           {INSTANT_GATE_IDS.map(id => (
