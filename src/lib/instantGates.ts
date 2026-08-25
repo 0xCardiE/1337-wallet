@@ -1,4 +1,4 @@
-/** Instant-mode risk gates. Default is gated (pause Instant and show approval). */
+/** Burner Mode risk gates. Default is gated (pause Burner Mode and show approval). */
 
 export const INSTANT_GATE_IDS = [
   'unlimitedApproval',
@@ -73,7 +73,7 @@ export function effectiveHighValueNative(settings: {
   return settings.instantHighValueNative ?? DEFAULT_HIGH_VALUE_NATIVE;
 }
 
-/** Gates that still interrupt Instant. Empty when fully ungated. */
+/** Gates that still interrupt Burner Mode. Empty when fully ungated. */
 export function effectiveActiveInstantGates(settings: {
   instantFullyUngated?: boolean;
   instantUngatedGates?: InstantGateId[];

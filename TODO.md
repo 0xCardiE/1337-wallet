@@ -12,7 +12,7 @@ Tracking ideas from [Rabby](https://github.com/RabbyHub/Rabby) and [Ambire](http
 
 Signing, consent, supply chain, physical access, and threat prevention.
 
-**1337 posture:** Normal (confirm every request) is default. Instant auto-signs ordinary requests but is **gated by default**; Settings can fully ungate or ungate individual risks.
+**1337 posture:** Normal (confirm every request) is default. Burner Mode auto-signs ordinary requests but is **gated by default**; Settings can fully ungate or ungate individual risks.
 
 ### Backlog
 

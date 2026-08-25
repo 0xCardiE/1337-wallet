@@ -64,13 +64,13 @@ export interface AppSettings {
   /** Dapp signing mode — defaults to normal (confirm before sign). */
   txConfirmMode?: TxConfirmMode;
   /**
-   * Instant fully ungated: auto-sign every dapp request while unlocked.
-   * Default is false — Instant still pauses on configured gates.
+   * Burner Mode fully ungated: auto-sign every dapp request while unlocked.
+   * Default is false — Burner Mode still pauses on configured gates.
    */
   instantFullyUngated?: boolean;
-  /** Gate ids that Instant may auto-sign through (unchecked in Settings). */
+  /** Gate ids that Burner Mode may auto-sign through (unchecked in Settings). */
   instantUngatedGates?: InstantGateId[];
-  /** Native-token amount at or above which Instant pauses (when highValue gate is on). */
+  /** Native-token amount at or above which Burner Mode pauses (when highValue gate is on). */
   instantHighValueNative?: number;
   /** Tools-tab modules the user wants visible. Missing = defaults (see toolsRegistry). */
   enabledTools?: ToolId[];

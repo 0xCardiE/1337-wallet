@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { getUnlockedAccount } from '../lib/accountSession';
+import { getActiveAccountMeta, getUnlockedAccount } from '../lib/accountSession';
 import type { AppSettings } from '../lib/storageState';
+import { accountInstantEnabled } from '../lib/txConfirmMode';
 import { AccountSwitcher } from './AccountSwitcher';
 import { Mark1337 } from './Mark1337';
 import { NetworkSelector } from './NetworkSelector';
@@ -34,6 +35,7 @@ export function WalletLayout({
 }) {
   const [, setTick] = useState(0);
   const account = getUnlockedAccount();
+  const burnerOn = accountInstantEnabled(getActiveAccountMeta(), settings);
 
   useEffect(() => {
     const bump = () => setTick(t => t + 1);
@@ -86,7 +88,10 @@ export function WalletLayout({
       <div className="screen-body w1337-body w1337-body--main">{children}</div>
 
       <DevErrorPanel />
-      <footer className="w1337-wallet-dock" aria-label="Wallet status">
+      <footer
+        className={`w1337-wallet-dock${burnerOn ? ' w1337-wallet-dock--burner' : ''}`}
+        aria-label={burnerOn ? 'Wallet status — Burner Mode on' : 'Wallet status'}
+      >
         {account ? <AccountSwitcher settings={settings} onChanged={onSaved} /> : null}
         <DappConnectionBar settings={settings} onSaved={onSaved} embedded />
       </footer>

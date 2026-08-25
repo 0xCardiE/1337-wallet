@@ -18,7 +18,7 @@
       "Side panel + popup, multi-RPC per chain, network doctor",
       "Seed, private key, Ledger, and Trezor in one shell",
       "LiFi swaps, multi-send, MetaMask-compatible dapp provider",
-      "Normal vs Instant signing modes for review or speed",
+      "Normal vs Burner Mode signing — confirm every request, or mark a wallet as a disposable auto-signer",
       "Dark terminal aesthetic inspired by 1337 Skulls"
     ],
     "notA": [
@@ -75,7 +75,7 @@
     "Per-chain RPC picker and network doctor",
     "MetaMask drop-in dapp provider (optional)",
     "Side panel and popup layouts",
-    "Normal / Instant transaction confirmation modes",
+    "Confirm every request, or opt into Burner Mode per software wallet",
     "Confirm-time human summary, local simulate, contract hints",
     "Inspect address / token / ENS / tx before you sign or send",
     "Token, NFT, and Permit2 approval revoke",

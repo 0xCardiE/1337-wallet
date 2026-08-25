@@ -15,7 +15,7 @@ export function VideoSection() {
           </p>
           <ul className="mt-6 space-y-3 text-sm text-muted">
             <li>• Side panel for dapp + wallet side-by-side</li>
-            <li>• Turbo vs Normal signing modes</li>
+            <li>• Burner Mode vs confirm-every-request</li>
             <li>• Ledger, Trezor, seed, and private-key accounts</li>
           </ul>
         </div>

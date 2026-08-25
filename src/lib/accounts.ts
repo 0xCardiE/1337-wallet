@@ -8,7 +8,7 @@ export interface WalletAccount {
   /** BIP-44 path for hardware wallets */
   derivationPath?: string;
   /**
-   * Per-account Instant. Only for local/imported keys.
+   * Per-account Burner Mode. Only for local/imported keys.
    * `undefined` inherits the legacy global `txConfirmMode` until the user toggles.
    */
   instant?: boolean;

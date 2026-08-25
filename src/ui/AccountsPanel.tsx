@@ -28,6 +28,7 @@ import { PassportScoreBadge } from './PassportScoreBadge';
 import { Segment1337 } from './Select1337';
 import { TxConfirmModeToggle } from './TxConfirmModeBar';
 import type { AppSettings } from '../lib/storageState';
+import { accountInstantEnabled } from '../lib/txConfirmMode';
 
 type AddMode = 'derive' | 'importKey' | 'import' | 'generate';
 
@@ -136,8 +137,14 @@ export function AccountsPanel({
       <ul className="bfox-account-manage-list">
         {accounts.map(account => {
           const active = account.id === activeId;
+          const burnerOn = accountInstantEnabled(account, settings);
           return (
-            <li key={account.id} className={`bfox-account-manage-item${active ? ' is-active' : ''}`}>
+            <li
+              key={account.id}
+              className={`bfox-account-manage-item${active ? ' is-active' : ''}${
+                burnerOn ? ' bfox-account-manage-item--burner' : ''
+              }`}
+            >
               <button
                 type="button"
                 className="bfox-account-manage-select"
@@ -149,7 +156,8 @@ export function AccountsPanel({
               >
                 <AccountLabel account={account} />
                 <span className="muted mono bfox-account-manage-meta">
-                  {accountKindLabel(account.kind)} · {shortAddress(account.address)}
+                  {accountKindLabel(account.kind)}
+                  {burnerOn ? ' · Burner' : ''} · {shortAddress(account.address)}
                 </span>
               </button>
               <PassportScoreBadge address={account.address} />

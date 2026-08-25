@@ -7,6 +7,7 @@ import {
 } from '../lib/accountSession';
 import { accountKindLabel, isKeyBackedAccount, shortAddress } from '../lib/accounts';
 import type { AppSettings } from '../lib/storageState';
+import { accountInstantEnabled } from '../lib/txConfirmMode';
 import { AccountLabel } from './AccountLabel';
 import { switchActiveAccount } from '../lib/walletManager';
 import { PassportScoreBadge } from './PassportScoreBadge';
@@ -152,6 +153,7 @@ export function AccountSwitcher({
   }
 
   const canSwitch = accounts.length > 1;
+  const activeBurner = accountInstantEnabled(active, settings);
 
   const sheet =
     open && typeof document !== 'undefined'
@@ -174,11 +176,15 @@ export function AccountSwitcher({
               <ul className="w1337-acct-sheet-list">
                 {accounts.map(account => {
                   const selected = account.id === activeId;
+                  const burnerOn = accountInstantEnabled(account, settings);
                   return (
-                    <li key={account.id} className="w1337-acct-sheet-item">
+                    <li
+                      key={account.id}
+                      className={`w1337-acct-sheet-item${selected ? ' w1337-acct-sheet-item--on' : ''}${burnerOn ? ' w1337-acct-sheet-item--burner' : ''}`}
+                    >
                       <button
                         type="button"
-                        className={`w1337-acct-sheet-row${selected ? ' w1337-acct-sheet-row--on' : ''}`}
+                        className="w1337-acct-sheet-row"
                         disabled={busy}
                         title="Click to switch · double-click address to copy"
                         onClick={() => scheduleSelect(account.id)}
@@ -197,7 +203,8 @@ export function AccountSwitcher({
                             )}
                           </span>
                           <span className="w1337-acct-sheet-row__meta mono">
-                            {accountKindLabel(account.kind)} · {shortAddress(account.address)}
+                            {accountKindLabel(account.kind)}
+                            {burnerOn ? ' · Burner' : ''} · {shortAddress(account.address)}
                           </span>
                         </span>
                         <PassportScoreBadge address={account.address} />
@@ -235,13 +242,13 @@ export function AccountSwitcher({
 
   return (
     <>
-      <div className="w1337-acct-dock">
+      <div className={`w1337-acct-dock${activeBurner ? ' w1337-acct-dock--burner' : ''}`}>
         <button
           type="button"
-          className={`w1337-acct-trigger w1337-acct-trigger--dock${open ? ' w1337-acct-trigger--open' : ''}`}
+          className={`w1337-acct-trigger w1337-acct-trigger--dock${open ? ' w1337-acct-trigger--open' : ''}${activeBurner ? ' w1337-acct-trigger--burner' : ''}`}
           onClick={() => scheduleOpen()}
           onDoubleClick={() => onTriggerDoubleClick(active.address)}
-          title={`${active.address} · double-click to copy`}
+          title={`${active.address}${activeBurner ? ' · Burner Mode on' : ''} · double-click to copy`}
           aria-expanded={open}
           aria-haspopup="dialog"
         >
@@ -258,7 +265,8 @@ export function AccountSwitcher({
               )}
             </span>
             <span className="w1337-acct-trigger__sub mono">
-              {accountKindLabel(active.kind)} · {shortAddress(active.address)}
+              {accountKindLabel(active.kind)}
+              {activeBurner ? ' · Burner' : ''} · {shortAddress(active.address)}
             </span>
           </span>
           <PassportScoreBadge address={active.address} />

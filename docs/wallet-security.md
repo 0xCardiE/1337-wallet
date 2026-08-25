@@ -10,17 +10,17 @@ This note describes how signing works in 1337 and how to keep risk lower in prac
 - **Hardware accounts** — Ledger (WebHID) and Trezor Connect; only address + path are stored. Signing uses the device SDK.
 - After unlock, local signing uses a **Viem account** and **`eth_sendRawTransaction`** over your RPC (`src/lib/ethereum.ts`).
 - A full **EIP-1193 provider** is injected (`window.ethereum`), with optional MetaMask replacement.
-- **Normal mode (default):** each dApp sign/send request is queued in `TxApprovalSheet` with a human summary, local `eth_call` simulation (pass / fail / revert), and contract danger flags when source is available. **Instant mode:** ordinary requests execute automatically while a **local** account is unlocked. Instant is **gated by default** — unlimited approvals, unknown contract calls, high-value sends, permits, EIP-712 chainId mismatches, and SIWE domain mismatches still open the approval sheet unless you ungate them in Settings. **Hardware** always requires device confirmation (and UI approval for dApp txs). Disperse `disperseEther` / `disperseToken` are treated as known-safe selectors; CreateX `deployCreate2` (first-user plant of Disperse) is not — Instant still pauses unless that unknown-contract gate is off.
+- **Normal mode (default):** each dApp sign/send request is queued in `TxApprovalSheet` with a human summary, local `eth_call` simulation (pass / fail / revert), and contract danger flags when source is available. **Burner Mode:** ordinary requests execute automatically while a **local** account is unlocked. Burner Mode is **gated by default** — unlimited approvals, unknown contract calls, high-value sends, permits, EIP-712 chainId mismatches, and SIWE domain mismatches still open the approval sheet unless you ungate them in Settings. **Hardware** always requires device confirmation (and UI approval for dApp txs). Disperse `disperseEther` / `disperseToken` are treated as known-safe selectors; CreateX `deployCreate2` (first-user plant of Disperse) is not — Burner Mode still pauses unless that unknown-contract gate is off.
 - **`eth_sign` is disabled.** Use `personal_sign` or `eth_signTypedData_v4`.
 - The unlocked **active private key** (local only) is kept in the MV3 **service worker** and as **plaintext in `chrome.storage.session`**. Seed phrase (if any) stays in UI memory for the unlock session, not in session storage. **Lock** / **auto-lock** clears the session.
 
 ## Compared to MetaMask (short)
 
-MetaMask’s main end-user advantage is **separation + explicit review**: the dapp is untrusted, and the wallet UI confirms every sign/send by default. 1337 matches that for signing (Normal by default) while still favoring session convenience — stay unlocked and persist across UI close; opt into Instant for auto-sign, with risk gates on by default. Both are **hot software wallets** for local accounts; hardware accounts keep keys on device.
+MetaMask’s main end-user advantage is **separation + explicit review**: the dapp is untrusted, and the wallet UI confirms every sign/send by default. 1337 matches that for signing (Normal by default) while still favoring session convenience — stay unlocked and persist across UI close; opt into Burner Mode for auto-sign, with risk gates on by default. Both are **hot software wallets** for local accounts; hardware accounts keep keys on device.
 
 | | MetaMask | 1337 |
 |---|----------|------|
-| Software default | Confirm every request | Confirm every request (Instant opt-in, gated) |
+| Software default | Confirm every request | Confirm every request (Burner Mode opt-in, gated) |
 | HD seed | Yes (SRP) | Yes (optional; create default) |
 | Private key import | Yes | Yes |
 | Hardware | Ledger / Trezor | Ledger / Trezor |
@@ -79,7 +79,7 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 ## Ways to keep risk lower
 
 1. **Use Lock** when you step away; enable **auto-lock** (off by default).
-2. Keep **Normal** (default) for MetaMask-style per-request confirmation; Instant still pauses on gated risks unless you fully ungate it in Settings.
+2. Keep **Normal** (default) for MetaMask-style per-request confirmation; Burner Mode still pauses on gated risks unless you fully ungate it in Settings.
 3. Prefer **Ledger/Trezor** for high-value funds or when you want device-backed signing.
 4. Back up **seed phrases** offline; never paste them into websites.
 5. **Install from a trustworthy build** (`npm run build` from this repo).
@@ -95,7 +95,7 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 - `src/lib/walletManager.ts` — account lifecycle
 - `src/lib/accountSession.ts` — in-memory session
 - `src/lib/sessionBridge.ts` / `src/background.ts` — background session / lock
-- `src/lib/txConfirmMode.ts` / `src/lib/instantGates.ts` / `src/lib/txRisk.ts` / `src/lib/siwe.ts` — Instant gates, SIWE, EIP-712 chain checks
+- `src/lib/txConfirmMode.ts` / `src/lib/instantGates.ts` / `src/lib/txRisk.ts` / `src/lib/siwe.ts` — Burner Mode gates, SIWE, EIP-712 chain checks
 - `src/lib/disperse.ts` / `src/lib/disperseCreate2.ts` — Multisend Disperse probe + CreateX first-user deploy (`docs/signer.md`)
 - `src/lib/ledger.ts` / `src/lib/trezor.ts` — hardware signing
 - `webpack.config.cjs` / `webpack.ui.config.cjs` / `webpack.content.config.cjs` — LavaMoat vs plain bundles

@@ -416,7 +416,7 @@ function InstantPausedBanner({
   const labels = hits.map(id => INSTANT_GATE_META[id].title);
   return (
     <p className="w1337-tx-approval__gate-banner">
-      Instant paused · {labels.join(' · ')}
+      Burner paused · {labels.join(' · ')}
     </p>
   );
 }

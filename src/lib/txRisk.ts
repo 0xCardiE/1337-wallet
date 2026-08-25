@@ -28,7 +28,7 @@ const SELECTOR_APPROVE = '0x095ea7b3';
 const SELECTOR_INCREASE_ALLOWANCE = '0x39509351';
 const SELECTOR_SET_APPROVAL_FOR_ALL = '0xa22cb465';
 
-/** Selectors Instant may auto-sign without the unknown-contract gate. */
+/** Selectors Burner Mode may auto-sign without the unknown-contract gate. */
 const KNOWN_SAFE_SELECTORS = new Set([
   SELECTOR_APPROVE,
   SELECTOR_INCREASE_ALLOWANCE,

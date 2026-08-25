@@ -366,7 +366,7 @@ export function SwapView({
   const [quoteBusy, setQuoteBusy] = useState(false);
   /** After a completed swap, show a non-actionable "Success" until the form changes. */
   const [swapSuccessCta, setSwapSuccessCta] = useState(false);
-  /** Instant off: first tap reviews, second tap executes. */
+  /** Burner Mode off: first tap reviews, second tap executes. */
   const [reviewing, setReviewing] = useState(false);
 
   const [execBusy, setExecBusy] = useState(false);
@@ -1519,7 +1519,7 @@ export function SwapView({
                   {reviewing && !execBusy ? (
                     <div className="w1337-ms-confirm">
                       <p className="muted" style={{ margin: 0, fontSize: 12 }}>
-                        Instant is off. Review this swap, then confirm to sign.
+                        Burner Mode is off. Review this swap, then confirm to sign.
                       </p>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button

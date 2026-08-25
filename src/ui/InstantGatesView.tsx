@@ -71,13 +71,14 @@ export function InstantGatesView({
 
   return (
     <div className="wallet-shell w1337">
-      <ScreenHeader title="Instant signing gates" onClose={onBack} />
+      <ScreenHeader title="Burner Mode" onClose={onBack} />
       <div className="screen-body settings-panel">
         <div className="settings-body">
           <p className="muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}>
-            Instant auto-signs ordinary dapp requests on software wallets that have Instant on.
-            Checked items still pause Instant and open the confirm sheet. Uncheck to ungate that
-            risk. Does not apply when Instant is off, or on hardware wallets.
+            Burner Mode marks a software wallet as disposable and auto-signs ordinary dapp
+            requests. Flip it on or off per wallet in the wallet bar. Checked items still pause
+            Burner Mode and open the confirm sheet. Uncheck to ungate that risk. Does not apply
+            when Burner Mode is off, or on hardware wallets.
           </p>
 
           {INSTANT_GATE_IDS.map(id => (
@@ -110,7 +111,7 @@ export function InstantGatesView({
             onChange={e => setHighValueStr(e.target.value)}
           />
           <p className="muted" style={{ fontSize: 12 }}>
-            Pause Instant when a transaction sends at least this much native token (default{' '}
+            Pause Burner Mode when a transaction sends at least this much native token (default{' '}
             {DEFAULT_HIGH_VALUE_NATIVE}).
           </p>
 
@@ -123,7 +124,7 @@ export function InstantGatesView({
               onChange={e => setInstantFullyUngated(e.target.checked)}
             />
             <label htmlFor="instant-fully-ungated" className="w1337-settings-gate-row__copy">
-              <strong>Fully ungate Instant</strong>
+              <strong>Fully ungate Burner Mode</strong>
               <span className="muted">
                 Auto-sign every dapp request while unlocked, including unlimited approvals and
                 mismatched SIWE. Hardware accounts still confirm on the device.
@@ -132,8 +133,8 @@ export function InstantGatesView({
           </div>
           {instantFullyUngated ? (
             <p className="settings-callout settings-callout--warn">
-              Fully ungated Instant signs without reviewing risky requests. Only use this on sites
-              you already trust.
+              Fully ungated Burner Mode signs without reviewing risky requests. Only use this on
+              sites you already trust.
             </p>
           ) : null}
 

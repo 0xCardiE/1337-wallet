@@ -180,11 +180,11 @@ export function SettingsView({
           {onOpenInstantGates ? (
             <div className="w1337-settings-link-card">
               <div>
-                <strong>Instant signing gates</strong>
+                <strong>Burner Mode</strong>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
                   {settings.instantFullyUngated
-                    ? 'Fully ungated — Instant wallets auto-sign every dapp request.'
-                    : `${INSTANT_GATE_IDS.length - (settings.instantUngatedGates?.length ?? 0)} of ${INSTANT_GATE_IDS.length} risks still pause Instant wallets.`}
+                    ? 'Fully ungated — Burner wallets auto-sign every dapp request.'
+                    : `${INSTANT_GATE_IDS.length - (settings.instantUngatedGates?.length ?? 0)} of ${INSTANT_GATE_IDS.length} risks still pause Burner wallets.`}
                 </p>
               </div>
               <button type="button" className="ghost" onClick={onOpenInstantGates}>

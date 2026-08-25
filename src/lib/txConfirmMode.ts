@@ -9,7 +9,7 @@ import { classifyRequest } from './txRisk';
 import type { ProviderRequest } from '../provider/types';
 
 /**
- * Instant is per software wallet. Hardware never auto-signs.
+ * Burner Mode is per software wallet. Hardware never auto-signs.
  * Unset `account.instant` still follows the legacy global toggle.
  */
 export function accountInstantEnabled(
@@ -28,7 +28,7 @@ export function shouldQueueDappApproval(
   opts: {
     hardware?: boolean;
     hasLocalKey: boolean;
-    /** Active software wallet Instant. False/undefined means confirm. */
+    /** Active software wallet Burner Mode. False/undefined means confirm. */
     instantOn?: boolean;
     request?: ProviderRequest;
     chainId?: number;

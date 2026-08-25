@@ -186,7 +186,7 @@ function CompactApprovalItem({
       ) : null}
       {reviewing ? (
         <div className="w1337-approvals__confirm">
-          <p className="muted">Instant is off. Review this revoke, then confirm to sign.</p>
+          <p className="muted">Burner Mode is off. Review this revoke, then confirm to sign.</p>
           <button type="button" className="ghost" onClick={onCancelReview}>
             Cancel
           </button>

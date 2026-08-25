@@ -21,6 +21,12 @@
   --tag-bg: rgba(34, 197, 94, 0.14);
   --danger: #f87171;
   --danger-bg: rgba(127, 29, 29, 0.22);
+  --burner: #f59e0b;
+  --burner-hot: #fb923c;
+  --burner-deep: #ea580c;
+  --burner-text: #1a0c00;
+  --burner-soft: rgba(245, 158, 11, 0.2);
+  --burner-soft-2: rgba(245, 158, 11, 0.1);
   --ok: #22c55e;
   --radius-lg: 20px;
   --radius-md: 14px;
@@ -625,17 +631,78 @@ button.w1337-acct-trigger--dock {
   width: 100%;
   border-radius: 0;
   border: none;
-  border-bottom: 1px solid var(--border);
-  background: rgba(5, 8, 6, 0.92);
+  background: transparent;
   padding: 10px 14px;
 }
 
 button.w1337-acct-trigger--dock:hover:not(:disabled) {
-  background: var(--accent-soft-2);
+  background: transparent;
 }
 
 button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
-  background: var(--accent-soft);
+  background: transparent;
+}
+
+.w1337-acct-dock {
+  border-bottom: 1px solid var(--border);
+  background: rgba(5, 8, 6, 0.92);
+}
+
+.w1337-acct-dock:hover,
+.w1337-acct-dock:focus-within,
+.w1337-acct-dock:has(.w1337-acct-trigger--open) {
+  background: var(--accent-soft-2);
+}
+
+.w1337-wallet-dock--burner .w1337-acct-dock,
+.w1337-wallet-dock--burner .w1337-acct-dock:hover,
+.w1337-wallet-dock--burner .w1337-acct-dock:focus-within,
+.w1337-wallet-dock--burner .w1337-acct-dock:has(.w1337-acct-trigger--open) {
+  background: transparent;
+  border-bottom-color: rgba(245, 158, 11, 0.28);
+}
+
+.w1337-wallet-dock--burner button.w1337-acct-trigger--dock,
+.w1337-wallet-dock--burner button.w1337-acct-trigger--dock:hover:not(:disabled),
+.w1337-wallet-dock--burner button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
+  background: transparent;
+}
+
+.w1337-wallet-dock--burner .w1337-acct-trigger__label,
+.w1337-acct-trigger--burner .w1337-acct-trigger__label {
+  color: #fde68a;
+}
+
+.w1337-wallet-dock--burner .w1337-acct-trigger__sub,
+.w1337-wallet-dock--burner .w1337-acct-trigger__chev,
+.w1337-acct-trigger--burner .w1337-acct-trigger__sub,
+.w1337-acct-trigger--burner .w1337-acct-trigger__chev {
+  color: #fdba74;
+}
+
+.w1337-wallet-dock--burner .w1337-acct-trigger__label--copied {
+  color: #fef3c7;
+}
+
+.w1337-wallet-dock--burner .w1337-dapp-bar--embedded {
+  background: transparent;
+}
+
+.w1337-wallet-dock--burner .w1337-dapp-bar__host {
+  color: #fde68a;
+}
+
+.w1337-wallet-dock--burner .w1337-dapp-bar__sub {
+  color: #fdba74;
+}
+
+.w1337-wallet-dock--burner .w1337-dapp-bar__icon--fallback {
+  color: var(--burner);
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.w1337-wallet-dock--burner .w1337-dapp-bar__dot {
+  background: var(--burner);
 }
 
 .w1337-wallet-dock {
@@ -655,15 +722,23 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   --dock-dapp-py-t: 10px;
   --dock-dapp-py-b: 12px;
   --dock-icon: 32px;
-  --dock-instant-label-w: 9em;
-  --dock-instant-label-o: 1;
-  --dock-instant-px: 10px;
-  --dock-instant-gap: 4px;
+  --dock-burner-label-w: 9em;
+  --dock-burner-label-o: 1;
+  --dock-burner-px: 10px;
+  --dock-burner-gap: 4px;
+}
+
+.w1337-wallet-dock--burner {
+  background: linear-gradient(180deg, #3a1606 0%, #1a0c06 72%, #120804 100%);
+  border-top-color: var(--burner);
+  box-shadow:
+    inset 0 1px 0 rgba(251, 191, 36, 0.38),
+    0 -10px 28px rgba(234, 88, 12, 0.22);
 }
 
 /* Peek only when the window is short (popup / laptop). Tall monitors keep the full dock. */
 @media (hover: hover) and (pointer: fine) and (max-height: 900px) {
-  .w1337-wallet-dock:not(:hover):not(:focus-within):not(:has(.w1337-acct-trigger--open)) {
+  .w1337-wallet-dock:not(.w1337-wallet-dock--burner):not(:hover):not(:focus-within):not(:has(.w1337-acct-trigger--open)) {
     --dock-sub-h: 0px;
     --dock-sub-o: 0;
     --dock-meta-gap: 0px;
@@ -671,10 +746,10 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
     --dock-dapp-py-t: 6px;
     --dock-dapp-py-b: 6px;
     --dock-icon: 22px;
-    --dock-instant-label-w: 0px;
-    --dock-instant-label-o: 0;
-    --dock-instant-px: 7px;
-    --dock-instant-gap: 0px;
+    --dock-burner-label-w: 0px;
+    --dock-burner-label-o: 0;
+    --dock-burner-px: 7px;
+    --dock-burner-gap: 0px;
   }
 }
 
@@ -710,17 +785,17 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   transition: width 0.18s ease, height 0.18s ease;
 }
 
-.w1337-wallet-dock .w1337-instant-toggle__label {
+.w1337-wallet-dock .w1337-burner-toggle__label {
   display: inline-block;
   max-width: 9em;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) {
-  padding-left: var(--dock-instant-px);
-  padding-right: var(--dock-instant-px);
-  gap: var(--dock-instant-gap);
+.w1337-wallet-dock button.w1337-burner-toggle:not(.w1337-burner-toggle--on) {
+  padding-left: var(--dock-burner-px);
+  padding-right: var(--dock-burner-px);
+  gap: var(--dock-burner-gap);
   transition:
     background 0.15s ease,
     color 0.15s ease,
@@ -730,9 +805,9 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
     gap 0.16s ease;
 }
 
-.w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) .w1337-instant-toggle__label {
-  max-width: var(--dock-instant-label-w);
-  opacity: var(--dock-instant-label-o);
+.w1337-wallet-dock button.w1337-burner-toggle:not(.w1337-burner-toggle--on) .w1337-burner-toggle__label {
+  max-width: var(--dock-burner-label-w);
+  opacity: var(--dock-burner-label-o);
   transition:
     max-width 0.16s ease,
     opacity 0.14s ease,
@@ -745,7 +820,7 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   .w1337-wallet-dock button.w1337-acct-trigger--dock,
   .w1337-wallet-dock .w1337-dapp-bar--embedded,
   .w1337-wallet-dock .w1337-dapp-bar__icon,
-  .w1337-wallet-dock button.w1337-instant-toggle:not(.w1337-instant-toggle--on) .w1337-instant-toggle__label {
+  .w1337-wallet-dock button.w1337-burner-toggle:not(.w1337-burner-toggle--on) .w1337-burner-toggle__label {
     transition: none;
   }
 }
@@ -815,12 +890,21 @@ button.w1337-acct-sheet-backdrop:focus-visible {
   font-size: 12px;
 }
 
+.w1337-acct-sheet-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 10px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .w1337-acct-dock {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   min-width: 0;
-  gap: 6px;
-  padding-right: 10px;
+  gap: 0;
 }
 
 .w1337-acct-dock .w1337-acct-trigger {
@@ -830,19 +914,111 @@ button.w1337-acct-sheet-backdrop:focus-visible {
 
 .w1337-acct-sheet-item {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  gap: 0;
+  margin: 0 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+
+.w1337-acct-sheet-item:hover {
+  background: var(--accent-soft-2);
+}
+
+.w1337-acct-sheet-item--on,
+.w1337-acct-sheet-item--on:hover {
+  background: var(--accent-soft);
 }
 
 .w1337-acct-sheet-item .w1337-acct-sheet-row {
   flex: 1;
   min-width: 0;
   width: auto;
+  border-radius: 0;
+  background: transparent;
 }
 
-.w1337-acct-sheet-item .w1337-instant-toggle {
+.w1337-acct-sheet-item .w1337-acct-sheet-row:hover:not(:disabled),
+.w1337-acct-sheet-item .w1337-acct-sheet-row:focus-visible {
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.w1337-acct-sheet-item--burner,
+.w1337-acct-sheet-item--burner:hover,
+.w1337-acct-sheet-item--burner.w1337-acct-sheet-item--on,
+.w1337-acct-sheet-item--burner.w1337-acct-sheet-item--on:hover {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.22), rgba(234, 88, 12, 0.12));
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.32);
+}
+
+.w1337-acct-sheet-item--burner .w1337-acct-sheet-row__label {
+  color: #fde68a;
+}
+
+.w1337-acct-sheet-item--burner .w1337-acct-sheet-row__meta {
+  color: #fdba74;
+}
+
+.w1337-acct-sheet-item--burner .w1337-acct-sheet-row__check {
+  color: var(--burner);
+}
+
+/* Burner control is a segment of the same bar, not a separate pill. */
+.w1337-acct-sheet-item .w1337-burner-toggle,
+.w1337-acct-dock .w1337-burner-toggle {
   flex-shrink: 0;
-  margin-right: 6px;
+  margin: 0;
+  align-self: stretch;
+  height: auto;
+  min-height: 0;
+  padding: 0 12px;
+  border: none;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.w1337-acct-sheet-item .w1337-burner-toggle:hover:not(:disabled),
+.w1337-acct-dock .w1337-burner-toggle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: transparent;
+  border-left-color: var(--border);
+  box-shadow: none;
+  color: var(--text);
+}
+
+.w1337-acct-sheet-item .w1337-burner-toggle--on,
+.w1337-acct-sheet-item .w1337-burner-toggle--on:hover:not(:disabled),
+.w1337-acct-dock .w1337-burner-toggle--on,
+.w1337-acct-dock .w1337-burner-toggle--on:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  border-left-color: var(--border);
+  box-shadow: none;
+  color: var(--text);
+}
+
+.w1337-acct-sheet-item--burner .w1337-burner-toggle,
+.w1337-acct-sheet-item--burner .w1337-burner-toggle--on,
+.w1337-acct-dock--burner .w1337-burner-toggle,
+.w1337-acct-dock--burner .w1337-burner-toggle--on {
+  color: #fde68a;
+  border-left-color: rgba(245, 158, 11, 0.28);
+  background: transparent;
+  box-shadow: none;
+}
+
+.w1337-acct-sheet-item--burner .w1337-burner-toggle:hover:not(:disabled),
+.w1337-acct-dock--burner .w1337-burner-toggle:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fde68a;
+  border-left-color: rgba(245, 158, 11, 0.28);
+  box-shadow: none;
 }
 
 button.w1337-acct-sheet-row {
@@ -933,8 +1109,9 @@ button.w1337-acct-sheet-row--on:hover:not(:disabled) {
 .bfox-account-manage-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
+  gap: 4px;
+  padding: 4px 4px 4px 0;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bg-card);
@@ -942,6 +1119,41 @@ button.w1337-acct-sheet-row--on:hover:not(:disabled) {
 
 .bfox-account-manage-item.is-active {
   border-color: var(--ok, #22c55e);
+}
+
+.bfox-account-manage-item--burner {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.16), rgba(234, 88, 12, 0.08));
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.bfox-account-manage-item--burner.is-active {
+  border-color: var(--burner);
+}
+
+.bfox-account-manage-item--burner button.bfox-account-manage-select:hover:not(:disabled),
+.bfox-account-manage-item--burner.is-active button.bfox-account-manage-select,
+.bfox-account-manage-item--burner.is-active button.bfox-account-manage-select:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.bfox-account-manage-item--burner .bfox-account-manage-meta {
+  color: #fdba74;
+}
+
+.bfox-account-manage-item .w1337-burner-toggle,
+.bfox-account-manage-item .w1337-burner-toggle--on,
+.bfox-account-manage-item .w1337-burner-toggle--on:hover:not(:disabled) {
+  margin: 0;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.bfox-account-manage-item--burner .w1337-burner-toggle,
+.bfox-account-manage-item--burner .w1337-burner-toggle--on {
+  color: #fde68a;
+  border-left-color: rgba(245, 158, 11, 0.28);
 }
 
 button.bfox-account-manage-select {
@@ -4098,7 +4310,7 @@ button.w1337-seg__btn--on:hover:not(:disabled) {
   font-weight: 700;
 }
 
-button.w1337-instant-toggle {
+button.w1337-burner-toggle {
   margin: 0;
   flex: none;
   display: inline-flex;
@@ -4118,37 +4330,37 @@ button.w1337-instant-toggle {
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-button.w1337-instant-toggle .w1337-instant-toggle__icon {
+button.w1337-burner-toggle .w1337-burner-toggle__icon {
   flex-shrink: 0;
   opacity: 0.85;
 }
 
-button.w1337-instant-toggle:hover:not(:disabled) {
+button.w1337-burner-toggle:hover:not(:disabled) {
   color: var(--text);
   background: rgba(20, 20, 22, 0.55);
   box-shadow: none;
 }
 
-/* Instant on = caution state — solid amber so it's hard to miss while auto-signing */
-button.w1337-instant-toggle--on {
-  background: #f59e0b;
-  color: #1a1000;
-  border-color: #f59e0b;
+/* Burner on = flame state — solid amber so it's hard to miss while auto-signing */
+button.w1337-burner-toggle--on {
+  background: var(--burner);
+  color: var(--burner-text);
+  border-color: var(--burner);
   box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35), 0 2px 8px rgba(245, 158, 11, 0.35);
 }
 
-button.w1337-instant-toggle--on .w1337-instant-toggle__icon {
+button.w1337-burner-toggle--on .w1337-burner-toggle__icon {
   opacity: 1;
 }
 
-button.w1337-instant-toggle--on:hover:not(:disabled) {
+button.w1337-burner-toggle--on:hover:not(:disabled) {
   background: #fbbf24;
-  color: #1a1000;
+  color: var(--burner-text);
   border-color: #fbbf24;
   box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.4), 0 2px 10px rgba(245, 158, 11, 0.45);
 }
 
-button.w1337-instant-toggle--compact {
+button.w1337-burner-toggle--compact {
   padding: 4px 8px;
   min-height: 26px;
   font-size: 9px;
