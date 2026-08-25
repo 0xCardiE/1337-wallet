@@ -75,7 +75,7 @@ export function TxConfirmModeToggle({
         }}
       >
         <FlameIcon />
-        <span className="w1337-burner-toggle__label">{on ? 'Burner On' : 'Burner Off'}</span>
+        <span className="w1337-burner-toggle__label">{on ? 'Burner' : 'Off'}</span>
       </button>
       {err ? <span className="w1337-tx-mode-err">{err}</span> : null}
     </>

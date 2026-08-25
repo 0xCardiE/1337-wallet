@@ -208,11 +208,6 @@ export function AccountSwitcher({
                           </span>
                         </span>
                         <PassportScoreBadge address={account.address} />
-                        {selected ? (
-                          <span className="w1337-acct-sheet-row__check" aria-hidden>
-                            <CheckIcon />
-                          </span>
-                        ) : null}
                       </button>
                       {isKeyBackedAccount(account) ? (
                         <TxConfirmModeToggle
@@ -221,7 +216,16 @@ export function AccountSwitcher({
                           onSaved={onChanged}
                           compact
                         />
-                      ) : null}
+                      ) : (
+                        <span className="w1337-acct-burner-slot" aria-hidden />
+                      )}
+                      <span className="w1337-acct-sheet-row__trail">
+                        {selected ? (
+                          <span className="w1337-acct-sheet-row__check" aria-hidden>
+                            <CheckIcon />
+                          </span>
+                        ) : null}
+                      </span>
                     </li>
                   );
                 })}
@@ -270,11 +274,18 @@ export function AccountSwitcher({
             </span>
           </span>
           <PassportScoreBadge address={active.address} />
-          <span className="w1337-acct-trigger__chev" aria-hidden>
-            <ChevronUpIcon />
-          </span>
         </button>
         <TxConfirmModeToggle settings={settings} account={active} onSaved={onChanged} />
+        <button
+          type="button"
+          className="w1337-acct-dock__chev"
+          onClick={() => scheduleOpen()}
+          aria-label="Switch account"
+          aria-expanded={open}
+          aria-haspopup="dialog"
+        >
+          <ChevronUpIcon />
+        </button>
       </div>
       {sheet}
     </>

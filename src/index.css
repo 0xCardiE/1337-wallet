@@ -769,7 +769,7 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
 }
 
 .w1337-wallet-dock button.w1337-acct-trigger--dock {
-  padding: var(--dock-acct-py) 14px;
+  padding: var(--dock-acct-py) 8px var(--dock-acct-py) 14px;
   transition: padding 0.18s ease, background 0.12s ease;
 }
 
@@ -912,6 +912,35 @@ button.w1337-acct-sheet-backdrop:focus-visible {
   min-width: 0;
 }
 
+button.w1337-acct-dock__chev {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+button.w1337-acct-dock__chev:hover:not(:disabled),
+button.w1337-acct-dock__chev:focus-visible {
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.w1337-acct-dock--burner button.w1337-acct-dock__chev,
+.w1337-acct-dock--burner button.w1337-acct-dock__chev:hover:not(:disabled) {
+  color: #fdba74;
+  background: transparent;
+}
+
 .w1337-acct-sheet-item {
   display: flex;
   align-items: stretch;
@@ -967,40 +996,69 @@ button.w1337-acct-sheet-backdrop:focus-visible {
   color: var(--burner);
 }
 
-/* Burner control is a segment of the same bar, not a separate pill. */
+/* Burner is a fixed icon slot — same place on dock and in the switcher. */
 .w1337-acct-sheet-item .w1337-burner-toggle,
-.w1337-acct-dock .w1337-burner-toggle {
+.w1337-acct-dock .w1337-burner-toggle,
+.w1337-acct-burner-slot {
   flex-shrink: 0;
+  box-sizing: border-box;
+  width: 32px;
   margin: 0;
   align-self: stretch;
   height: auto;
   min-height: 0;
-  padding: 0 12px;
+  padding: 0;
   border: none;
-  border-left: 1px solid var(--border);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  justify-content: center;
+}
+
+.w1337-acct-dock .w1337-burner-toggle {
+  color: var(--text-muted);
+  opacity: 0.38;
+}
+
+.w1337-acct-sheet-item .w1337-burner-toggle:not(.w1337-burner-toggle--on),
+.w1337-acct-dock .w1337-burner-toggle:not(.w1337-burner-toggle--on) {
+  color: var(--text-muted);
+  opacity: 0.38;
+}
+
+.w1337-acct-sheet-item .w1337-burner-toggle__label,
+.w1337-acct-dock .w1337-burner-toggle__label {
+  display: none;
+}
+
+.w1337-acct-sheet-row__trail {
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .w1337-acct-sheet-item .w1337-burner-toggle:hover:not(:disabled),
 .w1337-acct-dock .w1337-burner-toggle:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.05);
-  border-color: transparent;
-  border-left-color: var(--border);
+  border: none;
   box-shadow: none;
   color: var(--text);
+  opacity: 0.9;
 }
 
 .w1337-acct-sheet-item .w1337-burner-toggle--on,
 .w1337-acct-sheet-item .w1337-burner-toggle--on:hover:not(:disabled),
 .w1337-acct-dock .w1337-burner-toggle--on,
 .w1337-acct-dock .w1337-burner-toggle--on:hover:not(:disabled) {
+  width: 32px;
+  padding: 0;
   background: transparent;
-  border-color: transparent;
-  border-left-color: var(--border);
+  border: none;
   box-shadow: none;
-  color: var(--text);
+  color: #fde68a;
+  opacity: 1;
 }
 
 .w1337-acct-sheet-item--burner .w1337-burner-toggle,
@@ -1008,16 +1066,15 @@ button.w1337-acct-sheet-backdrop:focus-visible {
 .w1337-acct-dock--burner .w1337-burner-toggle,
 .w1337-acct-dock--burner .w1337-burner-toggle--on {
   color: #fde68a;
-  border-left-color: rgba(245, 158, 11, 0.28);
   background: transparent;
   box-shadow: none;
+  opacity: 1;
 }
 
 .w1337-acct-sheet-item--burner .w1337-burner-toggle:hover:not(:disabled),
 .w1337-acct-dock--burner .w1337-burner-toggle:hover:not(:disabled) {
   background: rgba(245, 158, 11, 0.16);
   color: #fde68a;
-  border-left-color: rgba(245, 158, 11, 0.28);
   box-shadow: none;
 }
 
