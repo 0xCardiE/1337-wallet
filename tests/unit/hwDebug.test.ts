@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isUnpackedExtension } from '../../src/lib/hwDebug';
+import { isUnpackedExtension } from '../../src/lib/hwDebugFlags';
 
 describe('hardware debug console', () => {
   it('treats a missing update_url as unpacked', () => {

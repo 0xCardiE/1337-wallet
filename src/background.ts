@@ -35,6 +35,8 @@ import {
 } from './lib/storageState';
 import { resolveProviderInjectConfig } from './lib/dappCompat';
 import { handleTrezorMessage, isTrezorMessage } from './lib/trezorBackground';
+import { isUnpackedExtension } from './lib/hwDebugFlags';
+import { resetHardwareConnections } from './lib/hwReset';
 import type { ProviderRequest, ProviderResponse } from './provider/types';
 import { toHexChainId } from './provider/types';
 import { reportInternalFailure } from './lib/devErrorReport';
@@ -396,6 +398,7 @@ type Msg =
     }
   | { type: 'TREZOR_INIT' }
   | { type: 'TREZOR_RESET' }
+  | { type: 'HW_RESET' }
   | { type: 'TREZOR_ETHEREUM_GET_ADDRESS'; path?: string; paths?: string[]; showOnTrezor?: boolean }
   | {
       type: 'TREZOR_ETHEREUM_SIGN_TRANSACTION';
@@ -522,6 +525,17 @@ async function maybeAutoLockExpired(): Promise<void> {
 chrome.runtime.onMessage.addListener(
   (message: Msg, sender, sendResponse: (r: unknown) => void) => {
     if (!message || typeof message !== 'object') return;
+
+    if (message.type === 'HW_RESET') {
+      if (!isUnpackedExtension()) {
+        sendResponse({ error: 'Hardware reset is unpacked-only.' });
+        return;
+      }
+      void resetHardwareConnections().then(sendResponse).catch(err =>
+        sendResponse({ error: err instanceof Error ? err.message : String(err) }),
+      );
+      return true;
+    }
 
     if (isTrezorMessage(message)) {
       void handleTrezorMessage(
@@ -1011,3 +1025,9 @@ chrome.runtime.onMessage.addListener(
     }
   },
 );
+
+if (isUnpackedExtension()) {
+  (globalThis as { __1337?: { resetHardware: typeof resetHardwareConnections } }).__1337 = {
+    resetHardware: resetHardwareConnections,
+  };
+}

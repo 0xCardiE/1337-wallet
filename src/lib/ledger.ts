@@ -2,6 +2,13 @@ import TransportWebHIDModule from '@ledgerhq/hw-transport-webhid';
 import LedgerEthModule from '@ledgerhq/hw-app-eth';
 import { serializeTransaction, type Hex, type TransactionSerializable } from 'viem';
 import { DEFAULT_ETH_DERIVATION_PATH } from './accounts';
+import {
+  forgetGrantedLedgerHidDevices,
+  LEDGER_USB_VENDOR_ID,
+  ledgerHid,
+} from './ledgerHidGrant';
+
+export { getGrantedLedgerDevice, LEDGER_USB_VENDOR_ID } from './ledgerHidGrant';
 
 export function toLedgerPath(path: string): string {
   const trimmed = path.trim();
@@ -22,15 +29,12 @@ export function unwrapDefaultExport<T>(mod: unknown): T {
   throw new Error('Ledger library failed to load.');
 }
 
-/** Ledger USB vendor id (`@ledgerhq/devices`). */
-const LEDGER_USB_VENDOR_ID = 0x2c97;
-
 /**
  * Start the Chrome HID chooser in this turn — no `await` before `requestDevice`,
  * or Chrome swallows the click and shows nothing.
  */
 export function startLedgerHidPicker(): Promise<HIDDevice[]> {
-  const hid = window.navigator?.hid;
+  const hid = ledgerHid();
   if (!hid) {
     return Promise.reject(new Error('WebHID is not supported. Use Chrome desktop.'));
   }
@@ -50,14 +54,6 @@ export async function openLedgerHidConnectTab(): Promise<void> {
   });
 }
 
-/** Ledger already granted to this extension via a previous chooser pick, if any. */
-export async function getGrantedLedgerDevice(): Promise<HIDDevice | undefined> {
-  const hid = window.navigator?.hid;
-  if (!hid) return undefined;
-  const devices = await hid.getDevices();
-  return devices.find(d => d.vendorId === LEDGER_USB_VENDOR_ID);
-}
-
 let pickerSession: Awaited<ReturnType<typeof openLedgerEth>> | null = null;
 
 export async function closeLedgerPickerSession(): Promise<void> {
@@ -69,18 +65,7 @@ export async function closeLedgerPickerSession(): Promise<void> {
 /** Revoke Chrome’s WebHID grant so the next connect shows the device list again. */
 export async function forgetGrantedLedgerDevices(): Promise<number> {
   await closeLedgerPickerSession();
-  const hid = window.navigator?.hid;
-  if (!hid) return 0;
-  const devices = (await hid.getDevices()).filter(d => d.vendorId === LEDGER_USB_VENDOR_ID);
-  let forgotten = 0;
-  for (const device of devices) {
-    if (device.opened) await device.close().catch(() => undefined);
-    const forget = (device as HIDDevice & { forget?: () => Promise<void> }).forget;
-    if (typeof forget !== 'function') continue;
-    await forget.call(device);
-    forgotten += 1;
-  }
-  return forgotten;
+  return forgetGrantedLedgerHidDevices();
 }
 
 export function firstHidDevice(picked: HIDDevice[] | HIDDevice | undefined): HIDDevice | undefined {
@@ -90,7 +75,7 @@ export function firstHidDevice(picked: HIDDevice[] | HIDDevice | undefined): HID
 
 async function requestLedgerHidDevice(opts?: { device?: HIDDevice }): Promise<HIDDevice> {
   if (opts?.device) return opts.device;
-  const hid = window.navigator?.hid;
+  const hid = ledgerHid();
   if (!hid) throw new Error('WebHID is not supported. Use Chrome desktop.');
   const existing = (await hid.getDevices()).filter(d => d.vendorId === LEDGER_USB_VENDOR_ID);
   if (existing[0]) return existing[0];
@@ -112,7 +97,7 @@ async function openLedgerEth(opts?: { device?: HIDDevice }) {
   const LedgerEth = unwrapDefaultExport<typeof import('@ledgerhq/hw-app-eth').default>(
     LedgerEthModule,
   );
-  if (!window.navigator?.hid) {
+  if (!ledgerHid()) {
     throw new Error('WebHID is not supported. Use Chrome desktop.');
   }
   try {

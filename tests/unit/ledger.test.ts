@@ -50,9 +50,9 @@ describe('ledger helpers', () => {
       forget: () => Promise<void>;
     };
     const hid = { getDevices: async () => [device] };
-    Object.defineProperty(globalThis, 'window', {
+    Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
-      value: { navigator: { hid } },
+      value: { hid },
     });
     await expect(forgetGrantedLedgerDevices()).resolves.toBe(1);
   });

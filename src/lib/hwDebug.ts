@@ -1,35 +1,21 @@
-import { forgetGrantedLedgerDevices } from './ledger';
+import { closeLedgerPickerSession } from './ledger';
+import { isUnpackedExtension } from './hwDebugFlags';
+import type { HardwareResetResult } from './hwReset';
 
-export type HardwareResetResult = {
-  ledgerForgotten: number;
-  trezorReset: boolean;
-};
-
-/** Unpacked builds only — store packages have an `update_url`. */
-export function isUnpackedExtension(): boolean {
-  try {
-    return !chrome.runtime.getManifest().update_url;
-  } catch {
-    return false;
-  }
-}
+export type { HardwareResetResult } from './hwReset';
+export { isUnpackedExtension } from './hwDebugFlags';
 
 /**
- * Drop the Chrome WebHID grant for Ledger and dispose the Trezor Connect
- * session. Next Connect Ledger shows the HID chooser; next Trezor call re-inits.
+ * Ask the service worker to forget Ledger HID + reset Trezor Connect.
+ * Works from any 1337 extension page console via chrome.runtime.
  */
 export async function resetHardwareConnections(): Promise<HardwareResetResult> {
-  const ledgerForgotten = await forgetGrantedLedgerDevices();
-  let trezorReset = false;
-  try {
-    const response = (await chrome.runtime.sendMessage({ type: 'TREZOR_RESET' })) as
-      | { success?: boolean }
-      | undefined;
-    trezorReset = response?.success === true;
-  } catch {
-    trezorReset = false;
-  }
-  return { ledgerForgotten, trezorReset };
+  await closeLedgerPickerSession().catch(() => undefined);
+  const response = (await chrome.runtime.sendMessage({ type: 'HW_RESET' })) as
+    | HardwareResetResult
+    | undefined;
+  if (!response) throw new Error('No response from background hardware reset.');
+  return response;
 }
 
 export function installHardwareDebugConsole(): void {

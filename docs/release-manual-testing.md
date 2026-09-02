@@ -121,16 +121,21 @@ Physical Trezor + Trezor Connect popup (`connect.trezor.io`). Signing pass 2026-
 
 Chrome keeps the Ledger WebHID grant on the **extension**, not on the imported account. Removing a Ledger wallet does not revoke it, so the next Connect skips the device list. Trezor Connect keeps an init session in the service worker.
 
-This is not in the UI. In an unpacked `dist/` load, open Wallets (side panel or the Ledger tab), right-click → Inspect, Console:
+Do **not** run this on a website tab (or MetaMask). `__1337` is not there. Use one of:
+
+1. `chrome://extensions` → 1337 → **Service worker** → Inspect → Console
+2. Open the 1337 side panel or popup, right-click **inside 1337** → Inspect. Console context must be `chrome-extension://…` (not `top` of a web page).
 
 ```js
-await __1337.resetHardware()
+await chrome.runtime.sendMessage({ type: 'HW_RESET' })
 // { ledgerForgotten: 1, trezorReset: true }
 ```
 
+From the service worker console this also works: `await __1337.resetHardware()`.
+
 Then Connect Ledger again — Chrome should show the HID list. Connect Trezor re-inits Connect (the popup still comes from `connect.trezor.io`).
 
-Store builds omit `__1337`. Manual fallbacks: `chrome://settings/content/hidDevices` → remove 1337; for a sticky Trezor popup, close Suite and clear site data for `https://connect.trezor.io`.
+Store builds reject `HW_RESET`. Manual fallbacks: `chrome://settings/content/hidDevices` → remove 1337; for a sticky Trezor popup, close Suite and clear site data for `https://connect.trezor.io`.
 
 ---
 
