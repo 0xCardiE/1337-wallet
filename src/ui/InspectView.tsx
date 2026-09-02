@@ -174,8 +174,14 @@ export function InspectView({ settings }: { settings: AppSettings }) {
           autoComplete="off"
           spellCheck={false}
           aria-label="Inspect input"
+          data-testid="inspect-input"
         />
-        <button type="submit" className="primary" disabled={busy || !query.trim()}>
+        <button
+          type="submit"
+          className="primary"
+          disabled={busy || !query.trim()}
+          data-testid="inspect-submit"
+        >
           {busy ? '…' : 'Inspect'}
         </button>
       </form>

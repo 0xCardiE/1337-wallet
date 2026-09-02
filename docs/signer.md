@@ -70,3 +70,5 @@ Ask: **would someone open this wallet to do it?**
 - [wallet-security.md](./wallet-security.md) — consent, Burner Mode gates, LavaMoat
 - [explorer-history.md](./explorer-history.md) — Etherscan Free vs paid chains, Blockscout fallback, why RPC cannot list address history
 - [TODO.md](../TODO.md) — backlog, including later-if-asked lab items
+- [testing.md](./testing.md) — automated suite
+- [release-manual-testing.md](./release-manual-testing.md) — hardware and live-dapp checklist before release

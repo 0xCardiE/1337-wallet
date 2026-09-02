@@ -61,12 +61,14 @@ export function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
           placeholder="Enter your password"
           onChange={e => setPassword(e.target.value)}
           autoFocus
+          data-testid="unlock-password"
         />
         {err ? <p className="unlock-error">{err}</p> : null}
         <button
           type="submit"
           className="unlock-submit"
           disabled={busy || !password}
+          data-testid="unlock-submit"
         >
           {busy ? 'Unlocking…' : 'Unlock'}
         </button>

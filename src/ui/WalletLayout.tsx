@@ -49,6 +49,7 @@ export function WalletLayout({
       className="w1337-icon-head"
       onClick={onOpenSettings}
       aria-label="Settings"
+      data-testid="open-settings"
     >
       <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
         <circle cx="12" cy="12" r="3" />
@@ -74,6 +75,7 @@ export function WalletLayout({
             type="button"
             className={`w1337-mm-tabs__btn${activeTab === tab ? ' w1337-mm-tabs__btn--on' : ''}`}
             aria-current={activeTab === tab ? 'page' : undefined}
+            data-testid={`wallet-tab-${tab}`}
             onClick={() => onTabChange(tab)}
           >
             {TAB_LABELS[tab]}

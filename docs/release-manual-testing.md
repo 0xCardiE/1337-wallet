@@ -1,0 +1,178 @@
+# Pre-release manual testing
+
+Automated tests (`npm run test:unit` and `npm run test:e2e`) catch signer logic and the Chromium extension shell. They **cannot** replace a human pass with real devices, store packaging, and live dapps.
+
+Walk this list before uploading to the Chrome Web Store or tagging a release. Check a box only after you did it on the **release build** (`npm run build`, unpacked `dist/` or the zip you will upload).
+
+Use a **throwaway** seed / small balances. Never paste a production mnemonic into a dapp or a screenshot.
+
+---
+
+## 0. Build and install
+
+- [ ] Fresh `npm ci && npm run icons && npm run build`
+- [ ] `npm run lavamoat:check` is clean
+- [ ] `npm run test:unit` and `npm run test:e2e` pass on the same commit
+- [ ] Load unpacked `dist/` in a clean Chrome profile (or the store zip, not `npm run dev`)
+- [ ] Extension name, version (`package.json` / `public/manifest.json`), and icons look correct in `chrome://extensions`
+
+---
+
+## 1. Onboarding and vault (software)
+
+- [ ] **Create seed** — 12 words shown once; Continue lands on Assets; closing the UI and reopening asks for the password
+- [ ] **Wrong password** — rejected; vault still there
+- [ ] **Create private key** — backup screen shows the hex key once
+- [ ] **Import seed** (12 and, if you have one, 24 words) — first HD address matches MetaMask on `m/44'/60'/0'/0/0`
+- [ ] **Import private key** — checksummed address matches a known tool
+- [ ] **Lock** from Settings, then unlock
+- [ ] **Wipe wallet** — after confirm, onboarding is back; old vault is gone
+- [ ] Password of 7 characters is rejected; 8+ is accepted
+
+---
+
+## 2. Accounts and session
+
+- [ ] Add a second HD account from Wallets; switcher changes the header address
+- [ ] Import a second key into the same vault
+- [ ] Active account survives popup / side panel close while unlocked
+- [ ] Lock clears the session: dapp `eth_accounts` is empty until unlock + reconnect
+- [ ] Auto-lock (Settings → 5 min) fires after idle; leave it **off** again if that is still the product default
+
+---
+
+## 3. Networks and RPC
+
+- [ ] Switch among Ethereum, a popular L2 (Base or OP), and a testnet
+- [ ] Assets / History / Tools stay consistent with the selected chain
+- [ ] Swap / ENS / Gas hide on testnets; Inspect, Approvals, Multisend stay
+- [ ] Add a custom RPC for a catalog chain; Doctor can mark it preferred
+- [ ] Add a custom chain; it appears in the selector and `eth_chainId` matches
+- [ ] Bad RPC: Doctor opens or a readable error — no blank hang
+
+---
+
+## 4. Confirm sheet (Normal mode)
+
+On a **software** account, from a real page (not the E2E `example.com` stub):
+
+- [ ] **Connect** — `eth_requestAccounts` connects; site shows in the dock / Connected sites
+- [ ] **personal_sign** — human line + origin (host + path/query); reject (4001) and approve both work
+- [ ] **SIWE** from the same origin — “Sign in to …”
+- [ ] **SIWE** with a mismatched domain (or a phishing demo) — warning, not a silent sign
+- [ ] **EIP-712** (Permit or a login typed-data) — domain / types / message readable
+- [ ] **EIP-712 chainId ≠ active chain** — mismatch warning
+- [ ] **Send native** — “Send X ETH to 0x…”; checksum warning if you paste mixed-case junk
+- [ ] **Unlimited approve** — Approve card, not a raw selector
+- [ ] **Unknown calldata** — Unknown card + selector
+- [ ] Local simulate line shows pass / revert / gas (or a clear RPC failure) — no fake balance diff
+- [ ] `eth_sign` from a console is rejected (4200)
+
+---
+
+## 5. Burner Mode
+
+- [ ] Default remains **Normal**
+- [ ] Enable Burner on one software account only
+- [ ] Ordinary `personal_sign` / small transfer auto-signs
+- [ ] Unlimited approve, unknown contract, high-value send, Permit, SIWE mismatch still open the sheet
+- [ ] Settings → Burner Mode: ungate one risk and confirm only that path auto-signs
+- [ ] Fully ungate: every software request auto-signs; hardware still cannot
+- [ ] Hardware account never shows Burner as active
+
+---
+
+## 6. Hardware — Ledger
+
+Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accepted.
+
+- [ ] Connect Ledger from Wallets; address matches Ledger Live
+- [ ] Disconnect / reject WebHID — readable error, no unsigned tx
+- [ ] **Dapp send** — confirm sheet, then device screens; approve on device
+- [ ] **Reject on device** — request fails; no broadcast
+- [ ] **personal_sign** and **EIP-712** on device (blind-sign if the app requires it — note which)
+- [ ] **Quick Send** from Assets
+- [ ] **Swap** (tiny amount) — quote, confirm sheet, device, receipt / History
+- [ ] **Gas Station** top-up to another chain
+- [ ] **Multisend** native (and ERC-20 if you have a test token) — one device confirm (+ approve)
+- [ ] **ENS** record or register path opens the device confirm (skip paying if you do not intend to)
+- [ ] Unplug mid-sign — error, not a hang; replug works
+- [ ] Switch back to a software account; Ledger is not left as the silent signer
+
+---
+
+## 7. Hardware — Trezor
+
+Physical Trezor + Trezor Connect popup (`connect.trezor.io`).
+
+- [ ] Connect Trezor from Wallets; export address; address matches Trezor Suite
+- [ ] Connect popup blocked / closed — readable error
+- [ ] **Dapp send** — confirm sheet + Trezor screens; approve
+- [ ] **Reject on device**
+- [ ] **personal_sign** / **EIP-712**
+- [ ] **Quick Send**, **Swap**, **Gas Station**, **Multisend**, **ENS** (same bar as Ledger)
+- [ ] Suite / Connect version notes if something needs a firmware bump
+
+---
+
+## 8. Live dapps (MetaMask-compat)
+
+Use small amounts. After each, check History + the site.
+
+- [ ] Uniswap (or another AMM) — swap; unlimited approve warning is visible
+- [ ] Aave / similar — supply or approve
+- [ ] OpenSea or an NFT marketplace — `setApprovalForAll` card
+- [ ] Snapshot / another SIWE login
+- [ ] A site that **requires** `window.ethereum.isMetaMask` — Settings → Connected sites → Announce as MetaMask; reload the tab; connect works; 1337 still signs
+- [ ] A site that should stay 1337-only — override “1337 only”; `is1337` visible in console
+- [ ] `wallet_revokePermissions` or Connected sites → Disconnect; site loses accounts
+- [ ] Two tabs, two origins — permissions do not leak across sites
+
+---
+
+## 9. Signer tools (in-wallet)
+
+- [ ] **Inspect** — address, `.eth` name, tx hash; explorer link opens the right chain
+- [ ] **Approvals** — list ERC-20 / NFT / Permit2; revoke one dummy approval
+- [ ] **Swap** — quote, confirm, History title is human
+- [ ] **Multisend** — paste ≥2 recipients; on a chain without legacy Disperse but with CreateX, first-user **Deploy Disperse** copy is honest (skip deploy unless you mean to)
+- [ ] **Gas Station** — quote + execute to a chain where the account needs gas
+- [ ] **ENS** — resolve a name; portfolio loads if The Graph key is set
+- [ ] Settings → Tools: hide Swap; it disappears; defaults come back if you reset the list
+
+---
+
+## 10. History, Assets, privacy
+
+- [ ] History fills from explorer (Etherscan key and/or Blockscout fallback on OP/Base/etc.)
+- [ ] Failed tx shows as failed, not a success
+- [ ] Assets: native row; hide a junk token; it stays in Other / hidden
+- [ ] Quick Send to a checksummed address; reject once, then a dust send
+- [ ] No analytics / mystery 1337 backend hosts in the Network panel (RPC, LiFi, explorer, hardware Connect only)
+- [ ] Side panel vs popup (Settings) both render; confirm sheet still works in the chosen surface
+
+---
+
+## 11. Store / release packaging
+
+- [ ] Zip is production `dist/` only (no `.map` if you strip them for the store; keep maps in a GitHub release if you want them)
+- [ ] Store listing: name, screenshots, privacy text match [brand/product.manifest.json](../brand/product.manifest.json) — no analytics, no 1337 server
+- [ ] Permissions still match `public/manifest.json` (`storage`, `sidePanel`, `windows`, `tabs`, `scripting`, `<all_urls>`)
+- [ ] Version bump in `package.json` + `public/manifest.json`
+- [ ] Firefox / Safari **not** required until those builds exist (TODO)
+
+---
+
+## 12. Sign-off
+
+| Role | Name | Date | Build / commit |
+|------|------|------|----------------|
+| Automated suite | | | |
+| Software + dapp pass | | | |
+| Ledger pass | | | |
+| Trezor pass | | | |
+| Store zip review | | | |
+
+Known issues found this pass (link issues or list here):
+
+-

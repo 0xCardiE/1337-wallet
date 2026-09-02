@@ -43,6 +43,7 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
             type="button"
             className={`w1337-tools-tabs__btn${activeTab === t.id ? ' w1337-tools-tabs__btn--on' : ''}`}
             aria-current={activeTab === t.id ? 'page' : undefined}
+            data-testid={`tools-tab-${t.id}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}

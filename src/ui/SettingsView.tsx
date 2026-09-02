@@ -384,10 +384,20 @@ export function SettingsView({
           <div className="settings-wallet-footer">
             <hr className="sep" />
             <div className="row" style={{ marginBottom: 0 }}>
-              <button type="button" className="ghost" onClick={() => void lock()}>
+              <button
+                type="button"
+                className="ghost"
+                data-testid="settings-lock"
+                onClick={() => void lock()}
+              >
                 Lock
               </button>
-              <button type="button" className="danger" onClick={() => void wipe()}>
+              <button
+                type="button"
+                className="danger"
+                data-testid="settings-wipe"
+                onClick={() => void wipe()}
+              >
                 Wipe wallet
               </button>
             </div>

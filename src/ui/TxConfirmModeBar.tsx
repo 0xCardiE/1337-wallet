@@ -63,6 +63,7 @@ export function TxConfirmModeToggle({
         type="button"
         className={`w1337-burner-toggle${on ? ' w1337-burner-toggle--on' : ''}${compact ? ' w1337-burner-toggle--compact' : ''}`}
         aria-pressed={on}
+        data-testid="burner-toggle"
         aria-label={
           on
             ? `Burner Mode on for ${account.label}`

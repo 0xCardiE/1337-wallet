@@ -1353,6 +1353,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
             type="button"
             className="w1337-tx-approval__reject"
             disabled={busy}
+            data-testid="tx-reject"
             onClick={() => void onDecision(false)}
           >
             Reject
@@ -1361,6 +1362,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
             type="button"
             className="w1337-tx-approval__approve"
             disabled={busy || confirmBlocked || (hwAccount && !persistentSurface)}
+            data-testid="tx-approve"
             onClick={() => void onDecision(true)}
           >
             {busy

@@ -11,6 +11,12 @@
     "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.ui.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
     "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs && LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.ui.config.cjs",
     "lavamoat:check": "node scripts/check-lavamoat-policy.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "pretest:e2e": "npm run build",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "build:watch": "npm run dev:ext",
     "preview": "npx serve dist",
     "icons": "node scripts/generate-extension-icons.mjs",
@@ -40,6 +46,7 @@
     "@lavamoat/allow-scripts": "^5.1.0",
     "@lavamoat/preinstall-always-fail": "^3.0.0",
     "@lavamoat/webpack": "^2.2.4",
+    "@playwright/test": "^1.55.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/chrome": "^0.0.280",
     "@types/react": "^18.3.12",
@@ -50,6 +57,7 @@
     "html-webpack-plugin": "^5.6.8",
     "mini-css-extract-plugin": "^2.10.2",
     "typescript": "^5.6.3",
+    "vitest": "^3.2.4",
     "webpack": "^5.109.2",
     "webpack-cli": "^7.2.2"
   },
@@ -71,8 +79,7 @@
       "@trezor/connect-webextension>@trezor/connect>@trezor/utxo-lib>tiny-secp256k1#1.1.7": false,
       "viem>ws>bufferutil#4.1.0": false,
       "viem>ws>utf-8-validate#6.0.6": false,
-      "esbuild-loader>esbuild#0.27.4": true,
-      "vite>esbuild#0.21.5": false
+      "esbuild-loader>esbuild#0.28.2": true
     }
   }
 }

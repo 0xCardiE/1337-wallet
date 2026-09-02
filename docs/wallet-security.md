@@ -88,6 +88,8 @@ Extension CSP remains `script-src 'self'` for extension pages (`public/manifest.
 ## Related docs
 
 - [signer.md](./signer.md) — signer-not-a-lab guideline (confirm sheet, Tools, what not to build)
+- [testing.md](./testing.md) — unit + extension E2E
+- [release-manual-testing.md](./release-manual-testing.md) — Ledger / Trezor / live dapps before release
 
 ## Related source files
 

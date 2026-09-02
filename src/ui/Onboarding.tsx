@@ -115,6 +115,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
             type="button"
             className="primary"
             style={{ width: '100%' }}
+            data-testid="onboarding-continue"
             onClick={() => {
               setShowBackup(false);
               onReady();
@@ -166,6 +167,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
           autoComplete="new-password"
           value={password}
           onChange={e => setPassword(e.target.value)}
+          data-testid="onboarding-password"
         />
         <label htmlFor="pw2">Confirm password</label>
         <input
@@ -174,6 +176,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
           autoComplete="new-password"
           value={password2}
           onChange={e => setPassword2(e.target.value)}
+          data-testid="onboarding-password-confirm"
         />
 
         {mode === 'import' ? (
@@ -184,6 +187,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
             <textarea
               id="secret"
               className="mono"
+              data-testid="onboarding-secret"
               rows={importKind === 'seed' ? 4 : 3}
               placeholder={
                 importKind === 'seed'
@@ -206,6 +210,7 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
           className="primary"
           style={{ width: '100%', marginTop: 12 }}
           disabled={busy}
+          data-testid="onboarding-submit"
           onClick={() => void (mode === 'create' ? handleCreate() : handleImport())}
         >
           {busy

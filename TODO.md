@@ -25,7 +25,7 @@ Signing, consent, supply chain, physical access, and threat prevention.
 | [ ] | P0 | RPC middleware refactor (`@APPROVAL`-style) | Rabby | Medium | Replace inline branching in `src/lib/providerRpc.ts` with metadata-driven middleware (unlock → connect → approve → execute) |
 | [x] | P1 | Action-type approval components | Rabby | Medium | Approve / Permit / Send / Swap / Unknown cards in `TxApprovalSheet`. |
 | [~] | P1 | Opt-in tx simulation / balance preview | Rabby | Medium | Local `eth_call` pass/fail/revert/gas on confirm (`txSimulate.ts`). Full asset-diff needs a sim API — **not planned** as default (signer.md) |
-| [ ] | P1 | Secrets-leak E2E test | Ambire | Low | Scan network/request bodies for mnemonics, private keys, session material during tests |
+| [x] | P1 | Secrets-leak E2E test | Ambire | Low | `e2e/secrets-leak.spec.ts` — fails if mnemonic/private key appear on the wire |
 | [ ] | P1 | LavaMoat unsafe-packages lockfile gate | Ambire | Low | Block lockfile bumps to packages excluded from LavaMoat unless PR is explicitly approved |
 | [ ] | P2 | Connect-time security hints | Rabby | Medium | On dapp connect, show origin reputation / basic rules (new site, suspicious domain). Lighter than full Rabby security engine |
 | [~] | P2 | Typed data explainer UI | Rabby | Medium | Domain / types / message + chainId mismatch warning done. Remaining: consumer-readable Permit/login copy beyond action cards |
@@ -137,7 +137,7 @@ Product, UX, infra, and platform work that is not a security control.
 | Done | P | Item | Source | Effort | Notes |
 |------|---|------|--------|--------|-------|
 | [x] | P0 | Per-origin MetaMask-compat mode | Rabby | Low | Hide `is1337` / announce as MetaMask in EIP-6963 per origin. Settings → Connected sites. `dappCompat.ts` |
-| [ ] | P1 | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `launchPersistentContext` + `--load-extension`; seed storage via service worker to skip onboarding |
+| [x] | P1 | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `e2e/` + `docs/testing.md`. Hardware / live dapps: `docs/release-manual-testing.md` |
 | [~] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Confirm sheet + History titles. See `src/lib/txHumanize.ts`. Expand known selectors as needed |
 | [ ] | P2 | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts` |
 | [ ] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts |
@@ -198,6 +198,8 @@ Product, UX, infra, and platform work that is not a security control.
 - [docs/wallet-security.md](./docs/wallet-security.md) — security model
 - [docs/wallet-comparison-metamask.md](./docs/wallet-comparison-metamask.md) — MetaMask comparison
 - [docs/explorer-history.md](./docs/explorer-history.md) — Etherscan Free vs paid, Blockscout fallback
+- [docs/testing.md](./docs/testing.md) — unit + Playwright E2E
+- [docs/release-manual-testing.md](./docs/release-manual-testing.md) — pre-release human checklist (hardware, live dapps)
 - [website/src/app/integrate/page.tsx](./website/src/app/integrate/page.tsx) — dapp integration (EIP-6963)
 
 ---
@@ -206,6 +208,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-09-02 | Vitest unit suite + Playwright extension E2E + pre-release manual checklist (`docs/testing.md`, `docs/release-manual-testing.md`) |
 | 2026-08-19 | Blockscout fallback for History/Approvals when Etherscan Free excludes the chain (`explorerApis.ts`) |
 | 2026-08-19 | Document Etherscan Free vs paid chain coverage + Blockscout/RPC notes (`docs/explorer-history.md`) |
 | 2026-08-19 | Confirm sheet Send/Swap/Unknown cards, full page URL, checksum warnings; connected sites + per-origin MetaMask-compat; Swap/Gas on hardware |

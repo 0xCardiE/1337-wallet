@@ -38,6 +38,17 @@ npm run build   # Webpack + LavaMoat (popup, background) + content scripts
 
 Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpacked).
 
+### Tests
+
+```bash
+npx playwright install chromium   # once
+npm run test:unit                 # signer logic (Vitest)
+npm run icons && npm run build
+npm run test:e2e                  # Chrome extension + dapp provider (Playwright)
+```
+
+See [docs/testing.md](docs/testing.md). Hardware wallets and live dapps are a human pass: [docs/release-manual-testing.md](docs/release-manual-testing.md).
+
 ### LavaMoat policy
 
 | Bundle | Protection |
