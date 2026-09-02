@@ -3699,21 +3699,19 @@ html.w1337-surface--popup .wallet-shell.w1337--main:has(.w1337-tx-approval) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px 16px 0;
+  padding: 10px 12px 0;
   background: var(--bg-overlay);
   border-top: 1px solid var(--border);
 }
 
 .w1337-tx-approval__hw-banner {
-  margin: 0 auto;
-  width: fit-content;
-  max-width: 100%;
-  padding: 5px 10px;
-  font-size: 11px;
+  margin: 0;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 650;
-  line-height: 1.35;
-  text-align: center;
-  border-radius: 10px;
+  line-height: 1.4;
+  border-radius: var(--radius-md);
   background: rgba(125, 211, 252, 0.1);
   border: 1px solid rgba(125, 211, 252, 0.28);
   color: #7dd3fc;

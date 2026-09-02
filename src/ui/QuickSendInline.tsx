@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { encodeFunctionData, getAddress, isAddress, parseUnits, formatUnits } from 'viem';
 import { getActiveAccountMeta, getSessionPrivateKey, getUnlockedAccount } from '../lib/accountSession';
 import { isHardwareAccount } from '../lib/accounts';
@@ -8,7 +8,11 @@ import {
   sendNativeTransfer,
 } from '../lib/backgroundSign';
 import { chainJsonRpcCall, sendTransactionRequest, waitForChainReceipt } from '../lib/ethereum';
-import { txExplorerLink } from '../lib/explorerTxHistory';
+import {
+  addressExplorerLink,
+  blockExplorerLink,
+  txExplorerLink,
+} from '../lib/explorerTxHistory';
 import {
   formatTokenAmount,
   isNativeWalletToken,
@@ -56,6 +60,38 @@ function phaseLabel(phase: SendPhase): string {
 
 function parseBlockNum(hex: string): number {
   return Number.parseInt(hex, hex.startsWith('0x') ? 16 : 10);
+}
+
+function DoneScanLink({
+  href,
+  title,
+  children,
+}: {
+  href?: string;
+  title?: string;
+  children: ReactNode;
+}) {
+  if (!href) {
+    return (
+      <span className="w1337-quick-send-inline__done-value mono" title={title}>
+        {children}
+      </span>
+    );
+  }
+  return (
+    <a
+      className="w1337-quick-send-inline__done-value w1337-quick-send-inline__done-link mono"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={title}
+    >
+      {children}
+      <span className="w1337-quick-send-inline__done-link-icon" aria-hidden>
+        ↗
+      </span>
+    </a>
+  );
 }
 
 function SendProgressPanel({ progress }: { progress: SendProgress }) {
@@ -359,6 +395,8 @@ export function QuickSendInline({
   }
 
   const explorerUrl = txHash ? txExplorerLink(chainId, txHash) : undefined;
+  const toExplorerUrl = to ? addressExplorerLink(chainId, to) : undefined;
+  const blockUrl = confirmBlock != null ? blockExplorerLink(chainId, confirmBlock) : undefined;
   const sentAmount = amount ?? 0n;
   const sentTo = to;
 
@@ -384,41 +422,25 @@ export function QuickSendInline({
           {sentTo ? (
             <div className="w1337-quick-send-inline__done-line">
               <span className="w1337-quick-send-inline__done-label">To</span>
-              <span className="w1337-quick-send-inline__done-value mono" title={sentTo}>
+              <DoneScanLink href={toExplorerUrl} title={sentTo}>
                 {shortAddress(sentTo)}
-              </span>
+              </DoneScanLink>
             </div>
           ) : null}
           {confirmBlock != null ? (
             <div className="w1337-quick-send-inline__done-line">
               <span className="w1337-quick-send-inline__done-label">Block</span>
-              <span className="w1337-quick-send-inline__done-value mono">
+              <DoneScanLink href={blockUrl} title={`Block ${confirmBlock}`}>
                 #{confirmBlock.toLocaleString()}
-              </span>
+              </DoneScanLink>
             </div>
           ) : null}
-          {explorerUrl ? (
-            <div className="w1337-quick-send-inline__done-line">
-              <span className="w1337-quick-send-inline__done-label">Tx</span>
-              <a
-                className="w1337-quick-send-inline__done-value w1337-quick-send-inline__done-link mono"
-                href={explorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={txHash}
-              >
-                {shortHash(txHash)}
-                <span className="w1337-quick-send-inline__done-link-icon" aria-hidden>
-                  ↗
-                </span>
-              </a>
-            </div>
-          ) : (
-            <div className="w1337-quick-send-inline__done-line">
-              <span className="w1337-quick-send-inline__done-label">Tx</span>
-              <span className="w1337-quick-send-inline__done-value mono">{shortHash(txHash)}</span>
-            </div>
-          )}
+          <div className="w1337-quick-send-inline__done-line">
+            <span className="w1337-quick-send-inline__done-label">Tx</span>
+            <DoneScanLink href={explorerUrl} title={txHash}>
+              {shortHash(txHash)}
+            </DoneScanLink>
+          </div>
         </div>
       </div>
     );

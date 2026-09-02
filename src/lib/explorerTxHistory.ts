@@ -258,3 +258,15 @@ export function txExplorerLink(chainId: number, hash: string): string | undefine
   if (!origin || !/^0x[a-fA-F0-9]{64}$/.test(hash)) return undefined;
   return `${origin}/tx/${hash}`;
 }
+
+export function addressExplorerLink(chainId: number, address: string): string | undefined {
+  const origin = catalogExplorerOrigin(chainId);
+  if (!origin || !isAddress(address)) return undefined;
+  return `${origin}/address/${getAddress(address)}`;
+}
+
+export function blockExplorerLink(chainId: number, blockNumber: number): string | undefined {
+  const origin = catalogExplorerOrigin(chainId);
+  if (!origin || !Number.isInteger(blockNumber) || blockNumber < 0) return undefined;
+  return `${origin}/block/${blockNumber}`;
+}
