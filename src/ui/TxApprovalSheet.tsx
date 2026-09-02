@@ -1324,53 +1324,55 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
           onGasOverridesChange={setGasOverrides}
         />
 
-        {err ? <p className="error w1337-tx-approval__err">{err}</p> : null}
+        <div className="w1337-tx-approval__footer">
+          {err ? <p className="error w1337-tx-approval__err">{err}</p> : null}
 
-        {hwAccount ? (
-          <p className="w1337-tx-approval__hw-banner">
-            {busy
-              ? 'Confirm on the device. Keep this window open until it finishes.'
-              : persistentSurface
-                ? 'Keep this window open. You will confirm on the device next.'
-                : 'A 1337 window stays open while you confirm on the device — use Confirm there.'}
-            {!persistentSurface ? (
-              <>
-                {' '}
-                <button
-                  type="button"
-                  className="w1337-tx-approval__hw-open"
-                  onClick={() => void requestHardwareConfirmWindow()}
-                >
-                  Open window
-                </button>
-              </>
-            ) : null}
-          </p>
-        ) : null}
+          {hwAccount ? (
+            <p className="w1337-tx-approval__hw-banner" role="status">
+              {busy
+                ? 'Confirm on the device. Keep this window open until it finishes.'
+                : persistentSurface
+                  ? 'Keep this window open. You will confirm on the device next.'
+                  : 'A 1337 window stays open while you confirm on the device — use Confirm there.'}
+              {!persistentSurface ? (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    className="w1337-tx-approval__hw-open"
+                    onClick={() => void requestHardwareConfirmWindow()}
+                  >
+                    Open window
+                  </button>
+                </>
+              ) : null}
+            </p>
+          ) : null}
 
-        <div className="w1337-tx-approval__actions">
-          <button
-            type="button"
-            className="w1337-tx-approval__reject"
-            disabled={busy}
-            data-testid="tx-reject"
-            onClick={() => void onDecision(false)}
-          >
-            Reject
-          </button>
-          <button
-            type="button"
-            className="w1337-tx-approval__approve"
-            disabled={busy || confirmBlocked || (hwAccount && !persistentSurface)}
-            data-testid="tx-approve"
-            onClick={() => void onDecision(true)}
-          >
-            {busy
-              ? 'Confirming…'
-              : hwAccount
-                ? `Confirm on ${hwMeta?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
-                : confirmLabel}
-          </button>
+          <div className="w1337-tx-approval__actions">
+            <button
+              type="button"
+              className="w1337-tx-approval__reject"
+              disabled={busy}
+              data-testid="tx-reject"
+              onClick={() => void onDecision(false)}
+            >
+              Reject
+            </button>
+            <button
+              type="button"
+              className="w1337-tx-approval__approve"
+              disabled={busy || confirmBlocked || (hwAccount && !persistentSurface)}
+              data-testid="tx-approve"
+              onClick={() => void onDecision(true)}
+            >
+              {busy
+                ? 'Confirming…'
+                : hwAccount
+                  ? `Confirm on ${hwMeta?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
+                  : confirmLabel}
+            </button>
+          </div>
         </div>
       </div>
     </div>

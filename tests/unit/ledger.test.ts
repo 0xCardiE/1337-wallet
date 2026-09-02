@@ -3,6 +3,7 @@ import {
   firstHidDevice,
   forgetGrantedLedgerDevices,
   formatLedgerError,
+  isLedgerEip712ClearSignUnsupported,
   toLedgerPath,
   unwrapDefaultExport,
 } from '../../src/lib/ledger';
@@ -35,6 +36,13 @@ describe('ledger helpers', () => {
       /did not grant the Ledger/,
     );
     expect(formatLedgerError(new Error('0x6985'))).toMatch(/rejected on the device/);
+  });
+
+  it('treats Nano S EIP-712 INS_NOT_SUPPORTED as a hashed-sign fallback', () => {
+    const err = new Error('Ledger device: INS_NOT_SUPPORTED (0x6d00)');
+    expect(isLedgerEip712ClearSignUnsupported(err)).toBe(true);
+    expect(isLedgerEip712ClearSignUnsupported(new Error('0x6985'))).toBe(false);
+    expect(formatLedgerError(err)).toMatch(/Update the Ethereum app/);
   });
 
   it('rejects a module that is not a constructor', () => {

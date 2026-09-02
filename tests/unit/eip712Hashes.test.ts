@@ -1,6 +1,7 @@
 import { concat, hashTypedData, keccak256 } from 'viem';
 import { describe, expect, it } from 'vitest';
 import {
+  eip712BlindSignHashes,
   ensureEip712DomainType,
   prepareTrezorTypedData,
 } from '../../src/lib/eip712Hashes';
@@ -78,6 +79,16 @@ describe('eip712Hashes', () => {
       message: data.message,
     });
     expect(keccak256(concat(['0x1901', domain_separator_hash, message_hash!]))).toBe(full);
+  });
+
+  it('exposes both hashes for Ledger hashed EIP-712', () => {
+    const hashes = eip712BlindSignHashes(UNISWAP_PERMIT2);
+    expect(hashes.domainSeparatorHash).toBe(
+      '0x8a6e6e19bdfb3db3409910416b47c2f8fc28b49488d6555c7fceaa4479135bc3',
+    );
+    expect(hashes.messageHash).toBe(
+      '0xc7395b71541a0a5092dfd657d55d7432fdb9b1999c1833665eb7e58cd7c5232a',
+    );
   });
 
   it('omits message_hash when primaryType is EIP712Domain', () => {

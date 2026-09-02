@@ -83,3 +83,17 @@ export function prepareTrezorTypedData(typed: Eip712Payload): {
     );
   }
 }
+
+/** Domain + struct hashes for Ledger `signEIP712HashedMessage` (Nano S / old ETH app). */
+export function eip712BlindSignHashes(typed: Eip712Payload): {
+  domainSeparatorHash: Hex;
+  messageHash: Hex;
+} {
+  const prepared = prepareTrezorTypedData(typed);
+  return {
+    domainSeparatorHash: prepared.domain_separator_hash,
+    messageHash:
+      prepared.message_hash ??
+      ('0x' + '00'.repeat(32) as Hex),
+  };
+}

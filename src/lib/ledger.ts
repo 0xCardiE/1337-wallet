@@ -2,6 +2,7 @@ import TransportWebHIDModule from '@ledgerhq/hw-transport-webhid';
 import LedgerEthModule from '@ledgerhq/hw-app-eth';
 import { serializeTransaction, type Hex, type TransactionSerializable } from 'viem';
 import { DEFAULT_ETH_DERIVATION_PATH } from './accounts';
+import { eip712BlindSignHashes } from './eip712Hashes';
 import {
   forgetGrantedLedgerHidDevices,
   LEDGER_USB_VENDOR_ID,
@@ -227,6 +228,15 @@ export async function signPersonalMessageWithLedger(params: {
   }
 }
 
+export function isLedgerEip712ClearSignUnsupported(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /0x6d00|INS_NOT_SUPPORTED/i.test(message);
+}
+
+function toLedgerHashHex(value: string): string {
+  return value.replace(/^0x/i, '');
+}
+
 export async function signEip712WithLedger(params: {
   derivationPath: string;
   typedData: {
@@ -237,8 +247,21 @@ export async function signEip712WithLedger(params: {
   };
 }): Promise<{ r: Hex; s: Hex; v: number }> {
   const { transport, eth } = await openLedgerEth();
+  const path = toLedgerPath(params.derivationPath);
   try {
-    const sig = await eth.signEIP712Message(toLedgerPath(params.derivationPath), params.typedData);
+    let sig: { r: string; s: string; v: number };
+    try {
+      sig = await eth.signEIP712Message(path, params.typedData);
+    } catch (clearErr) {
+      // Nano S / older ETH apps have no full EIP-712 APDU (Uniswap Permit2 hits this).
+      if (!isLedgerEip712ClearSignUnsupported(clearErr)) throw clearErr;
+      const hashes = eip712BlindSignHashes(params.typedData);
+      sig = await eth.signEIP712HashedMessage(
+        path,
+        toLedgerHashHex(hashes.domainSeparatorHash),
+        toLedgerHashHex(hashes.messageHash),
+      );
+    }
     return { r: ensureHex(sig.r), s: ensureHex(sig.s), v: sig.v };
   } catch (err) {
     throw new Error(formatLedgerError(err));
@@ -264,6 +287,9 @@ export function formatLedgerError(err: unknown): string {
   }
   if (/locked|0x5515|0x6b0c/i.test(message)) {
     return 'Unlock your Ledger and open the Ethereum app.';
+  }
+  if (/0x6d00|INS_NOT_SUPPORTED/i.test(message)) {
+    return 'This Ledger Ethereum app cannot sign this typed data. Update the Ethereum app in Ledger Live, enable Blind signing, then retry.';
   }
   if (/0x6a80|blind sign|unresolved|missing metadata/i.test(message)) {
     return 'Ledger could not clear-sign this contract call. Enable Blind signing in the Ethereum app settings, then retry.';

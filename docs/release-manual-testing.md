@@ -88,7 +88,7 @@ Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accept
 - [ ] Disconnect / reject WebHID — readable error, no unsigned tx
 - [ ] **Dapp send** — confirm sheet, then device screens; approve on device
 - [ ] **Reject on device** — request fails; no broadcast
-- [ ] **personal_sign** and **EIP-712** on device (blind-sign if the app requires it — note which)
+- [ ] **personal_sign** and **EIP-712** on device — Uniswap Permit2 (`PermitSingle`) on Nano S uses hashed EIP-712 fallback (`0x6d00`); enable Blind signing if the device asks
 - [ ] **Quick Send** from Assets
 - [ ] **Swap** (tiny amount) — quote, confirm sheet, device, receipt / History
 - [ ] **Gas Station** top-up to another chain
