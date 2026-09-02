@@ -3,6 +3,9 @@ import {
   formatProviderRpcError,
   providerErrorTitle,
   shouldReportProviderError,
+  userNoticeForProviderFailure,
+  userNoticeForSignSuccess,
+  type WalletNoticePayload,
 } from './devErrorFormat';
 import type { DevErrorMessagePayload } from './devErrorLog';
 
@@ -19,6 +22,12 @@ export function pushDevErrorToWallet(
     .catch(() => {});
 }
 
+export function pushWalletNotice(payload: WalletNoticePayload): void {
+  void chrome.runtime
+    .sendMessage({ type: 'WALLET_NOTICE', payload })
+    .catch(() => {});
+}
+
 export function reportProviderRpcFailure(opts: {
   method: string;
   code?: number;
@@ -28,7 +37,13 @@ export function reportProviderRpcFailure(opts: {
   params?: unknown[];
   rpcData?: unknown;
 }): void {
-  if (!shouldReportProviderError(opts.code ?? 4001, opts.message)) return;
+  const code = opts.code ?? 4001;
+  const notice = userNoticeForProviderFailure(opts.method, code, opts.message);
+  if (notice) {
+    pushWalletNotice(notice);
+    return;
+  }
+  if (!shouldReportProviderError(code, opts.message, opts.method)) return;
   const formatted = formatProviderRpcError(opts);
   pushDevErrorToWallet({
     source: 'dapp',
@@ -37,6 +52,11 @@ export function reportProviderRpcFailure(opts: {
     sections: formatted.sections,
     detail: formatted.detail,
   });
+}
+
+export function reportDappSignSuccess(method: string): void {
+  const notice = userNoticeForSignSuccess(method);
+  if (notice) pushWalletNotice(notice);
 }
 
 export function reportInternalFailure(opts: {

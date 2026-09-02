@@ -203,9 +203,78 @@ export function providerErrorTitle(method: string, code?: number): string {
   return `Dapp RPC failed (${method})`;
 }
 
-export function shouldReportProviderError(code: number, message: string): boolean {
-  if (code === 4001 && /user rejected/i.test(message)) return false;
+export function isUserRejectedProviderError(code: number, message: string): boolean {
+  if (code === 4001) return true;
+  return /user rejected|rejected on the device|denied on the device|cancelled by user|canceled by user|0x6985/i.test(
+    message,
+  );
+}
+
+export function isDisabledEthSign(method: string, code: number, message: string): boolean {
+  return method === 'eth_sign' && (code === 4200 || /eth_sign is disabled/i.test(message));
+}
+
+/** Unexpected dapp RPC failures only. Rejects, device cancels, and disabled eth_sign are normal. */
+export function shouldReportProviderError(
+  code: number,
+  message: string,
+  method?: string,
+): boolean {
+  if (isUserRejectedProviderError(code, message)) return false;
+  if (method && isDisabledEthSign(method, code, message)) return false;
   return true;
+}
+
+export type WalletNoticeKind = 'ok' | 'info' | 'warn';
+
+export type WalletNoticePayload = {
+  kind: WalletNoticeKind;
+  title: string;
+  message: string;
+};
+
+export function userNoticeForProviderFailure(
+  method: string,
+  code: number,
+  message: string,
+): WalletNoticePayload | null {
+  if (isDisabledEthSign(method, code, message)) {
+    return {
+      kind: 'warn',
+      title: 'This sign method is off',
+      message: 'eth_sign is disabled. Use personal_sign or typed data.',
+    };
+  }
+  if (isUserRejectedProviderError(code, message)) {
+    return {
+      kind: 'info',
+      title: 'Rejected',
+      message: message || 'Request rejected.',
+    };
+  }
+  return null;
+}
+
+export function userNoticeForSignSuccess(method: string): WalletNoticePayload | null {
+  if (method === 'personal_sign') {
+    return {
+      kind: 'ok',
+      title: 'Signed',
+      message: 'Message signed. The site has the signature.',
+    };
+  }
+  if (
+    method === 'eth_signTypedData' ||
+    method === 'eth_signTypedData_v3' ||
+    method === 'eth_signTypedData_v4'
+  ) {
+    return {
+      kind: 'ok',
+      title: 'Signed',
+      message: 'Typed data signed. The site has the signature.',
+    };
+  }
+  return null;
 }
 
 export function formatProviderRpcError(opts: {

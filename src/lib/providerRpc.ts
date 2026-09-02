@@ -30,7 +30,7 @@ import {
   isAddressConnected,
 } from './dappConnections';
 import { chainJsonRpcCall } from './ethereum';
-import { reportProviderRpcFailure } from './devErrorReport';
+import { reportDappSignSuccess, reportProviderRpcFailure } from './devErrorReport';
 import { isSignMethod, queueApprovalRequest } from './pendingApprovals';
 import { parseChainIdParam, providerError, toHexChainId } from '../provider/types';
 import type { ProviderRequest, ProviderResponse } from '../provider/types';
@@ -345,6 +345,8 @@ export async function handleProviderRpc(
             chainId,
             params,
           });
+        } else if (approval.ok) {
+          reportDappSignSuccess(method);
         }
         return approval;
       }
@@ -354,6 +356,7 @@ export async function handleProviderRpc(
         });
       }
       const result = await executeSignRequest(pk, chainId, method, params);
+      reportDappSignSuccess(method);
       return { id, ok: true, result };
     }
 

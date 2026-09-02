@@ -123,6 +123,9 @@ export function DappConnectionBar({
   return (
     <div className={`w1337-dapp-bar${embedded ? ' w1337-dapp-bar--embedded' : ''}`} aria-label="Website connection">
       <div className="w1337-dapp-bar__site">
+        {showSite && tab ? (
+          <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected={connected} />
+        ) : null}
         {connected && tab ? (
           <span className="w1337-dapp-bar__meta">
             <span className="w1337-dapp-bar__host">{tab.hostname}</span>
@@ -151,9 +154,6 @@ export function DappConnectionBar({
       </div>
 
       <div className="w1337-dapp-bar__actions">
-        {showSite && tab ? (
-          <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected={connected} />
-        ) : null}
         {connected ? (
           <button
             type="button"

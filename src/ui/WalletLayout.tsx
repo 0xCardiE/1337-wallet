@@ -9,6 +9,7 @@ import { DappConnectionBar } from './DappConnectionBar';
 import { TxApprovalSheet } from './TxApprovalSheet';
 import { NetworkDoctorSheet } from './NetworkDoctorSheet';
 import { DevErrorPanel } from './DevErrorPanel';
+import { WalletNotice } from './WalletNotice';
 
 export type WalletMainTab = 'assets' | 'history' | 'tools';
 
@@ -91,6 +92,7 @@ export function WalletLayout({
 
       <div className="screen-body w1337-body w1337-body--main">{children}</div>
 
+      <WalletNotice />
       <DevErrorPanel />
       <footer
         className={`w1337-wallet-dock${burnerOn ? ' w1337-wallet-dock--burner' : ''}`}
