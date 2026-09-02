@@ -23,6 +23,7 @@ import {
   INTERNAL_WALLET_ORIGIN,
   listPendingApprovals,
   queueApprovalRequest,
+  rejectAllPendingApprovals,
   rejectPendingApproval,
   takePendingApproval,
 } from './lib/pendingApprovals';
@@ -42,6 +43,7 @@ import { getAddress } from 'viem';
 const POPUP_PATH = 'index.html';
 const HW_CONFIRM_PATH = 'index.html?hwconfirm=1';
 const INTERNAL_RESULT_PREFIX = '1337_internal_';
+const INTERNAL_APPROVAL_TTL_MS = 10 * 60 * 1000;
 
 let hwConfirmWindowId: number | undefined;
 
@@ -215,6 +217,12 @@ function notifyPendingApprovalsChanged(): void {
     });
   } catch {
     /* no extension page listening */
+  }
+}
+
+function cancelPendingApprovals(message: string): void {
+  if (rejectAllPendingApprovals(message) > 0) {
+    notifyPendingApprovalsChanged();
   }
 }
 
@@ -500,6 +508,7 @@ async function maybeAutoLockExpired(): Promise<void> {
         HW_SESSION_KEY,
         ACTIVITY_KEY,
       ]);
+      cancelPendingApprovals('Wallet locked; pending request cancelled');
       void broadcastAccountsChanged(null);
     }
   } catch {
@@ -616,6 +625,7 @@ chrome.runtime.onMessage.addListener(
                 if (hw) void openHardwareConfirmUi(sender.tab?.id);
                 else void openWalletUi(sender.tab?.id);
               },
+              onApprovalExpired: notifyPendingApprovalsChanged,
               sessionAddress: hw
                 ? (getAddress(hw.address) as `0x${string}`)
                 : undefined,
@@ -711,6 +721,8 @@ chrome.runtime.onMessage.addListener(
               notifyPendingApprovalsChanged();
               void openHardwareConfirmUi();
             },
+            onExpired: notifyPendingApprovalsChanged,
+            ttlMs: INTERNAL_APPROVAL_TTL_MS,
           });
           if (res.ok) {
             await setInternalResult(id, { ok: true, result: res.result });
@@ -994,6 +1006,7 @@ chrome.runtime.onMessage.addListener(
         HW_SESSION_KEY,
         ACTIVITY_KEY,
       ]);
+      cancelPendingApprovals('Wallet locked; pending request cancelled');
       void broadcastAccountsChanged(null);
       sendResponse({ ok: true });
     }

@@ -19,6 +19,9 @@ const SIGN_METHODS = new Set([
   'eth_signTypedData_v4',
 ]);
 
+/** Keep background approvals aligned with the inpage provider timeout. */
+export const PENDING_APPROVAL_TTL_MS = 2 * 60 * 1000;
+
 export function isSignMethod(method: string): boolean {
   return SIGN_METHODS.has(method);
 }
@@ -43,6 +46,7 @@ type PendingEntry = {
   summary: ApprovalSummary;
   createdAt: number;
   resolve: (res: ProviderResponse) => void;
+  timeoutId?: ReturnType<typeof setTimeout>;
 };
 
 const pending = new Map<string, PendingEntry>();
@@ -185,12 +189,17 @@ export function queueApprovalRequest(opts: {
   tabId?: number;
   chainId: number;
   onQueued?: () => void;
+  onExpired?: () => void;
+  /** Internal hardware flows may opt into a longer timeout. */
+  ttlMs?: number;
 }): Promise<ProviderResponse> {
-  const { request, origin, pageUrl, tabId, chainId, onQueued } = opts;
+  const { request, origin, pageUrl, tabId, chainId, onQueued, onExpired } = opts;
   const id = request.id;
+  rejectPendingApproval(id, 'Request superseded by a newer request');
+
   return new Promise(resolve => {
     const summary = buildApprovalSummary(request, origin, pageUrl);
-    pending.set(id, {
+    const entry: PendingEntry = {
       id,
       request,
       origin,
@@ -200,7 +209,17 @@ export function queueApprovalRequest(opts: {
       summary,
       createdAt: Date.now(),
       resolve,
-    });
+    };
+    pending.set(id, entry);
+
+    const ttlMs =
+      typeof opts.ttlMs === 'number' && Number.isFinite(opts.ttlMs) && opts.ttlMs > 0
+        ? opts.ttlMs
+        : PENDING_APPROVAL_TTL_MS;
+    entry.timeoutId = setTimeout(() => {
+      if (rejectPendingApproval(id, 'Request expired')) onExpired?.();
+    }, ttlMs);
+
     onQueued?.();
   });
 }
@@ -208,12 +227,15 @@ export function queueApprovalRequest(opts: {
 export function listPendingApprovals(): PendingApproval[] {
   return Array.from(pending.values())
     .sort((a, b) => a.createdAt - b.createdAt)
-    .map(({ resolve: _, ...rest }) => rest);
+    .map(({ resolve: _, timeoutId: __, ...rest }) => rest);
 }
 
 export function takePendingApproval(id: string): PendingEntry | undefined {
   const entry = pending.get(id);
-  if (entry) pending.delete(id);
+  if (entry) {
+    pending.delete(id);
+    if (entry.timeoutId) clearTimeout(entry.timeoutId);
+  }
   return entry;
 }
 
@@ -221,9 +243,8 @@ export function rejectPendingApproval(
   id: string,
   message = 'User rejected the request',
 ): boolean {
-  const entry = pending.get(id);
+  const entry = takePendingApproval(id);
   if (!entry) return false;
-  pending.delete(id);
   entry.resolve({
     id,
     ok: false,
@@ -232,13 +253,22 @@ export function rejectPendingApproval(
   return true;
 }
 
+export function rejectAllPendingApprovals(
+  message = 'Pending request cancelled',
+): number {
+  let rejected = 0;
+  for (const id of [...pending.keys()]) {
+    if (rejectPendingApproval(id, message)) rejected += 1;
+  }
+  return rejected;
+}
+
 export function resolvePendingApproval(
   id: string,
   response: ProviderResponse,
 ): boolean {
-  const entry = pending.get(id);
+  const entry = takePendingApproval(id);
   if (!entry) return false;
-  pending.delete(id);
   entry.resolve(response);
   return true;
 }

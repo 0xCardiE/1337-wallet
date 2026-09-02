@@ -119,6 +119,7 @@ export async function handleProviderRpc(
     tabId?: number;
     pageUrl?: string;
     onApprovalQueued?: () => void;
+    onApprovalExpired?: () => void;
     sessionAddress?: `0x${string}`;
     hardware?: boolean;
   },
@@ -315,6 +316,7 @@ export async function handleProviderRpc(
           tabId: opts?.tabId,
           chainId,
           onQueued: opts?.onApprovalQueued,
+          onExpired: opts?.onApprovalExpired,
         });
         if (!approval.ok && approval.error) {
           reportProviderRpcFailure({

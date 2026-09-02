@@ -1,7 +1,7 @@
 import { encodeFunctionData, maxUint256 } from 'viem';
 import { E2E_ADDRESS } from './helpers/constants';
 import { openDappPage, providerRequest, providerRequestError } from './helpers/dapp';
-import { openUnlockedWallet } from './helpers/wallet';
+import { openUnlockedWallet, unlockWallet } from './helpers/wallet';
 import { expect, test } from './fixtures';
 
 const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
@@ -29,6 +29,33 @@ test.describe('confirm sheet', () => {
     const sig = await signed;
     expect(typeof sig).toBe('string');
     expect(sig).toMatch(/^0x[0-9a-fA-F]{130}$/);
+  });
+
+  test('locking cancels hidden approvals before the next unlock', async ({
+    context,
+    extensionId,
+  }) => {
+    const wallet = await openUnlockedWallet(context, extensionId);
+    const dapp = await openDappPage(context);
+    await providerRequest(dapp, 'eth_requestAccounts');
+
+    await wallet.getByTestId('open-settings').click();
+    const pending = providerRequestError(dapp, 'personal_sign', [
+      'stale request',
+      E2E_ADDRESS,
+    ]);
+    await expect(wallet.getByTestId('settings-lock')).toBeVisible();
+    await wallet.getByTestId('settings-lock').click();
+
+    await expect(wallet.getByTestId('unlock-password')).toBeVisible();
+    expect(await pending).toMatchObject({
+      code: 4001,
+      message: expect.stringMatching(/wallet locked|cancelled/i),
+    });
+
+    await unlockWallet(wallet);
+    await wallet.waitForTimeout(1_000);
+    await expect(wallet.getByTestId('tx-approve')).toHaveCount(0);
   });
 
   test('SIWE domain mismatch is called out before sign', async ({
