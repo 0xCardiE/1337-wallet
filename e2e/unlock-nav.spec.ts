@@ -28,9 +28,10 @@ test.describe('unlock and navigation', () => {
 
     await page.getByTestId('wallet-tab-tools').click();
     await expect(page.getByTestId('wallet-tab-tools')).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByTestId('tools-tab-inspect')).toBeVisible();
+    await expect(page.getByTestId('tools-tab-signings')).toBeVisible();
     await expect(page.getByTestId('tools-tab-approvals')).toBeVisible();
     await expect(page.getByTestId('tools-tab-multisend')).toBeVisible();
+    await expect(page.getByTestId('tools-tab-inspect')).toHaveCount(0);
 
     await lockFromSettings(page);
     await unlockWallet(page, E2E_PASSWORD);

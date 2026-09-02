@@ -3,6 +3,19 @@
 import type { ChainKind } from './chainCatalog';
 
 export const TOOL_IDS = [
+  'signings',
+  'approvals',
+  'swap',
+  'ens',
+  'multisend',
+  'gas',
+  'inspect',
+] as const;
+
+export type ToolId = (typeof TOOL_IDS)[number];
+
+/** Tools that shipped before Signings existed (all-on, including Inspect). */
+const LEGACY_DEFAULT_TOOLS = [
   'inspect',
   'approvals',
   'swap',
@@ -10,8 +23,6 @@ export const TOOL_IDS = [
   'multisend',
   'gas',
 ] as const;
-
-export type ToolId = (typeof TOOL_IDS)[number];
 
 export type ToolDefinition = {
   id: ToolId;
@@ -24,9 +35,9 @@ export type ToolDefinition = {
 
 export const TOOL_CATALOG: ToolDefinition[] = [
   {
-    id: 'inspect',
-    label: 'Inspect',
-    description: 'Paste an address, token, ENS name, or transaction hash.',
+    id: 'signings',
+    label: 'Signings',
+    description: 'Local history of messages and typed data this wallet has signed.',
     defaultEnabled: true,
   },
   {
@@ -62,6 +73,12 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     defaultEnabled: true,
     mainnetOnly: true,
   },
+  {
+    id: 'inspect',
+    label: 'Inspect',
+    description: 'Paste an address, token, ENS name, or transaction hash.',
+    defaultEnabled: false,
+  },
 ];
 
 const TOOL_ID_SET = new Set<string>(TOOL_IDS);
@@ -80,9 +97,16 @@ export function normalizeEnabledTools(raw: unknown): ToolId[] | undefined {
   return ids;
 }
 
+function isLegacyDefaultTools(ids: ToolId[]): boolean {
+  return (
+    ids.length === LEGACY_DEFAULT_TOOLS.length &&
+    LEGACY_DEFAULT_TOOLS.every(id => ids.includes(id))
+  );
+}
+
 export function effectiveEnabledTools(settings: { enabledTools?: string[] }): ToolId[] {
   const normalized = normalizeEnabledTools(settings.enabledTools);
-  if (normalized == null) return defaultEnabledToolIds();
+  if (normalized == null || isLegacyDefaultTools(normalized)) return defaultEnabledToolIds();
   return TOOL_CATALOG.map(t => t.id).filter(id => normalized.includes(id));
 }
 

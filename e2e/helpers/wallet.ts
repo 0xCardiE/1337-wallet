@@ -64,6 +64,14 @@ export async function enableBurnerMode(page: Page): Promise<void> {
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 }
 
+export async function enableTool(page: Page, toolId: string): Promise<void> {
+  await page.getByTestId('open-settings').click();
+  await page.getByTestId('settings-tools-open').click();
+  await page.locator(`#tool-${toolId}`).check();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+}
+
 export async function openUnlockedWallet(
   context: BrowserContext,
   extensionId: string,

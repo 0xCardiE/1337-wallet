@@ -32,6 +32,7 @@ import {
 import { chainJsonRpcCall } from './ethereum';
 import { reportDappSignSuccess, reportProviderRpcFailure } from './devErrorReport';
 import { isSignMethod, queueApprovalRequest } from './pendingApprovals';
+import { recordSuccessfulSigning } from './signingHistory';
 import { parseChainIdParam, providerError, toHexChainId } from '../provider/types';
 import type { ProviderRequest, ProviderResponse } from '../provider/types';
 import {
@@ -357,6 +358,15 @@ export async function handleProviderRpc(
       }
       const result = await executeSignRequest(pk, chainId, method, params);
       reportDappSignSuccess(method);
+      void recordSuccessfulSigning({
+        account: addressFromPrivateKey(pk),
+        chainId,
+        request,
+        origin,
+        pageUrl: opts?.pageUrl,
+        signature: typeof result === 'string' ? result : undefined,
+        source: 'instant',
+      });
       return { id, ok: true, result };
     }
 

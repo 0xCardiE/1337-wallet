@@ -169,10 +169,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Inspect (address, token, ENS, tx hash), Approvals (ERC-20, NFT operators, Permit2),
-              Swap (LI.FI), ENS &amp; DNS, Multisend, and Gas station. Hide what you do not use in
-              Settings. Inspect is a search box, not a fourth tab — nav stays Assets / History /
-              Tools.
+              Signings (local message / typed-data history), Approvals (ERC-20, NFT operators,
+              Permit2), Swap (LI.FI), ENS &amp; DNS, Multisend, and Gas station. Inspect (address,
+              token, ENS, tx hash) is off until you enable it in Settings. Inspect is a search box,
+              not a fourth tab — nav stays Assets / History / Tools.
             </p>
           </>
         ),

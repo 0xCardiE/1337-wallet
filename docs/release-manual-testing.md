@@ -43,7 +43,7 @@ Covered by CI: `npm ci`, `npm run icons`, `npm run build`, `npm run lavamoat:che
 
 - [ ] Switch among Ethereum, a popular L2 (Base or OP), and a testnet
 - [ ] Assets / History / Tools stay consistent with the selected chain
-- [ ] Swap / ENS / Gas hide on testnets; Inspect, Approvals, Multisend stay
+- [ ] Swap / ENS / Gas hide on testnets; Signings, Approvals, Multisend stay
 - [ ] Add a custom RPC for a catalog chain; Doctor can mark it preferred
 - [ ] Add a custom chain; it appears in the selector and `eth_chainId` matches
 - [ ] Bad RPC: Doctor opens or a readable error — no blank hang
@@ -156,7 +156,8 @@ Use small amounts. After each, check History + the site.
 
 ## 9. Signer tools (in-wallet)
 
-- [ ] **Inspect** — address, `.eth` name, tx hash; explorer link opens the right chain
+- [ ] **Signings** — after a `personal_sign` / EIP-712, the row is there with origin + message; Clear wipes only this device
+- [ ] **Inspect** — enable in Settings → Tools; address, `.eth` name, tx hash; explorer link opens the right chain
 - [ ] **Approvals** — list ERC-20 / NFT / Permit2; revoke one dummy approval
 - [ ] **Swap** — quote, confirm, History title is human
 - [ ] **Multisend** — paste ≥2 recipients; on a chain without legacy Disperse but with CreateX, first-user **Deploy Disperse** copy is honest (skip deploy unless you mean to)

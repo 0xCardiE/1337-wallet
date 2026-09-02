@@ -39,7 +39,7 @@ test.describe('secrets leak', () => {
     const wallet = await openUnlockedWallet(context, extensionId);
     await wallet.getByTestId('wallet-tab-history').click();
     await wallet.getByTestId('wallet-tab-tools').click();
-    await wallet.getByTestId('tools-tab-inspect').click();
+    await wallet.getByTestId('tools-tab-signings').click();
     await wallet.getByTestId('tools-tab-approvals').click();
     await wallet.getByTestId('open-settings').click();
     await expect(wallet.getByTestId('settings-lock')).toBeVisible();

@@ -12,8 +12,9 @@ Product positioning, privacy claims, and promo copy live in **[brand/product.man
 - **Hardware wallets** — connect Ledger (WebHID) or Trezor Connect; sign txs on-device
 - **Security docs** — [MetaMask comparison by wallet type](docs/wallet-comparison-metamask.md)
 - **Signer confirms** — human summary, local `eth_call` simulation, and contract danger flags before you sign
-- **Inspect** — paste an address, token, ENS name, or tx hash from Tools
+- **Signings** — local history of messages and typed data this wallet signed (device only)
 - **Approvals** — review and revoke ERC-20, NFT operators, and Permit2
+- **Inspect** — paste an address, token, ENS name, or tx hash (opt-in in Settings → Tools)
 - **Swaps** — cross-chain token swaps powered by LI.FI
 - **Multi-send** — paste a list of addresses and batch native or ERC-20 via [Disperse.app](https://disperse.app) (local and hardware). If Disperse is missing but [CreateX](https://createx.rocks) is on the chain, the first user can deploy it once for everyone — [docs/signer.md](docs/signer.md#multisend-is-disperseapp-not-a-create2-lab)
 - **Networks** — 20 popular chains with pre-filled public RPCs; switch endpoint from a dropdown

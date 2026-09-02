@@ -201,7 +201,12 @@ export function SettingsView({
                   {`${effectiveEnabledTools(settings).length} of ${TOOL_CATALOG.length} enabled`}
                 </p>
               </div>
-              <button type="button" className="ghost" onClick={onOpenTools}>
+              <button
+                type="button"
+                className="ghost"
+                data-testid="settings-tools-open"
+                onClick={onOpenTools}
+              >
                 Open
               </button>
             </div>

@@ -77,7 +77,8 @@
     "Side panel and popup layouts",
     "Confirm every request, or opt into Burner Mode per software wallet",
     "Confirm-time human summary, local simulate, contract hints",
-    "Inspect address / token / ENS / tx before you sign or send",
+    "Local signing history for messages and typed data",
+    "Inspect address / token / ENS / tx (opt-in)",
     "Token, NFT, and Permit2 approval revoke",
     "Transaction history via your own explorer API key"
   ],

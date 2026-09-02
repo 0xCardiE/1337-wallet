@@ -40,6 +40,7 @@ import { resetHardwareConnections } from './lib/hwReset';
 import type { ProviderRequest, ProviderResponse } from './provider/types';
 import { toHexChainId } from './provider/types';
 import { reportInternalFailure } from './lib/devErrorReport';
+import { recordSuccessfulSigning } from './lib/signingHistory';
 import { getAddress } from 'viem';
 
 const POPUP_PATH = 'index.html';
@@ -788,6 +789,15 @@ chrome.runtime.onMessage.addListener(
               entry.request.params ?? [],
               message.gasOverrides,
             );
+            void recordSuccessfulSigning({
+              account: addressFromPrivateKey(pk),
+              chainId: entry.chainId,
+              request: entry.request,
+              origin: entry.origin,
+              pageUrl: entry.pageUrl,
+              signature: typeof result === 'string' ? result : undefined,
+              source: 'confirm',
+            });
             entry.resolve({ id, ok: true, result });
             notifyPendingApprovalsChanged();
             sendResponse({ ok: true });
@@ -936,6 +946,18 @@ chrome.runtime.onMessage.addListener(
             notifyPendingApprovalsChanged();
             sendResponse({ ok: true });
             return;
+          }
+          const addr = await sessionAddress();
+          if (addr) {
+            void recordSuccessfulSigning({
+              account: addr,
+              chainId: entry.chainId,
+              request: entry.request,
+              origin: entry.origin,
+              pageUrl: entry.pageUrl,
+              signature: typeof message.result === 'string' ? message.result : undefined,
+              source: 'hardware',
+            });
           }
           entry.resolve({ id: entry.request.id, ok: true, result: message.result });
           notifyPendingApprovalsChanged();

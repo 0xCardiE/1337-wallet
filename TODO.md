@@ -219,6 +219,7 @@ EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilitie
 
 | Date | Change |
 |------|--------|
+| 2026-09-03 | Tools: Signings (local message/typed-data history) is the default tab; Inspect is opt-in |
 | 2026-09-02 | Smart-account follow-ups: EIP-5792 atomic batch / paymaster / session keys wait on 7702; discovery (`wallet_getCapabilities`) already ships empty |
 | 2026-09-02 | Vitest unit suite + Playwright extension E2E + pre-release manual checklist (`docs/testing.md`, `docs/release-manual-testing.md`) |
 | 2026-08-19 | Blockscout fallback for History/Approvals when Etherscan Free excludes the chain (`explorerApis.ts`) |

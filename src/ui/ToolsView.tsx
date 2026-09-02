@@ -11,6 +11,7 @@ import { EnsView } from './EnsView';
 import { GasStationView } from './GasStationView';
 import { InspectView } from './InspectView';
 import { MultiSendView } from './MultiSendView';
+import { SigningsPanel } from './SigningsPanel';
 import { SwapView } from './SwapView';
 
 export function ToolsView({ settings }: { settings: AppSettings }) {
@@ -19,8 +20,8 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
     () => visibleToolsForChain(settings, chainKind),
     [settings.enabledTools, chainKind],
   );
-  const [tab, setTab] = useState<ToolId>(() => enabled[0] ?? 'inspect');
-  const activeTab = enabled.includes(tab) ? tab : (enabled[0] ?? 'inspect');
+  const [tab, setTab] = useState<ToolId>(() => enabled[0] ?? 'signings');
+  const activeTab = enabled.includes(tab) ? tab : (enabled[0] ?? 'signings');
 
   useEffect(() => {
     if (tab !== activeTab) setTab(activeTab);
@@ -52,8 +53,9 @@ export function ToolsView({ settings }: { settings: AppSettings }) {
       </nav>
 
       <div className="w1337-tools-panel">
-        {activeTab === 'inspect' ? <InspectView settings={settings} /> : null}
+        {activeTab === 'signings' ? <SigningsPanel settings={settings} /> : null}
         {activeTab === 'approvals' ? <ApprovalsPanel settings={settings} /> : null}
+        {activeTab === 'inspect' ? <InspectView settings={settings} /> : null}
         {activeTab === 'swap' ? <SwapView settings={settings} embedded /> : null}
         {activeTab === 'ens' ? <EnsView settings={settings} /> : null}
         {activeTab === 'multisend' ? <MultiSendView settings={settings} /> : null}

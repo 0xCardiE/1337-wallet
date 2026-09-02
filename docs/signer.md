@@ -13,12 +13,13 @@ These are daily signer jobs. Prefer the confirm sheet, History, or a small Inspe
 | Surface | Job |
 |---------|-----|
 | **Confirm sheet** | Human summary, local simulate (pass / fail / revert / gas), contract danger flags, readable approvals and permits |
+| **Signings** | Local history of messages and typed data this wallet signed — SIWE, permits, EIP-712. Not on-chain |
 | **Approvals** | ERC-20, NFT `setApprovalForAll`, and Permit2 — scan and revoke from the same place you approved |
-| **Inspect** | Paste an address, token, ENS name, or tx hash. Peek enough to decide whether to send, approve, or open the explorer |
+| **Inspect** | Paste an address, token, ENS name, or tx hash. Peek enough to decide whether to send, approve, or open the explorer. Off until the user enables it |
 | **History** | *Your* transactions in plain language. Random hashes belong on the explorer |
 | **Action tools** | Swap, Multisend, Gas Station, ENS — things you do *with* the signer, not instead of a dapp you already have |
 
-Default Tools (on unless the user hides them): Inspect, Approvals, Swap, ENS, Multisend, Gas Station.
+Default Tools (on unless the user hides them): Signings, Approvals, Swap, ENS, Multisend, Gas Station. Inspect is opt-in in Settings → Tools.
 
 ### Multisend is Disperse.app, not a CREATE2 lab
 

@@ -14,12 +14,14 @@ export function ExternalLinkIcon() {
 export function ApprovalFact({
   label,
   children,
+  stack,
 }: {
   label: string;
   children: ReactNode;
+  stack?: boolean;
 }) {
   return (
-    <div className="w1337-approvals__fact">
+    <div className={`w1337-approvals__fact${stack ? ' w1337-approvals__fact--stack' : ''}`}>
       <dt className="muted">{label}</dt>
       <dd>{children}</dd>
     </div>

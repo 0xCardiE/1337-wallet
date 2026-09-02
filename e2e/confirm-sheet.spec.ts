@@ -29,6 +29,10 @@ test.describe('confirm sheet', () => {
     const sig = await signed;
     expect(typeof sig).toBe('string');
     expect(sig).toMatch(/^0x[0-9a-fA-F]{130}$/);
+
+    await wallet.getByTestId('wallet-tab-tools').click();
+    await expect(wallet.getByTestId('tools-tab-signings')).toHaveAttribute('aria-current', 'page');
+    await expect(wallet.locator('body')).toContainText(/hello from e2e|sign a message/i);
   });
 
   test('locking cancels hidden approvals before the next unlock', async ({
@@ -128,5 +132,8 @@ Issued At: 2026-01-01T00:00:00.000Z`;
     const sig = await providerRequest(dapp, 'personal_sign', ['ordinary hello', E2E_ADDRESS]);
     expect(sig).toMatch(/^0x[0-9a-fA-F]{130}$/);
     await expect(wallet.getByTestId('tx-approve')).toHaveCount(0);
+
+    await wallet.getByTestId('wallet-tab-tools').click();
+    await expect(wallet.locator('body')).toContainText(/ordinary hello|sign a message/i);
   });
 });

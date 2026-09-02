@@ -29,8 +29,8 @@ CI runs unit tests and E2E on every push/PR (`.github/workflows/test.yml`). Lava
 
 | Layer | Surfaces |
 |-------|----------|
-| Unit | SIWE, EIP-55 checksums, Burner Mode gates, `classifyRequest` / confirm queue, vault encrypt/decrypt, HD derivation (Anvil phrase), Inspect parse, Tools catalog, Disperse/CreateX pins, dapp MetaMask-compat flags, history/confirm humanizer |
-| E2E | Create / import onboarding, unlock + lock, Assets / History / Tools, Inspect, `window.ethereum` inject, silent `eth_requestAccounts`, `eth_sign` disabled, chain switch, confirm/reject `personal_sign`, SIWE mismatch copy, unlimited-approve card, Burner Mode auto-sign of an ordinary message, network scan for mnemonic/private key |
+| Unit | SIWE, EIP-55 checksums, Burner Mode gates, `classifyRequest` / confirm queue, vault encrypt/decrypt, HD derivation (Anvil phrase), Inspect parse, Tools catalog, signing history, Disperse/CreateX pins, dapp MetaMask-compat flags, history/confirm humanizer |
+| E2E | Create / import onboarding, unlock + lock, Assets / History / Tools, Signings default + opt-in Inspect, `window.ethereum` inject, silent `eth_requestAccounts`, `eth_sign` disabled, chain switch, confirm/reject `personal_sign`, SIWE mismatch copy, unlimited-approve card, Burner Mode auto-sign of an ordinary message, network scan for mnemonic/private key |
 
 E2E imports the Anvil test phrase through the onboarding UI. We cannot write `chrome.storage` from Playwright’s service-worker `evaluate` — LavaMoat scuttles `eval` in the background bundle (that is intended).
 

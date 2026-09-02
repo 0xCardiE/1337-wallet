@@ -10,8 +10,8 @@ export function ToolsSection() {
             Signer tools, not a lab
           </h2>
           <p className="mt-4 text-muted">
-            Inspect, approvals, swaps, ENS, multisend, and gas — things you do in a wallet. Hide
-            what you do not use in Settings.
+            Signings, approvals, swaps, ENS, multisend, and gas — things you do in a wallet. Inspect
+            is opt-in. Hide what you do not use in Settings.
           </p>
         </div>
 

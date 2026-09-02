@@ -63,14 +63,21 @@ export const CORE_FEATURES = [
 
 export const TOOLS = [
   {
-    id: 'inspect',
-    title: 'Inspect',
-    description: 'Paste an address, token, ENS name, or tx hash before you send or approve.',
+    id: 'signings',
+    title: 'Signings',
+    description:
+      'Local history of messages and typed data this wallet signed — SIWE, permits, EIP-712. Device only.',
   },
   {
     id: 'approvals',
     title: 'Approvals',
     description: 'Review and revoke ERC-20, NFT, and Permit2 allowances from the wallet.',
+  },
+  {
+    id: 'inspect',
+    title: 'Inspect',
+    description:
+      'Paste an address, token, ENS name, or tx hash before you send or approve. Off until you enable it.',
   },
   {
     id: 'swap',

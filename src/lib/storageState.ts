@@ -23,6 +23,7 @@ import {
   normalizeDappCompatByOrigin,
   type DappCompatMode,
 } from './dappCompat';
+import { clearAllSigningHistory } from './signingHistory';
 import { normalizeEnabledTools, type ToolId } from './toolsRegistry';
 
 export type { WalletAccount } from './accounts';
@@ -271,6 +272,11 @@ export async function savePersisted(next: PersistedState): Promise<void> {
 export async function setVault(vault: EncryptedVault | null): Promise<void> {
   const cur = await loadPersisted();
   if (vault == null) {
+    try {
+      await clearAllSigningHistory();
+    } catch {
+      /* wipe still proceeds */
+    }
     await savePersisted({
       ...cur,
       vault: null,
