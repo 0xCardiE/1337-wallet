@@ -12,7 +12,7 @@ function pathFromQuery(): string {
   return raw || DEFAULT_ETH_DERIVATION_PATH;
 }
 
-/** Dedicated window: Chrome’s HID chooser often does not appear from the side panel. */
+/** Dedicated full tab: Chrome’s HID chooser only renders in a normal tab, never in the side panel or popup windows. */
 export function LedgerHidConnect() {
   const path = pathFromQuery();
   const [busy, setBusy] = useState(false);
@@ -52,8 +52,8 @@ export function LedgerHidConnect() {
     <div className="w1337-send-panel" style={{ padding: 16 }}>
       <strong style={{ fontSize: 14 }}>Connect Ledger</strong>
       <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
-        Chrome will not show the device list from the side panel. Click Allow, then pick your Nano.
-        Unlock it and keep the Ethereum app open. Close Ledger Live if it is running.
+        Click Allow, then pick your Nano in Chrome’s device list. Unlock it and keep the Ethereum
+        app open. Close Ledger Live if it is running.
       </p>
       <p className="mono" style={{ fontSize: 11, marginTop: 8 }}>
         {path}

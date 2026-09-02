@@ -84,7 +84,7 @@ On a **software** account, from a real page (not the E2E `example.com` stub):
 
 Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accepted.
 
-- [ ] Connect Ledger from Wallets; address matches Ledger Live
+- [ ] Connect Ledger from Wallets — opens a full 1337 tab, Allow Ledger shows Chrome's HID picker; address matches Ledger Live
 - [ ] Disconnect / reject WebHID — readable error, no unsigned tx
 - [ ] **Dapp send** — confirm sheet, then device screens; approve on device
 - [ ] **Reject on device** — request fails; no broadcast

@@ -13,9 +13,8 @@ import {
 } from '../lib/accounts';
 import {
   connectLedgerAddress,
-  firstHidDevice,
-  openLedgerHidConnectWindow,
-  startLedgerHidPicker,
+  getGrantedLedgerDevice,
+  openLedgerHidConnectTab,
 } from '../lib/ledger';
 import { connectTrezorAddress } from '../lib/trezor';
 import { looksLikeMnemonic } from '../lib/walletCore';
@@ -266,17 +265,14 @@ export function AccountsPanel({
             disabled={busy != null}
             onClick={() => {
               const derivationPath = path.trim() || DEFAULT_ETH_DERIVATION_PATH;
-              const pick = startLedgerHidPicker();
               void run('ledger', async () => {
-                let device: HIDDevice | undefined;
-                try {
-                  device = firstHidDevice(await pick);
-                } catch {
-                  device = undefined;
-                }
+                // Chrome's HID chooser never renders in the side panel or action
+                // popup, so only connect directly when a device is already granted;
+                // otherwise hand off to a full tab where the chooser works.
+                const device = await getGrantedLedgerDevice();
                 if (!device) {
-                  await openLedgerHidConnectWindow(derivationPath);
-                  setMsg('Pick the Nano in the Ledger window, then Chrome’s device list.');
+                  await openLedgerHidConnectTab(derivationPath);
+                  setMsg('Opened a 1337 tab. Click Allow Ledger there and pick your Nano in Chrome’s list.');
                   return;
                 }
                 const result = await connectLedgerAddress(derivationPath, { device });

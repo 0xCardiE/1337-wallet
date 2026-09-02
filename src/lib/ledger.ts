@@ -37,15 +37,26 @@ export function startLedgerHidPicker(): Promise<HIDDevice[]> {
   return hid.requestDevice({ filters: [{ vendorId: LEDGER_USB_VENDOR_ID }] });
 }
 
-export async function openLedgerHidConnectWindow(derivationPath: string): Promise<void> {
+/**
+ * Chrome renders the HID device chooser only in a normal browser tab with an
+ * address bar — never in the side panel or a `type: 'popup'` window (there
+ * `requestDevice` resolves empty without showing anything). MetaMask forces
+ * "Expand View" (a full tab) for the same reason.
+ */
+export async function openLedgerHidConnectTab(derivationPath: string): Promise<void> {
   const path = derivationPath.trim() || DEFAULT_ETH_DERIVATION_PATH;
-  await chrome.windows.create({
+  await chrome.tabs.create({
     url: chrome.runtime.getURL(`index.html?ledgerhid=1&path=${encodeURIComponent(path)}`),
-    type: 'popup',
-    focused: true,
-    width: 400,
-    height: 440,
+    active: true,
   });
+}
+
+/** Ledger already granted to this extension via a previous chooser pick, if any. */
+export async function getGrantedLedgerDevice(): Promise<HIDDevice | undefined> {
+  const hid = window.navigator?.hid;
+  if (!hid) return undefined;
+  const devices = await hid.getDevices();
+  return devices.find(d => d.vendorId === LEDGER_USB_VENDOR_ID);
 }
 
 export function firstHidDevice(picked: HIDDevice[] | HIDDevice | undefined): HIDDevice | undefined {
