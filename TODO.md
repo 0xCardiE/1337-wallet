@@ -143,10 +143,21 @@ Product, UX, infra, and platform work that is not a security control.
 | [ ] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts |
 | [x] | P1 | Blockscout fallback when Etherscan Free excludes the chain | 1337 | Medium | OP/Base/Scroll/zkSync/Ink/Gnosis via per-instance Blockscout. BSC/Avalanche have no instance. `explorerApis.ts`. See `docs/explorer-history.md` |
 | [ ] | P2 | Four-byte + contract source in approval (expand) | 1337 + Rabby | Low | Already partial via `fourByteDirectory.ts`, `explorerContractSource.ts` — expand coverage and surface in action UI |
-| [ ] | P3 | EIP-7702 / smart-account path | Ambire | High | `AccountOp`-style abstraction, delegation UI, `sign7702` on signers. Needs relayer/bundler strategy |
+| [ ] | P3 | EIP-7702 / smart-account path | Ambire | High | `AccountOp`-style abstraction, delegation UI, `sign7702` on signers. Needs relayer/bundler strategy. Unlock EIP-5792 execution below — discovery already answers empty capabilities. |
 | [ ] | P3 | Cross-browser builds (Firefox / Safari) | Ambire | High | `WEB_ENGINE` env, gecko manifest transforms, Safari converter. Only if store expansion is a goal |
 | [ ] | P3 | Embedded Benzin-style explorer | Ambire | Medium | Standalone decode app + in-wallet preview; depends on humanizer investment |
 | [ ] | P3 | Shared logic submodule (`ambire-common` pattern) | Ambire | High | Only if mobile or multiple apps share vault/signing logic |
+
+### Smart accounts (after EIP-7702)
+
+EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilities` already answers Uniswap/wagmi probes with **empty** per-chain objects — do not advertise the capabilities below until `wallet_sendCalls` exists. Advertising `atomic.status: "unsupported"` still implies sequential `wallet_sendCalls` and would be a lie.
+
+| Done | P | Item | Notes |
+|------|---|------|-------|
+| [x] | P1 | EIP-5792 discovery (`wallet_getCapabilities`) | Empty `{}` per catalog chain. Uniswap connect overlay gone; dapps fall back to `eth_sendTransaction`. `walletCapabilities.ts` |
+| [ ] | P3 | Atomic batches (`wallet_sendCalls` / `wallet_getCallsStatus`) | EIP-5792. Several dapp calls as one user op. Needs 7702 or 4337 — not Disperse/Multisend (that is still one signed tx). |
+| [ ] | P3 | Paymaster / sponsored gas | EIP-7677 `paymasterService`. Someone else pays the fee. Bundler/relayer; keep opt-in, not a 1337 server. Related: Gas Tank is explicitly not planned as default infra. |
+| [ ] | P3 | Session keys | Dapp-scoped keys that sign later without opening the wallet (ERC-7715 / similar). New consent surface — every send/sign still goes through confirm today. |
 
 ---
 
@@ -208,6 +219,7 @@ Product, UX, infra, and platform work that is not a security control.
 
 | Date | Change |
 |------|--------|
+| 2026-09-02 | Smart-account follow-ups: EIP-5792 atomic batch / paymaster / session keys wait on 7702; discovery (`wallet_getCapabilities`) already ships empty |
 | 2026-09-02 | Vitest unit suite + Playwright extension E2E + pre-release manual checklist (`docs/testing.md`, `docs/release-manual-testing.md`) |
 | 2026-08-19 | Blockscout fallback for History/Approvals when Etherscan Free excludes the chain (`explorerApis.ts`) |
 | 2026-08-19 | Document Etherscan Free vs paid chain coverage + Blockscout/RPC notes (`docs/explorer-history.md`) |

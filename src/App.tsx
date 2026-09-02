@@ -20,6 +20,7 @@ import { HistoryPanel } from './ui/HistoryPanel';
 import { ToolsView } from './ui/ToolsView';
 import { LoadingScreen } from './ui/LoadingScreen';
 import { ScreenFade } from './ui/ScreenFade';
+import { LedgerHidConnect } from './ui/LedgerHidConnect';
 
 type Screen = 'load' | 'onboard' | 'main';
 type MainTab = WalletMainTab;
@@ -92,6 +93,7 @@ export function App() {
   }, [screen]);
 
   const unlocked = isUnlocked();
+  const ledgerHidSurface = new URLSearchParams(window.location.search).has('ledgerhid');
   const routeKey =
     screen === 'load'
       ? 'load'
@@ -99,6 +101,8 @@ export function App() {
         ? 'onboard'
         : !unlocked
           ? 'unlock'
+          : ledgerHidSurface
+            ? 'ledgerhid'
           : overlay === 'settings'
             ? 'settings'
           : overlay === 'wallets'
@@ -134,6 +138,8 @@ export function App() {
         }}
       />
     );
+  } else if (ledgerHidSurface) {
+    shell = <LedgerHidConnect />;
   } else if (overlay === 'wallets') {
     shell = (
       <WalletsView

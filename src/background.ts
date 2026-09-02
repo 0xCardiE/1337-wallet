@@ -34,7 +34,7 @@ import {
   effectiveActiveChainId,
 } from './lib/storageState';
 import { resolveProviderInjectConfig } from './lib/dappCompat';
-import { handleTrezorMessage, initTrezorConnect, isTrezorMessage } from './lib/trezorBackground';
+import { handleTrezorMessage, isTrezorMessage } from './lib/trezorBackground';
 import type { ProviderRequest, ProviderResponse } from './provider/types';
 import { toHexChainId } from './provider/types';
 import { reportInternalFailure } from './lib/devErrorReport';
@@ -140,6 +140,7 @@ async function emitToTab(
   } catch {
     /* content script may be unavailable — try MAIN-world inject below */
   }
+  void chrome.runtime.lastError;
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
@@ -159,6 +160,7 @@ async function emitToTab(
   } catch {
     /* scripting may be blocked on this tab */
   }
+  void chrome.runtime.lastError;
 }
 
 /** Push chainChanged to every tab whose origin is connected (and optionally one extra tab). */
@@ -515,10 +517,6 @@ async function maybeAutoLockExpired(): Promise<void> {
     /* ignore */
   }
 }
-
-void initTrezorConnect().catch(err => {
-  console.warn('Trezor Connect init deferred:', err);
-});
 
 chrome.runtime.onMessage.addListener(
   (message: Msg, sender, sendResponse: (r: unknown) => void) => {

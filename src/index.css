@@ -654,55 +654,32 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   background: var(--accent-soft-2);
 }
 
-.w1337-wallet-dock--burner .w1337-acct-dock,
-.w1337-wallet-dock--burner .w1337-acct-dock:hover,
-.w1337-wallet-dock--burner .w1337-acct-dock:focus-within,
-.w1337-wallet-dock--burner .w1337-acct-dock:has(.w1337-acct-trigger--open) {
-  background: transparent;
+.w1337-acct-dock--burner,
+.w1337-acct-dock--burner:hover,
+.w1337-acct-dock--burner:focus-within,
+.w1337-acct-dock--burner:has(.w1337-acct-trigger--open) {
+  background: linear-gradient(180deg, #3a1606 0%, #1a0c06 100%);
   border-bottom-color: rgba(245, 158, 11, 0.28);
+  box-shadow: inset 0 1px 0 rgba(251, 191, 36, 0.38);
 }
 
-.w1337-wallet-dock--burner button.w1337-acct-trigger--dock,
-.w1337-wallet-dock--burner button.w1337-acct-trigger--dock:hover:not(:disabled),
-.w1337-wallet-dock--burner button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
+.w1337-acct-dock--burner button.w1337-acct-trigger--dock,
+.w1337-acct-dock--burner button.w1337-acct-trigger--dock:hover:not(:disabled),
+.w1337-acct-dock--burner button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
   background: transparent;
 }
 
-.w1337-wallet-dock--burner .w1337-acct-trigger__label,
 .w1337-acct-trigger--burner .w1337-acct-trigger__label {
   color: #fde68a;
 }
 
-.w1337-wallet-dock--burner .w1337-acct-trigger__sub,
-.w1337-wallet-dock--burner .w1337-acct-trigger__chev,
 .w1337-acct-trigger--burner .w1337-acct-trigger__sub,
 .w1337-acct-trigger--burner .w1337-acct-trigger__chev {
   color: #fdba74;
 }
 
-.w1337-wallet-dock--burner .w1337-acct-trigger__label--copied {
+.w1337-acct-trigger--burner .w1337-acct-trigger__label--copied {
   color: #fef3c7;
-}
-
-.w1337-wallet-dock--burner .w1337-dapp-bar--embedded {
-  background: transparent;
-}
-
-.w1337-wallet-dock--burner .w1337-dapp-bar__host {
-  color: #fde68a;
-}
-
-.w1337-wallet-dock--burner .w1337-dapp-bar__sub {
-  color: #fdba74;
-}
-
-.w1337-wallet-dock--burner .w1337-dapp-bar__icon--fallback {
-  color: var(--burner);
-  background: rgba(245, 158, 11, 0.16);
-}
-
-.w1337-wallet-dock--burner .w1337-dapp-bar__dot {
-  background: var(--burner);
 }
 
 .w1337-wallet-dock {
@@ -729,11 +706,7 @@ button.w1337-acct-trigger--dock.w1337-acct-trigger--open {
 }
 
 .w1337-wallet-dock--burner {
-  background: linear-gradient(180deg, #3a1606 0%, #1a0c06 72%, #120804 100%);
   border-top-color: var(--burner);
-  box-shadow:
-    inset 0 1px 0 rgba(251, 191, 36, 0.38),
-    0 -10px 28px rgba(234, 88, 12, 0.22);
 }
 
 /* Peek only when the window is short (popup / laptop). Tall monitors keep the full dock. */

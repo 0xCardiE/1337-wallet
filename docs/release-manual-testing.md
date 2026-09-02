@@ -1,6 +1,6 @@
 # Pre-release manual testing
 
-Automated tests (`npm run test:unit` and `npm run test:e2e`) catch signer logic and the Chromium extension shell. They **cannot** replace a human pass with real devices, store packaging, and live dapps.
+Automated tests (`npm run test:unit` and `npm run test:e2e`) catch signer logic and the Chromium extension shell. CI already runs a fresh install, icons, production build, LavaMoat policy, unit, and E2E on the same commit. They **cannot** replace a human pass with real devices, store packaging, and live dapps.
 
 Walk this list before uploading to the Chrome Web Store or tagging a release. Check a box only after you did it on the **release build** (`npm run build`, unpacked `dist/` or the zip you will upload).
 
@@ -10,11 +10,9 @@ Use a **throwaway** seed / small balances. Never paste a production mnemonic int
 
 ## 0. Build and install
 
-- [ ] Fresh `npm ci && npm run icons && npm run build`
-- [ ] `npm run lavamoat:check` is clean
-- [ ] `npm run test:unit` and `npm run test:e2e` pass on the same commit
-- [ ] Load unpacked `dist/` in a clean Chrome profile (or the store zip, not `npm run dev`)
-- [ ] Extension name, version (`package.json` / `public/manifest.json`), and icons look correct in `chrome://extensions`
+Covered by CI: `npm ci`, `npm run icons`, `npm run build`, `npm run lavamoat:check`, `npm run test:unit`, and `npm run test:e2e` (`.github/workflows/test.yml`, `.github/workflows/lavamoat-policy.yml`). Name, version, and icon files are asserted in `tests/unit/extensionPackaging.test.ts`.
+
+- [x] Load unpacked production `dist/` in a clean Chrome profile (or the store zip, not `npm run dev`) — name, version, and icons look right on `chrome://extensions`
 
 ---
 
@@ -105,12 +103,18 @@ Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accept
 
 Physical Trezor + Trezor Connect popup (`connect.trezor.io`).
 
-- [ ] Connect Trezor from Wallets; export address; address matches Trezor Suite
+- [x] Connect Trezor from Wallets; export address; address matches Trezor Suite
 - [ ] Connect popup blocked / closed — readable error
-- [ ] **Dapp send** — confirm sheet + Trezor screens; approve
-- [ ] **Reject on device**
-- [ ] **personal_sign** / **EIP-712**
-- [ ] **Quick Send**, **Swap**, **Gas Station**, **Multisend**, **ENS** (same bar as Ledger)
+- [x] **ERC-20 send** — confirm sheet + Trezor screens; approve — Ethereum and Arbitrum (2026-09-02)
+- [x] **Native send** — dust ETH (or ARB) so the device sees empty `data` / value, not a token `transfer`
+- [x] **Reject on device** — request fails; no broadcast
+- [ ] **personal_sign** — dapp or console; approve on device
+- [ ] **EIP-712** — Permit (Uniswap / token) or a login typed-data; domain readable on device
+- [ ] **Quick Send** from Assets (native or token — skip if the ERC-20 send above was already this path)
+- [ ] **Swap** (tiny amount) — quote, confirm sheet, device, receipt / History
+- [ ] **Gas Station** top-up to another chain
+- [ ] **Multisend** native (and ERC-20 if you have a test token) — one device confirm (+ approve)
+- [ ] **ENS** record or register path opens the device confirm (skip paying if you do not intend to)
 - [ ] Suite / Connect version notes if something needs a firmware bump
 
 ---

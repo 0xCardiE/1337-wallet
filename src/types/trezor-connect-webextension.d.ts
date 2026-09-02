@@ -7,6 +7,7 @@ declare module '@trezor/connect-webextension' {
 
   type ConnectSettings = {
     lazyLoad?: boolean;
+    coreMode?: 'auto' | 'popup' | 'iframe' | 'suite-desktop' | 'suite-web';
     manifest: Manifest;
     connectSrc?: string;
     transports?: string[];

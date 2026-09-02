@@ -44,7 +44,12 @@
     },
     "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/hash": {
       "packages": {
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/address": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bignumber": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/bytes": true,
         "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/keccak256": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/logger": true,
+        "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/properties": true,
         "@ledgerhq/hw-app-eth>@ethersproject/abi>@ethersproject/strings": true
       }
     },
@@ -131,7 +136,6 @@
         "Buffer.alloc": true,
         "Buffer.concat": true,
         "Buffer.from": true,
-        "RLP": true,
         "console.warn": true
       },
       "packages": {
@@ -270,7 +274,8 @@
     },
     "@ledgerhq/hw-app-eth>bignumber.js": {
       "globals": {
-        "crypto": true
+        "crypto": true,
+        "define": true
       }
     },
     "@lifi/sdk>@solana/web3.js>bn.js": {
@@ -355,11 +360,13 @@
     },
     "@ledgerhq/hw-app-eth>@ledgerhq/types-live>rxjs": {
       "globals": {
+        "cancelAnimationFrame": true,
+        "clearInterval": true,
         "clearTimeout": true,
+        "performance": true,
+        "requestAnimationFrame": true,
+        "setInterval.apply": true,
         "setTimeout.apply": true
-      },
-      "packages": {
-        "tslib": true
       }
     },
     "react-dom>scheduler": {
@@ -384,13 +391,6 @@
       "globals": {
         "console.error": true,
         "process": true
-      }
-    },
-    "tslib": {
-      "globals": {
-        "AsyncIterator": true,
-        "Iterator": true,
-        "SuppressedError": true
       }
     },
     "viem": {

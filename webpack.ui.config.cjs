@@ -36,6 +36,16 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
       buffer: path.resolve(__dirname, 'node_modules/buffer/'),
+      // ESM `export default class Eth` becomes a live binding that throws
+      // "Cannot access 'Eth' before initialization" under LavaMoat/webpack.
+      '@ledgerhq/hw-app-eth': path.resolve(
+        __dirname,
+        'node_modules/@ledgerhq/hw-app-eth/lib/Eth.js',
+      ),
+      '@ledgerhq/hw-transport-webhid': path.resolve(
+        __dirname,
+        'node_modules/@ledgerhq/hw-transport-webhid/lib/TransportWebHID.js',
+      ),
     },
   },
   plugins: [

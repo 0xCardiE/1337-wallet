@@ -11,7 +11,12 @@ import {
   isKeyBackedAccount,
   shortAddress,
 } from '../lib/accounts';
-import { connectLedgerAddress } from '../lib/ledger';
+import {
+  connectLedgerAddress,
+  firstHidDevice,
+  openLedgerHidConnectWindow,
+  startLedgerHidPicker,
+} from '../lib/ledger';
 import { connectTrezorAddress } from '../lib/trezor';
 import { looksLikeMnemonic } from '../lib/walletCore';
 import {
@@ -259,17 +264,30 @@ export function AccountsPanel({
             type="button"
             className="ghost"
             disabled={busy != null}
-            onClick={() =>
+            onClick={() => {
+              const derivationPath = path.trim() || DEFAULT_ETH_DERIVATION_PATH;
+              const pick = startLedgerHidPicker();
               void run('ledger', async () => {
-                const result = await connectLedgerAddress(path.trim() || DEFAULT_ETH_DERIVATION_PATH);
+                let device: HIDDevice | undefined;
+                try {
+                  device = firstHidDevice(await pick);
+                } catch {
+                  device = undefined;
+                }
+                if (!device) {
+                  await openLedgerHidConnectWindow(derivationPath);
+                  setMsg('Pick the Nano in the Ledger window, then Chrome’s device list.');
+                  return;
+                }
+                const result = await connectLedgerAddress(derivationPath, { device });
                 const account = await addHardwareAccount({
                   kind: 'ledger',
                   address: result.address,
                   derivationPath: result.derivationPath,
                 });
                 setMsg(`Connected ${account.label}`);
-              })
-            }
+              });
+            }}
           >
             {busy === 'ledger' ? 'Connecting…' : 'Connect Ledger'}
           </button>

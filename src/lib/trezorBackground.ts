@@ -10,6 +10,9 @@ export function initTrezorConnect(): Promise<void> {
       try {
         await TrezorConnect.init({
           lazyLoad: true,
+          // Default `auto` probes Trezor Suite at ws://127.0.0.1:21335/connect-ws
+          // and logs ERR_CONNECTION_REFUSED whenever Suite is not running.
+          coreMode: 'popup',
           manifest: {
             email: '1337-wallet@proton.me',
             appName: '1337 Wallet',

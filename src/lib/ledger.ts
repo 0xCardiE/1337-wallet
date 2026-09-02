@@ -1,3 +1,5 @@
+import TransportWebHIDModule from '@ledgerhq/hw-transport-webhid';
+import LedgerEthModule from '@ledgerhq/hw-app-eth';
 import { serializeTransaction, type Hex, type TransactionSerializable } from 'viem';
 import { DEFAULT_ETH_DERIVATION_PATH } from './accounts';
 
@@ -6,22 +8,93 @@ export function toLedgerPath(path: string): string {
   return trimmed.startsWith('m/') ? trimmed.slice(2) : trimmed;
 }
 
-async function openLedgerEth() {
-  const [{ default: TransportWebHID }, { default: Eth }] = await Promise.all([
-    import('@ledgerhq/hw-transport-webhid'),
-    import('@ledgerhq/hw-app-eth'),
-  ]);
-  if (!(await TransportWebHID.isSupported())) {
+/** CJS/ESM interop for Ledger packages (webpack may wrap `exports.default`). */
+export function unwrapDefaultExport<T>(mod: unknown): T {
+  if (typeof mod === 'function') return mod as T;
+  if (mod && typeof mod === 'object') {
+    const exported = (mod as { default?: unknown }).default;
+    if (typeof exported === 'function') return exported as T;
+    if (exported && typeof exported === 'object') {
+      const nested = (exported as { default?: unknown }).default;
+      if (typeof nested === 'function') return nested as T;
+    }
+  }
+  throw new Error('Ledger library failed to load.');
+}
+
+/** Ledger USB vendor id (`@ledgerhq/devices`). */
+const LEDGER_USB_VENDOR_ID = 0x2c97;
+
+/**
+ * Start the Chrome HID chooser in this turn — no `await` before `requestDevice`,
+ * or Chrome swallows the click and shows nothing.
+ */
+export function startLedgerHidPicker(): Promise<HIDDevice[]> {
+  const hid = window.navigator?.hid;
+  if (!hid) {
+    return Promise.reject(new Error('WebHID is not supported. Use Chrome desktop.'));
+  }
+  return hid.requestDevice({ filters: [{ vendorId: LEDGER_USB_VENDOR_ID }] });
+}
+
+export async function openLedgerHidConnectWindow(derivationPath: string): Promise<void> {
+  const path = derivationPath.trim() || DEFAULT_ETH_DERIVATION_PATH;
+  await chrome.windows.create({
+    url: chrome.runtime.getURL(`index.html?ledgerhid=1&path=${encodeURIComponent(path)}`),
+    type: 'popup',
+    focused: true,
+    width: 400,
+    height: 440,
+  });
+}
+
+export function firstHidDevice(picked: HIDDevice[] | HIDDevice | undefined): HIDDevice | undefined {
+  if (!picked) return undefined;
+  return Array.isArray(picked) ? picked[0] : picked;
+}
+
+async function requestLedgerHidDevice(opts?: { device?: HIDDevice }): Promise<HIDDevice> {
+  if (opts?.device) return opts.device;
+  const hid = window.navigator?.hid;
+  if (!hid) throw new Error('WebHID is not supported. Use Chrome desktop.');
+  const existing = (await hid.getDevices()).filter(d => d.vendorId === LEDGER_USB_VENDOR_ID);
+  if (existing[0]) return existing[0];
+  const device = firstHidDevice(await startLedgerHidPicker());
+  if (!device) {
+    throw new Error(
+      'Chrome did not grant the Ledger. Close Ledger Live, unlock the Nano, open the Ethereum app, then pick it in the browser list.',
+    );
+  }
+  return device;
+}
+
+async function openLedgerEth(opts?: { device?: HIDDevice }) {
+  // Static imports stay in the popup chunk. Dynamic `import()` made a second
+  // LavaMoat graph with numeric IDs ("Policy does not allow importing 2 from 6").
+  const TransportWebHID = unwrapDefaultExport<typeof import('@ledgerhq/hw-transport-webhid').default>(
+    TransportWebHIDModule,
+  );
+  const LedgerEth = unwrapDefaultExport<typeof import('@ledgerhq/hw-app-eth').default>(
+    LedgerEthModule,
+  );
+  if (!window.navigator?.hid) {
     throw new Error('WebHID is not supported. Use Chrome desktop.');
   }
-  const transport = await TransportWebHID.create();
-  return { transport, eth: new Eth(transport) };
+  try {
+    const device = await requestLedgerHidDevice(opts);
+    if (device.opened) await device.close().catch(() => undefined);
+    const transport = await TransportWebHID.open(device);
+    return { transport, eth: new LedgerEth(transport) };
+  } catch (err) {
+    throw new Error(formatLedgerError(err));
+  }
 }
 
 export async function connectLedgerAddress(
   derivationPath: string = DEFAULT_ETH_DERIVATION_PATH,
+  opts?: { device?: HIDDevice },
 ): Promise<{ address: `0x${string}`; derivationPath: string }> {
-  const { transport, eth } = await openLedgerEth();
+  const { transport, eth } = await openLedgerEth(opts);
   try {
     const result = await eth.getAddress(toLedgerPath(derivationPath), true);
     return {
@@ -140,9 +213,15 @@ function ensureHex(value: string): Hex {
   return (value.startsWith('0x') ? value : `0x${value}`) as Hex;
 }
 
-function formatLedgerError(err: unknown): string {
+export function formatLedgerError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
-  if (/denied|reject|cancel|0x6985/i.test(message)) {
+  if (/user gesture|must be handling/i.test(message)) {
+    return 'Chrome blocked the device list (lost click). Use the Ledger window and click Allow.';
+  }
+  if (/Access denied to use Ledger|did not grant the Ledger|No device|NotFoundError|HIDNotSupported/i.test(message)) {
+    return 'Chrome did not grant the Ledger. Close Ledger Live, unlock the Nano, open the Ethereum app, then pick it in the browser list.';
+  }
+  if (/0x6985|denied on the device/i.test(message)) {
     return 'Ledger request was rejected on the device.';
   }
   if (/locked|0x5515|0x6b0c/i.test(message)) {
@@ -150,9 +229,6 @@ function formatLedgerError(err: unknown): string {
   }
   if (/0x6a80|blind sign|unresolved|missing metadata/i.test(message)) {
     return 'Ledger could not clear-sign this contract call. Enable Blind signing in the Ethereum app settings, then retry.';
-  }
-  if (/No device|Access denied|NotFoundError/i.test(message)) {
-    return 'No Ledger selected. Plug in the device, unlock it, and try again.';
   }
   return message || 'Ledger request failed.';
 }

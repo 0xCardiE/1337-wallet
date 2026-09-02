@@ -99,6 +99,8 @@ const popupScuttleExceptions = [
   'window',
   'document',
   'navigator',
+  'HID',
+  'HIDDevice',
   'location',
   'history',
   'localStorage',
