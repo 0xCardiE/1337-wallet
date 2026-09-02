@@ -42,11 +42,21 @@ export function defaultAccountLabel(kind: AccountKind, address: string): string 
   return short;
 }
 
-export function accountKindLabel(kind: AccountKind): string {
+/**
+ * Short origin for the switcher / account lists.
+ * Hardware = device name. Seed-derived (`derivationPath`) = Seed.
+ * Standalone generated or imported hex keys = Pvt key.
+ */
+export function accountKindLabel(
+  accountOrKind: AccountKind | Pick<WalletAccount, 'kind' | 'derivationPath'>,
+): string {
+  const kind = typeof accountOrKind === 'string' ? accountOrKind : accountOrKind.kind;
+  const derivationPath =
+    typeof accountOrKind === 'string' ? undefined : accountOrKind.derivationPath;
   if (kind === 'ledger') return 'Ledger';
   if (kind === 'trezor') return 'Trezor';
-  if (kind === 'imported') return 'Imported';
-  return 'Local';
+  if (kind === 'imported') return 'Pvt key';
+  return derivationPath ? 'Seed' : 'Pvt key';
 }
 
 export function isHardwareAccount(account: WalletAccount | null | undefined): boolean {

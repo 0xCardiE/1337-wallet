@@ -194,7 +194,7 @@ export function AccountsPanel({
               >
                 <AccountLabel account={account} />
                 <span className="muted mono bfox-account-manage-meta">
-                  {accountKindLabel(account.kind)}
+                  {accountKindLabel(account)}
                   {burnerOn ? ' · Burner' : ''} · {shortAddress(account.address)}
                 </span>
               </button>
@@ -274,7 +274,7 @@ export function AccountsPanel({
           {addMode === 'derive'
             ? 'Derives the next HD account from your vault seed (m/44\'/60\'/0\'/0/n).'
             : addMode === 'importKey'
-              ? 'Imports a standalone private key alongside your seed accounts. Shows as Imported.'
+              ? 'Imports a standalone private key alongside your seed accounts. Shows as Pvt key.'
               : addMode === 'generate'
                 ? 'Creates a new random private key in this vault.'
                 : 'Import a seed phrase to set up HD accounts, or a private key for a single imported account.'}

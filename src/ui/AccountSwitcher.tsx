@@ -215,7 +215,7 @@ export function AccountSwitcher({
                             )}
                           </span>
                           <span className="w1337-acct-sheet-row__meta mono">
-                            {accountKindLabel(account.kind)}
+                            {accountKindLabel(account)}
                             {burnerOn ? ' · Burner' : ''} · {shortAddress(account.address)}
                           </span>
                         </span>
@@ -283,7 +283,7 @@ export function AccountSwitcher({
               )}
             </span>
             <span className="w1337-acct-trigger__sub mono">
-              {accountKindLabel(active.kind)}
+              {accountKindLabel(active)}
               {activeBurner ? ' · Burner' : ''} · {shortAddress(active.address)}
             </span>
           </span>

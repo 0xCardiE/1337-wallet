@@ -46,7 +46,7 @@ export function AccountActionSheet({
   if (!action || typeof document === 'undefined') return null;
 
   const labelWithEns = accountLabelWithEns(action.account, ensName);
-  const meta = `${accountKindLabel(action.account.kind)} · ${shortAddress(action.account.address)}${
+  const meta = `${accountKindLabel(action.account)} · ${shortAddress(action.account.address)}${
     ensName ? ` · ${ensName}` : ''
   }`;
 

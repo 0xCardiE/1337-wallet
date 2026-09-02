@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountKindLabel,
   createAccountId,
   defaultAccountLabel,
   getActiveAccount,
@@ -18,6 +19,22 @@ describe('accounts', () => {
     expect(createAccountId('local', ADDR)).toBe(`local:${ADDR.toLowerCase()}`);
     expect(shortAddress(ADDR)).toBe('0xf39F…2266');
     expect(defaultAccountLabel('ledger', ADDR)).toBe('Ledger 0xf39F…2266');
+  });
+
+  it('labels origin as Seed vs Pvt key vs hardware', () => {
+    const seed = normalizeAccount({
+      address: ADDR,
+      kind: 'local',
+      derivationPath: "m/44'/60'/0'/0/0",
+    })!;
+    const generated = normalizeAccount({ address: ADDR, kind: 'local' })!;
+    const imported = normalizeAccount({ address: ADDR, kind: 'imported' })!;
+    expect(accountKindLabel(seed)).toBe('Seed');
+    expect(accountKindLabel(generated)).toBe('Pvt key');
+    expect(accountKindLabel(imported)).toBe('Pvt key');
+    expect(accountKindLabel('ledger')).toBe('Ledger');
+    expect(accountKindLabel('trezor')).toBe('Trezor');
+    expect(accountKindLabel('local')).toBe('Pvt key');
   });
 
   it('classifies hardware vs key-backed', () => {
