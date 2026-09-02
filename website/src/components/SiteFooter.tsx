@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { NAV_LINKS, SITE } from '@/lib/site';
+import { FOOTER_EXTRA_LINKS, NAV_LINKS, SITE } from '@/lib/site';
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/80 bg-bg">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <p className="text-lg font-semibold">{SITE.name}</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">{SITE.tagline}</p>
@@ -14,13 +14,43 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-medium text-text">Site</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
-            {NAV_LINKS.map(link => (
+            {NAV_LINKS.filter(link => link.href !== '/security' && link.href !== '/faq').map(
+              link => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-text">
+                    {link.label}
+                  </Link>
+                </li>
+              ),
+            )}
+            {FOOTER_EXTRA_LINKS.map(link => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-text">
                   {link.label}
                 </Link>
               </li>
             ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-text">Trust</p>
+          <ul className="mt-3 space-y-2 text-sm text-muted">
+            <li>
+              <Link href="/security" className="hover:text-text">
+                Security FAQ
+              </Link>
+            </li>
+            <li>
+              <Link href="/faq" className="hover:text-text">
+                Product FAQ
+              </Link>
+            </li>
+            <li>
+              <Link href="/security#hardware" className="hover:text-text">
+                Hardware wallets
+              </Link>
+            </li>
           </ul>
         </div>
 

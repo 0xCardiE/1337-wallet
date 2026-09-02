@@ -16,7 +16,15 @@ export function ContactSection() {
             <a href="/integrate" className="text-text underline-offset-4 hover:underline">
               integration guide
             </a>
-            . Humans: email us or skim the FAQ.
+            . Humans: the{' '}
+            <a href="/faq" className="text-text underline-offset-4 hover:underline">
+              FAQ
+            </a>{' '}
+            and{' '}
+            <a href="/security" className="text-text underline-offset-4 hover:underline">
+              security FAQ
+            </a>{' '}
+            cover most of it — including MetaMask and Rabby comparisons.
           </p>
           <a
             href={`mailto:${SITE.contactEmail}?subject=1337%20Wallet%20question`}
@@ -38,6 +46,14 @@ export function ContactSection() {
               <p className="mt-3 text-sm leading-relaxed text-muted">{item.a}</p>
             </details>
           ))}
+          <div className="flex flex-wrap gap-3 pt-2 text-sm">
+            <a href="/faq" className="text-text underline-offset-4 hover:underline">
+              All product questions →
+            </a>
+            <a href="/security" className="text-text underline-offset-4 hover:underline">
+              Security FAQ →
+            </a>
+          </div>
         </div>
       </div>
     </section>

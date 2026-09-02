@@ -12,8 +12,13 @@ export const SITE = {
 export const NAV_LINKS = [
   { href: '/#features', label: 'Features' },
   { href: '/#tools', label: 'Tools' },
-  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/security', label: 'Security' },
+  { href: '/faq', label: 'FAQ' },
   { href: '/integrate', label: 'Integrate' },
+] as const;
+
+export const FOOTER_EXTRA_LINKS = [
+  { href: '/#how-it-works', label: 'How it works' },
   { href: '/#contact', label: 'Contact' },
 ] as const;
 

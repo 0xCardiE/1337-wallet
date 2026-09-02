@@ -25,6 +25,9 @@ export function Hero() {
           <Link href="/integrate" className="btn-secondary">
             Integrate for dapps &amp; AIs
           </Link>
+          <Link href="/security" className="text-sm text-muted underline-offset-4 hover:text-text hover:underline">
+            Security vs MetaMask &amp; Rabby
+          </Link>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">

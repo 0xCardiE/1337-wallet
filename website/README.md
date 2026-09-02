@@ -5,6 +5,8 @@ Next.js landing page and integration docs for **1337 Wallet**.
 ## Pages
 
 - `/` — landing (features, tools, video placeholder, privacy, contact/FAQ)
+- `/security` — security FAQ (MetaMask / Rabby comparisons, hardware, burner keys)
+- `/faq` — product FAQ
 - `/integrate` — builder & AI integration guide (EIP-1193, EIP-6963, Wagmi, Ethers)
 
 ## Development
