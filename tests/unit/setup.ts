@@ -4,7 +4,10 @@ import { vi } from 'vitest';
 vi.stubGlobal('chrome', {
   runtime: {
     lastError: undefined,
-    sendMessage: (_msg: unknown, cb?: (r: unknown) => void) => cb?.(undefined),
+    sendMessage: (_msg: unknown, cb?: (r: unknown) => void) => {
+      cb?.(undefined);
+      return Promise.resolve();
+    },
     getURL: (p: string) => `chrome-extension://test/${p}`,
   },
   storage: {

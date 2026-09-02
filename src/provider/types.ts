@@ -34,6 +34,7 @@ export const PROVIDER_RPC_METHODS = [
   'wallet_getPermissions',
   'wallet_requestPermissions',
   'wallet_revokePermissions',
+  'wallet_getCapabilities',
   'wallet_switchEthereumChain',
   'wallet_addEthereumChain',
   'eth_sendTransaction',

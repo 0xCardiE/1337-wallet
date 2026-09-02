@@ -34,6 +34,10 @@ import { reportProviderRpcFailure } from './devErrorReport';
 import { isSignMethod, queueApprovalRequest } from './pendingApprovals';
 import { parseChainIdParam, providerError, toHexChainId } from '../provider/types';
 import type { ProviderRequest, ProviderResponse } from '../provider/types';
+import {
+  eip5792Capabilities,
+  parseWalletGetCapabilitiesParams,
+} from './walletCapabilities';
 
 export async function executeSignRequest(
   pk: `0x${string}`,
@@ -213,6 +217,19 @@ export async function handleProviderRpc(
         new Error('eth_sign is disabled. Use personal_sign or eth_signTypedData_v4.'),
         { code: 4200 },
       );
+    }
+
+    if (method === 'wallet_getCapabilities') {
+      const parsed = parseWalletGetCapabilitiesParams(params);
+      if (parsed.address && parsed.address.toLowerCase() !== sessionAddr.toLowerCase()) {
+        throw Object.assign(new Error('Requested address is not the connected account.'), {
+          code: 4100,
+        });
+      }
+      if (origin && !(await isAddressConnected(origin, sessionAddr))) {
+        throw Object.assign(new Error('Unauthorized'), { code: 4100 });
+      }
+      return { id, ok: true, result: eip5792Capabilities(parsed.chainIds) };
     }
 
     if (method === 'wallet_switchEthereumChain') {

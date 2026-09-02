@@ -48,4 +48,19 @@ test.describe('dapp provider', () => {
     await providerRequest(dapp, 'wallet_switchEthereumChain', [{ chainId: '0x2105' }]);
     expect(await providerRequest(dapp, 'eth_chainId')).toBe('0x2105');
   });
+
+  test('answers wallet_getCapabilities without advertising atomic batching', async ({
+    context,
+    extensionId,
+  }) => {
+    await openUnlockedWallet(context, extensionId);
+    const dapp = await openDappPage(context);
+    await providerRequest(dapp, 'eth_requestAccounts');
+    const caps = (await providerRequest(dapp, 'wallet_getCapabilities', [
+      E2E_ADDRESS,
+    ])) as Record<string, Record<string, unknown>>;
+    expect(caps['0x1']).toEqual({});
+    expect(caps['0xa4b1']).toEqual({});
+    expect(caps['0x1']).not.toHaveProperty('atomic');
+  });
 });
