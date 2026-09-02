@@ -255,12 +255,14 @@ export function Segment1337({
   options,
   ariaLabel = 'Options',
   className,
+  disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string; title?: string }[];
   ariaLabel?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -276,7 +278,10 @@ export function Segment1337({
           aria-selected={value === opt.value}
           className={`w1337-seg__btn${value === opt.value ? ' w1337-seg__btn--on' : ''}`}
           title={opt.title}
-          onClick={() => onChange(opt.value)}
+          disabled={disabled}
+          onClick={() => {
+            if (opt.value !== value) onChange(opt.value);
+          }}
         >
           {opt.label}
         </button>

@@ -502,6 +502,30 @@ export async function addHardwareAccount(opts: {
   return account;
 }
 
+export async function addHardwareAccounts(
+  rows: Array<{ kind: 'ledger' | 'trezor'; address: string; derivationPath: string }>,
+): Promise<{ added: WalletAccount[]; skipped: number }> {
+  if (rows.length === 0) throw new Error('Select at least one address.');
+  const added: WalletAccount[] = [];
+  let skipped = 0;
+  for (const row of rows) {
+    try {
+      added.push(await addHardwareAccount(row));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (/already imported/i.test(message)) {
+        skipped += 1;
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (added.length === 0) {
+    throw new Error('Those addresses are already imported.');
+  }
+  return { added, skipped };
+}
+
 export async function switchActiveAccount(accountId: string): Promise<WalletAccount> {
   const previousId = getActiveAccountId();
   const meta = getAccountsMeta().find(a => a.id === accountId);

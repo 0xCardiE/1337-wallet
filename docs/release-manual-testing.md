@@ -84,7 +84,7 @@ On a **software** account, from a real page (not the E2E `example.com` stub):
 
 Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accepted.
 
-- [ ] Connect Ledger from Wallets — opens a full 1337 tab, Allow Ledger shows Chrome's HID picker; address matches Ledger Live
+- [ ] Connect Ledger from Wallets — opens a full 1337 tab if HID is not granted; Allow Ledger shows Chrome's HID picker; then a list of addresses (Ledger Live / BIP-44 / Legacy, Next 5); import one or more; addresses match Ledger Live
 - [ ] Disconnect / reject WebHID — readable error, no unsigned tx
 - [ ] **Dapp send** — confirm sheet, then device screens; approve on device
 - [ ] **Reject on device** — request fails; no broadcast
@@ -103,7 +103,7 @@ Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accept
 
 Physical Trezor + Trezor Connect popup (`connect.trezor.io`). Signing pass 2026-09-02 (production `dist/`, including the Permit2 `domain_separator_hash` fix).
 
-- [x] Connect Trezor from Wallets; export address; address matches Trezor Suite
+- [x] Connect Trezor from Wallets; export addresses; pick one or more (BIP-44 / Ledger Live / Legacy); address matches Trezor Suite
 - [ ] Connect popup blocked / closed — readable error
 - [x] **ERC-20 send** — Ethereum and Arbitrum
 - [x] **Native send** — dust; empty `data` / value on device
@@ -116,6 +116,21 @@ Physical Trezor + Trezor Connect popup (`connect.trezor.io`). Signing pass 2026-
 - [ ] **Multisend** native (and ERC-20 if you have a test token) — one device confirm (+ approve)
 - [ ] **ENS** record or register path opens the device confirm (skip paying if you do not intend to)
 - [ ] Suite / Connect version notes if something needs a firmware bump
+
+### Reset hardware pairing (unpacked only)
+
+Chrome keeps the Ledger WebHID grant on the **extension**, not on the imported account. Removing a Ledger wallet does not revoke it, so the next Connect skips the device list. Trezor Connect keeps an init session in the service worker.
+
+This is not in the UI. In an unpacked `dist/` load, open Wallets (side panel or the Ledger tab), right-click → Inspect, Console:
+
+```js
+await __1337.resetHardware()
+// { ledgerForgotten: 1, trezorReset: true }
+```
+
+Then Connect Ledger again — Chrome should show the HID list. Connect Trezor re-inits Connect (the popup still comes from `connect.trezor.io`).
+
+Store builds omit `__1337`. Manual fallbacks: `chrome://settings/content/hidDevices` → remove 1337; for a sticky Trezor popup, close Suite and clear site data for `https://connect.trezor.io`.
 
 ---
 

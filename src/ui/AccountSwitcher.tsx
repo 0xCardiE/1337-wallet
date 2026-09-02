@@ -52,9 +52,11 @@ function CheckIcon() {
 export function AccountSwitcher({
   settings,
   onChanged,
+  onOpenWallets,
 }: {
   settings: AppSettings;
   onChanged?: () => void;
+  onOpenWallets?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -168,9 +170,19 @@ export function AccountSwitcher({
             <div className="w1337-acct-sheet-panel">
               <div className="w1337-acct-sheet-head">
                 <strong>Switch account</strong>
-                <span className="muted w1337-acct-sheet-count">
-                  {accounts.length} wallet{accounts.length === 1 ? '' : 's'}
-                </span>
+                {onOpenWallets ? (
+                  <button
+                    type="button"
+                    className="ghost w1337-acct-sheet-open"
+                    data-testid="acct-sheet-open"
+                    onClick={() => {
+                      setOpen(false);
+                      onOpenWallets();
+                    }}
+                  >
+                    Open
+                  </button>
+                ) : null}
               </div>
 
               <ul className="w1337-acct-sheet-list">
@@ -233,7 +245,9 @@ export function AccountSwitcher({
 
               {!canSwitch ? (
                 <p className="muted w1337-acct-sheet-hint">
-                  Add more accounts in Settings → Wallets.
+                  {onOpenWallets
+                    ? 'Open Wallets to add more accounts.'
+                    : 'Add more accounts in Settings → Wallets.'}
                 </p>
               ) : null}
 

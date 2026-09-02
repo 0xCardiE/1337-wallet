@@ -7,20 +7,25 @@ import {
 } from '../lib/accountSession';
 import {
   accountKindLabel,
-  DEFAULT_ETH_DERIVATION_PATH,
   isKeyBackedAccount,
   shortAddress,
 } from '../lib/accounts';
 import {
-  connectLedgerAddress,
+  firstUnusedSelection,
+  importedAddressSet,
+  listHardwareAddressPage,
+  type HardwareAddressRow,
+} from '../lib/hwAccounts';
+import { defaultHwPathScheme, type HardwareKind, type HwPathScheme } from '../lib/hwDerivation';
+import {
+  closeLedgerPickerSession,
   getGrantedLedgerDevice,
   openLedgerHidConnectTab,
 } from '../lib/ledger';
-import { connectTrezorAddress } from '../lib/trezor';
 import { looksLikeMnemonic } from '../lib/walletCore';
 import {
   addDerivedSeedAccount,
-  addHardwareAccount,
+  addHardwareAccounts,
   addLocalAccount,
   removeAccount,
   renameAccount,
@@ -28,11 +33,21 @@ import {
 } from '../lib/walletManager';
 import { AccountActionSheet, type AccountAction } from './AccountActionSheet';
 import { AccountLabel } from './AccountLabel';
+import { HardwareAccountPicker } from './HardwareAccountPicker';
 import { PassportScoreBadge } from './PassportScoreBadge';
 import { Segment1337 } from './Select1337';
 import { TxConfirmModeToggle } from './TxConfirmModeBar';
 import type { AppSettings } from '../lib/storageState';
 import { accountInstantEnabled } from '../lib/txConfirmMode';
+
+type HwPickerState = {
+  kind: HardwareKind;
+  scheme: HwPathScheme;
+  startIndex: number;
+  rows: HardwareAddressRow[];
+  selected: Record<string, HardwareAddressRow>;
+  device?: HIDDevice;
+};
 
 type AddMode = 'derive' | 'importKey' | 'import' | 'generate';
 
@@ -45,11 +60,11 @@ export function AccountsPanel({
 }) {
   const [importKey, setImportKey] = useState('');
   const [label, setLabel] = useState('');
-  const [path, setPath] = useState(DEFAULT_ETH_DERIVATION_PATH);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [action, setAction] = useState<AccountAction | null>(null);
+  const [hwPicker, setHwPicker] = useState<HwPickerState | null>(null);
 
   const accounts = getAccountsMeta();
   const activeId = getActiveAccountId();
@@ -127,6 +142,25 @@ export function AccountsPanel({
       setImportKey('');
       setLabel('');
       setMsg(`Imported ${account.label}`);
+    });
+  }
+
+  async function showHwPage(opts: {
+    kind: HardwareKind;
+    scheme: HwPathScheme;
+    startIndex: number;
+    device?: HIDDevice;
+    keepSelected?: Record<string, HardwareAddressRow>;
+  }) {
+    const rows = await listHardwareAddressPage(opts);
+    const imported = importedAddressSet(getAccountsMeta());
+    setHwPicker({
+      kind: opts.kind,
+      scheme: opts.scheme,
+      startIndex: opts.startIndex,
+      rows,
+      selected: opts.keepSelected ?? firstUnusedSelection(rows, imported),
+      device: opts.device,
     });
   }
 
@@ -250,62 +284,126 @@ export function AccountsPanel({
 
       <div style={{ marginTop: 16 }}>
         <strong style={{ fontSize: 13 }}>Hardware wallets</strong>
-        <input
-          className="mono"
-          value={path}
-          onChange={e => setPath(e.target.value)}
-          spellCheck={false}
-          style={{ marginTop: 8 }}
-          aria-label="Derivation path"
-        />
-        <div className="row bfox-hw-actions" style={{ marginTop: 8 }}>
-          <button
-            type="button"
-            className="ghost"
-            disabled={busy != null}
-            onClick={() => {
-              const derivationPath = path.trim() || DEFAULT_ETH_DERIVATION_PATH;
-              void run('ledger', async () => {
-                // Chrome's HID chooser never renders in the side panel or action
-                // popup, so only connect directly when a device is already granted;
-                // otherwise hand off to a full tab where the chooser works.
-                const device = await getGrantedLedgerDevice();
-                if (!device) {
-                  await openLedgerHidConnectTab(derivationPath);
-                  setMsg('Opened a 1337 tab. Click Allow Ledger there and pick your Nano in Chrome’s list.');
-                  return;
-                }
-                const result = await connectLedgerAddress(derivationPath, { device });
-                const account = await addHardwareAccount({
-                  kind: 'ledger',
-                  address: result.address,
-                  derivationPath: result.derivationPath,
-                });
-                setMsg(`Connected ${account.label}`);
-              });
+        {hwPicker ? (
+          <HardwareAccountPicker
+            kind={hwPicker.kind}
+            scheme={hwPicker.scheme}
+            rows={hwPicker.rows}
+            startIndex={hwPicker.startIndex}
+            selected={hwPicker.selected}
+            importedAddresses={importedAddressSet(accounts)}
+            busy={busy != null}
+            onSchemeChange={scheme => {
+              setHwPicker(prev => (prev ? { ...prev, scheme, startIndex: 0 } : prev));
+              void run('hw-page', () =>
+                showHwPage({
+                  kind: hwPicker.kind,
+                  scheme,
+                  startIndex: 0,
+                  device: hwPicker.device,
+                }),
+              );
             }}
-          >
-            {busy === 'ledger' ? 'Connecting…' : 'Connect Ledger'}
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            disabled={busy != null}
-            onClick={() =>
-              void run('trezor', async () => {
-                const result = await connectTrezorAddress(path.trim() || DEFAULT_ETH_DERIVATION_PATH);
-                const account = await addHardwareAccount({
-                  kind: 'trezor',
-                  address: result.address,
-                  derivationPath: result.derivationPath,
-                });
-                setMsg(`Connected ${account.label}`);
+            onToggle={row =>
+              setHwPicker(prev => {
+                if (!prev) return prev;
+                const selected = { ...prev.selected };
+                if (selected[row.derivationPath]) delete selected[row.derivationPath];
+                else selected[row.derivationPath] = row;
+                return { ...prev, selected };
               })
             }
-          >
-            {busy === 'trezor' ? 'Connecting…' : 'Connect Trezor'}
-          </button>
-        </div>
+            onPrev={() =>
+              void run('hw-page', () =>
+                showHwPage({
+                  kind: hwPicker.kind,
+                  scheme: hwPicker.scheme,
+                  startIndex: Math.max(0, hwPicker.startIndex - hwPicker.rows.length),
+                  device: hwPicker.device,
+                  keepSelected: hwPicker.selected,
+                }),
+              )
+            }
+            onNext={() =>
+              void run('hw-page', () =>
+                showHwPage({
+                  kind: hwPicker.kind,
+                  scheme: hwPicker.scheme,
+                  startIndex: hwPicker.startIndex + hwPicker.rows.length,
+                  device: hwPicker.device,
+                  keepSelected: hwPicker.selected,
+                }),
+              )
+            }
+            onImport={() =>
+              void run('hw-import', async () => {
+                const chosen = Object.values(hwPicker.selected);
+                const { added } = await addHardwareAccounts(
+                  chosen.map(row => ({
+                    kind: hwPicker.kind,
+                    address: row.address,
+                    derivationPath: row.derivationPath,
+                  })),
+                );
+                setHwPicker(null);
+                await closeLedgerPickerSession();
+                setMsg(
+                  added.length === 1
+                    ? `Connected ${added[0].label}`
+                    : `Connected ${added.length} ${accountKindLabel(hwPicker.kind)} accounts`,
+                );
+              })
+            }
+            onCancel={() => {
+              setHwPicker(null);
+              void closeLedgerPickerSession();
+            }}
+          />
+        ) : (
+          <div className="row bfox-hw-actions" style={{ marginTop: 8 }}>
+            <button
+              type="button"
+              className="ghost"
+              disabled={busy != null}
+              onClick={() =>
+                void run('ledger', async () => {
+                  const device = await getGrantedLedgerDevice();
+                  if (!device) {
+                    await openLedgerHidConnectTab();
+                    setMsg(
+                      'Opened a 1337 tab. Allow the Nano, then pick which addresses to import.',
+                    );
+                    return;
+                  }
+                  await showHwPage({
+                    kind: 'ledger',
+                    scheme: defaultHwPathScheme('ledger'),
+                    startIndex: 0,
+                    device,
+                  });
+                })
+              }
+            >
+              {busy === 'ledger' ? 'Reading Ledger…' : 'Connect Ledger'}
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              disabled={busy != null}
+              onClick={() =>
+                void run('trezor', () =>
+                  showHwPage({
+                    kind: 'trezor',
+                    scheme: defaultHwPathScheme('trezor'),
+                    startIndex: 0,
+                  }),
+                )
+              }
+            >
+              {busy === 'trezor' ? 'Reading Trezor…' : 'Connect Trezor'}
+            </button>
+          </div>
+        )}
       </div>
 
       {msg ? <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>{msg}</p> : null}

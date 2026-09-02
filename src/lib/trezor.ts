@@ -19,18 +19,33 @@ async function sendTrezorMessage<T>(message: Record<string, unknown>): Promise<T
   return response.payload;
 }
 
+export async function listTrezorAddresses(
+  derivationPaths: string[],
+): Promise<Array<{ address: `0x${string}`; derivationPath: string }>> {
+  const paths = derivationPaths.map(p => p.trim()).filter(Boolean);
+  if (paths.length === 0) return [];
+  await sendTrezorMessage({ type: 'TREZOR_INIT' });
+  const payload = await sendTrezorMessage<{
+    addresses: Array<{ address: string; path: string }>;
+  }>({
+    type: 'TREZOR_ETHEREUM_GET_ADDRESS',
+    paths,
+    showOnTrezor: false,
+  });
+  const rows = payload.addresses ?? [];
+  if (rows.length === 0) throw new Error('Trezor returned no addresses.');
+  return rows.map((row, i) => ({
+    address: row.address.toLowerCase() as `0x${string}`,
+    derivationPath: row.path || paths[i],
+  }));
+}
+
 export async function connectTrezorAddress(
   derivationPath: string = DEFAULT_ETH_DERIVATION_PATH,
 ): Promise<{ address: `0x${string}`; derivationPath: string }> {
-  await sendTrezorMessage({ type: 'TREZOR_INIT' });
-  const payload = await sendTrezorMessage<{ address: string }>({
-    type: 'TREZOR_ETHEREUM_GET_ADDRESS',
-    path: derivationPath,
-  });
-  return {
-    address: payload.address.toLowerCase() as `0x${string}`,
-    derivationPath,
-  };
+  const [row] = await listTrezorAddresses([derivationPath]);
+  if (!row) throw new Error('Trezor returned no address.');
+  return row;
 }
 
 function toHexQuantity(value: number | bigint): string {

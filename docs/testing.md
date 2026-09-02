@@ -5,7 +5,7 @@ Two layers:
 1. **Unit tests** — signer logic (risk gates, SIWE, vault, humanizer, provider flags). Fast, no Chrome.
 2. **Playwright E2E** — loads the unpacked MV3 build, seeds a test vault, and drives the popup plus a dapp tab.
 
-Hardware wallets, store listing, and live mainnet money movement are **not** automated. Walk [release-manual-testing.md](./release-manual-testing.md) before a store release.
+Hardware wallets, store listing, and live mainnet money movement are **not** automated. Walk [release-manual-testing.md](./release-manual-testing.md) before a store release. To re-prompt Ledger HID / re-init Trezor Connect on an unpacked build, inspect the Wallets surface and run `await __1337.resetHardware()` (see that doc).
 
 ## Commands
 

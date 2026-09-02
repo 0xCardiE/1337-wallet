@@ -859,7 +859,8 @@ button.w1337-acct-sheet-backdrop:focus-visible {
   font-weight: 700;
 }
 
-.w1337-acct-sheet-count {
+.w1337-acct-sheet-head .w1337-acct-sheet-open {
+  padding: 5px 12px;
   font-size: 12px;
 }
 
@@ -6675,6 +6676,130 @@ button.w1337-quick-send-inline__send--busy {
 }
 
 .bfox-hw-actions .ghost {
+  width: 100%;
+}
+
+.w1337-hw-picker {
+  margin-top: 12px;
+}
+
+.w1337-hw-picker__title {
+  display: block;
+  font-size: 13px;
+}
+
+.w1337-hw-picker__lead {
+  font-size: 12px;
+  margin: 6px 0 10px;
+}
+
+.w1337-hw-picker__schemes {
+  margin-bottom: 10px;
+}
+
+.w1337-hw-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.w1337-hw-picker__list > li {
+  width: 100%;
+}
+
+.w1337-hw-picker__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.w1337-hw-picker__row.is-picked {
+  border-color: var(--ok, #22c55e);
+}
+
+.w1337-hw-picker__row.is-imported {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.w1337-hw-picker__row input,
+.w1337-hw-picker__row input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 16px;
+  border: none;
+  box-shadow: none;
+  accent-color: var(--acc);
+}
+
+.w1337-hw-picker__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.w1337-hw-picker__addr,
+.w1337-hw-picker__path {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.w1337-hw-picker__addr {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.w1337-hw-picker__path {
+  font-size: 10px;
+}
+
+
+.w1337-hw-picker__tag {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.w1337-hw-picker__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.w1337-hw-picker__pager .ghost {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.w1337-hw-picker__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.w1337-hw-picker__actions .ghost,
+.w1337-hw-picker__actions .primary {
   width: 100%;
 }
 

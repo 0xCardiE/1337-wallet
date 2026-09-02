@@ -43,10 +43,9 @@ export function startLedgerHidPicker(): Promise<HIDDevice[]> {
  * `requestDevice` resolves empty without showing anything). MetaMask forces
  * "Expand View" (a full tab) for the same reason.
  */
-export async function openLedgerHidConnectTab(derivationPath: string): Promise<void> {
-  const path = derivationPath.trim() || DEFAULT_ETH_DERIVATION_PATH;
+export async function openLedgerHidConnectTab(): Promise<void> {
   await chrome.tabs.create({
-    url: chrome.runtime.getURL(`index.html?ledgerhid=1&path=${encodeURIComponent(path)}`),
+    url: chrome.runtime.getURL('index.html?ledgerhid=1'),
     active: true,
   });
 }
@@ -57,6 +56,31 @@ export async function getGrantedLedgerDevice(): Promise<HIDDevice | undefined> {
   if (!hid) return undefined;
   const devices = await hid.getDevices();
   return devices.find(d => d.vendorId === LEDGER_USB_VENDOR_ID);
+}
+
+let pickerSession: Awaited<ReturnType<typeof openLedgerEth>> | null = null;
+
+export async function closeLedgerPickerSession(): Promise<void> {
+  const session = pickerSession;
+  pickerSession = null;
+  if (session) await session.transport.close().catch(() => undefined);
+}
+
+/** Revoke Chrome’s WebHID grant so the next connect shows the device list again. */
+export async function forgetGrantedLedgerDevices(): Promise<number> {
+  await closeLedgerPickerSession();
+  const hid = window.navigator?.hid;
+  if (!hid) return 0;
+  const devices = (await hid.getDevices()).filter(d => d.vendorId === LEDGER_USB_VENDOR_ID);
+  let forgotten = 0;
+  for (const device of devices) {
+    if (device.opened) await device.close().catch(() => undefined);
+    const forget = (device as HIDDevice & { forget?: () => Promise<void> }).forget;
+    if (typeof forget !== 'function') continue;
+    await forget.call(device);
+    forgotten += 1;
+  }
+  return forgotten;
 }
 
 export function firstHidDevice(picked: HIDDevice[] | HIDDevice | undefined): HIDDevice | undefined {
@@ -101,22 +125,40 @@ async function openLedgerEth(opts?: { device?: HIDDevice }) {
   }
 }
 
+export async function listLedgerAddresses(
+  derivationPaths: string[],
+  opts?: { device?: HIDDevice; hold?: boolean },
+): Promise<Array<{ address: `0x${string}`; derivationPath: string }>> {
+  if (derivationPaths.length === 0) return [];
+  const opened = opts?.hold
+    ? pickerSession ?? (pickerSession = await openLedgerEth(opts))
+    : await openLedgerEth(opts);
+  try {
+    const out: Array<{ address: `0x${string}`; derivationPath: string }> = [];
+    for (const derivationPath of derivationPaths) {
+      // false = do not confirm each address on the device (picker lists many).
+      const result = await opened.eth.getAddress(toLedgerPath(derivationPath), false);
+      out.push({
+        address: result.address.toLowerCase() as `0x${string}`,
+        derivationPath,
+      });
+    }
+    return out;
+  } catch (err) {
+    if (opts?.hold) await closeLedgerPickerSession();
+    throw new Error(formatLedgerError(err));
+  } finally {
+    if (!opts?.hold) await opened.transport.close().catch(() => undefined);
+  }
+}
+
 export async function connectLedgerAddress(
   derivationPath: string = DEFAULT_ETH_DERIVATION_PATH,
   opts?: { device?: HIDDevice },
 ): Promise<{ address: `0x${string}`; derivationPath: string }> {
-  const { transport, eth } = await openLedgerEth(opts);
-  try {
-    const result = await eth.getAddress(toLedgerPath(derivationPath), true);
-    return {
-      address: result.address.toLowerCase() as `0x${string}`,
-      derivationPath,
-    };
-  } catch (err) {
-    throw new Error(formatLedgerError(err));
-  } finally {
-    await transport.close().catch(() => undefined);
-  }
+  const [row] = await listLedgerAddresses([derivationPath], opts);
+  if (!row) throw new Error('Ledger returned no address.');
+  return row;
 }
 
 function parseLedgerV(v: string | number): number {
@@ -227,7 +269,7 @@ function ensureHex(value: string): Hex {
 export function formatLedgerError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
   if (/user gesture|must be handling/i.test(message)) {
-    return 'Chrome blocked the device list (lost click). Use the Ledger window and click Allow.';
+    return 'Chrome blocked the device list (lost click). Use the Ledger tab and click Allow.';
   }
   if (/Access denied to use Ledger|did not grant the Ledger|No device|NotFoundError|HIDNotSupported/i.test(message)) {
     return 'Chrome did not grant the Ledger. Close Ledger Live, unlock the Nano, open the Ethereum app, then pick it in the browser list.';

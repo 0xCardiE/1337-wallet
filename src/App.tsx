@@ -31,6 +31,7 @@ export function App() {
   const [settings, setSettings] = useState<AppSettings>({});
   const [hasVault, setHasVault] = useState(false);
   const [overlay, setOverlay] = useState<Overlay>('none');
+  const [overlayBack, setOverlayBack] = useState<Exclude<Overlay, 'wallets'>>('settings');
   const [mainTab, setMainTab] = useState<MainTab>('assets');
 
   const refresh = useCallback(async () => {
@@ -145,7 +146,7 @@ export function App() {
       <WalletsView
         settings={settings}
         onChanged={() => void refresh()}
-        onBack={() => setOverlay('settings')}
+        onBack={() => setOverlay(overlayBack)}
       />
     );
   } else if (overlay === 'instant') {
@@ -179,7 +180,10 @@ export function App() {
         onSaved={() => void refresh()}
         onBack={() => setOverlay('none')}
         onOpenNetworks={() => setOverlay('networks')}
-        onOpenWallets={() => setOverlay('wallets')}
+        onOpenWallets={() => {
+          setOverlayBack('settings');
+          setOverlay('wallets');
+        }}
         onOpenInstantGates={() => setOverlay('instant')}
         onOpenTools={() => setOverlay('toolsSettings')}
         onOpenConnectedSites={() => setOverlay('connectedSites')}
@@ -199,6 +203,10 @@ export function App() {
         activeTab={mainTab}
         onTabChange={setMainTab}
         onOpenSettings={() => setOverlay('settings')}
+        onOpenWallets={() => {
+          setOverlayBack('none');
+          setOverlay('wallets');
+        }}
         settings={settings}
         onSaved={() => void refresh()}
       >

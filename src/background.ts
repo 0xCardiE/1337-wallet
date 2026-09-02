@@ -395,7 +395,8 @@ type Msg =
       error?: string;
     }
   | { type: 'TREZOR_INIT' }
-  | { type: 'TREZOR_ETHEREUM_GET_ADDRESS'; path?: string }
+  | { type: 'TREZOR_RESET' }
+  | { type: 'TREZOR_ETHEREUM_GET_ADDRESS'; path?: string; paths?: string[]; showOnTrezor?: boolean }
   | {
       type: 'TREZOR_ETHEREUM_SIGN_TRANSACTION';
       path?: string;

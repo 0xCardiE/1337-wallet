@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   firstHidDevice,
+  forgetGrantedLedgerDevices,
   formatLedgerError,
   toLedgerPath,
   unwrapDefaultExport,
@@ -41,5 +42,18 @@ describe('ledger helpers', () => {
       'Ledger library failed to load.',
     );
     expect(() => unwrapDefaultExport(undefined)).toThrow('Ledger library failed to load.');
+  });
+
+  it('forgets granted Ledger HID devices so Chrome can prompt again', async () => {
+    const forget = async () => undefined;
+    const device = { vendorId: 0x2c97, opened: false, forget } as HIDDevice & {
+      forget: () => Promise<void>;
+    };
+    const hid = { getDevices: async () => [device] };
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { navigator: { hid } },
+    });
+    await expect(forgetGrantedLedgerDevices()).resolves.toBe(1);
   });
 });

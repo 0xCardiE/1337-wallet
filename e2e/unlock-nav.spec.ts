@@ -36,4 +36,17 @@ test.describe('unlock and navigation', () => {
     await unlockWallet(page, E2E_PASSWORD);
     await expect(page.getByTestId('wallet-tab-assets')).toBeVisible();
   });
+
+  test('switcher Open goes to Wallets and back to assets', async ({ context, extensionId }) => {
+    const page = await openUnlockedWallet(context, extensionId);
+    await page.getByRole('button', { name: 'Switch account' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Switch account' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByText(/\d+ wallets?/)).toHaveCount(0);
+    await page.getByTestId('acct-sheet-open').click();
+    await expect(page.getByRole('heading', { name: 'Wallets' })).toBeVisible();
+    await expect(page.getByText('Active wallet')).toBeVisible();
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByTestId('wallet-tab-assets')).toBeVisible();
+  });
 });

@@ -39,13 +39,16 @@ export function isTrezorMessage(message: unknown): boolean {
     type === 'TREZOR_ETHEREUM_GET_ADDRESS' ||
     type === 'TREZOR_ETHEREUM_SIGN_TRANSACTION' ||
     type === 'TREZOR_ETHEREUM_SIGN_MESSAGE' ||
-    type === 'TREZOR_ETHEREUM_SIGN_TYPED_DATA'
+    type === 'TREZOR_ETHEREUM_SIGN_TYPED_DATA' ||
+    type === 'TREZOR_RESET'
   );
 }
 
 export async function handleTrezorMessage(message: {
   type: string;
   path?: string;
+  paths?: string[];
+  showOnTrezor?: boolean;
   transaction?: Record<string, unknown>;
   data?: Record<string, unknown>;
   metamask_v4_compat?: boolean;
@@ -53,17 +56,36 @@ export async function handleTrezorMessage(message: {
   hex?: boolean;
 }): Promise<{ success: boolean; payload?: unknown; error?: string }> {
   try {
+    if (message.type === 'TREZOR_RESET') {
+      try {
+        TrezorConnect.dispose();
+      } catch {
+        /* not initialized */
+      }
+      initPromise = undefined;
+      return { success: true, payload: { ok: true } };
+    }
     await initTrezorConnect();
     if (message.type === 'TREZOR_INIT') {
       return { success: true, payload: { ok: true } };
     }
     if (message.type === 'TREZOR_ETHEREUM_GET_ADDRESS') {
-      const path = message.path?.trim();
-      if (!path) return { success: false, error: 'Missing derivation path.' };
-      const result = await TrezorConnect.ethereumGetAddress({
-        path,
-        showOnTrezor: true,
-      });
+      const paths = Array.isArray(message.paths)
+        ? message.paths.map(p => String(p).trim()).filter(Boolean)
+        : message.path?.trim()
+          ? [message.path.trim()]
+          : [];
+      if (paths.length === 0) return { success: false, error: 'Missing derivation path.' };
+      const showOnTrezor = message.showOnTrezor === true;
+      const result =
+        paths.length === 1
+          ? await TrezorConnect.ethereumGetAddress({
+              path: paths[0],
+              showOnTrezor,
+            })
+          : await TrezorConnect.ethereumGetAddress({
+              bundle: paths.map(path => ({ path, showOnTrezor: false })),
+            });
       if (!result.success) {
         return {
           success: false,
@@ -71,7 +93,17 @@ export async function handleTrezorMessage(message: {
           payload: result.payload,
         };
       }
-      return { success: true, payload: result.payload };
+      const items = Array.isArray(result.payload) ? result.payload : [result.payload];
+      return {
+        success: true,
+        payload: {
+          address: items[0]?.address,
+          addresses: items.map((item, i) => ({
+            address: item.address,
+            path: paths[i],
+          })),
+        },
+      };
     }
     if (message.type === 'TREZOR_ETHEREUM_SIGN_TRANSACTION') {
       const path = message.path?.trim();

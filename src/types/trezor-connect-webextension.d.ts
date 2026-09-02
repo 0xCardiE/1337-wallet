@@ -22,10 +22,15 @@ declare module '@trezor/connect-webextension' {
 
   type TrezorConnectApi = {
     init(settings: ConnectSettings): Promise<void>;
-    ethereumGetAddress(params: {
-      path: string;
-      showOnTrezor?: boolean;
-    }): Promise<Response<{ address: string; path: number[] }>>;
+    ethereumGetAddress(
+      params:
+        | { path: string; showOnTrezor?: boolean }
+        | { bundle: Array<{ path: string; showOnTrezor?: boolean }> },
+    ): Promise<
+      Response<
+        { address: string; path: number[] } | Array<{ address: string; path: number[] }>
+      >
+    >;
     ethereumSignTransaction(params: {
       path: string;
       transaction: EthereumTransaction;
@@ -35,6 +40,7 @@ declare module '@trezor/connect-webextension' {
       message: string;
       hex?: boolean;
     }): Promise<Response<{ address: string; signature: string }>>;
+    dispose(): void;
     ethereumSignTypedData(params: {
       path: string;
       data: Record<string, unknown>;

@@ -22,6 +22,7 @@ export function WalletLayout({
   activeTab,
   onTabChange,
   onOpenSettings,
+  onOpenWallets,
   settings,
   onSaved,
   children,
@@ -29,6 +30,7 @@ export function WalletLayout({
   activeTab: WalletMainTab;
   onTabChange: (tab: WalletMainTab) => void;
   onOpenSettings: () => void;
+  onOpenWallets: () => void;
   settings: AppSettings;
   onSaved: () => void;
   children: ReactNode;
@@ -94,7 +96,13 @@ export function WalletLayout({
         className={`w1337-wallet-dock${burnerOn ? ' w1337-wallet-dock--burner' : ''}`}
         aria-label={burnerOn ? 'Wallet status — Burner Mode on' : 'Wallet status'}
       >
-        {account ? <AccountSwitcher settings={settings} onChanged={onSaved} /> : null}
+        {account ? (
+          <AccountSwitcher
+            settings={settings}
+            onChanged={onSaved}
+            onOpenWallets={onOpenWallets}
+          />
+        ) : null}
         <DappConnectionBar settings={settings} onSaved={onSaved} embedded />
       </footer>
       <TxApprovalSheet settings={settings} />
