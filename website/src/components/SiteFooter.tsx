@@ -63,6 +63,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/rpc" className="hover:text-text">
+                RPC methods
+              </Link>
+            </li>
+            <li>
               <a href={`mailto:${SITE.contactEmail}`} className="hover:text-text">
                 {SITE.contactEmail}
               </a>

@@ -8,6 +8,7 @@ Next.js landing page and integration docs for **1337 Wallet**.
 - `/security` — security FAQ (MetaMask / Rabby comparisons, hardware, burner keys)
 - `/faq` — product FAQ
 - `/integrate` — builder & AI integration guide (EIP-1193, EIP-6963, Wagmi, Ethers)
+- `/rpc` — supported / missing provider methods and what dapps fall back to
 
 ## Development
 

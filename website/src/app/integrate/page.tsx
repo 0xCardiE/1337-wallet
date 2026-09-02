@@ -148,14 +148,16 @@ const address = await signer.getAddress();`}
         </ul>
 
         <h2>Supported methods</h2>
-        <p>Standard EIP-1193 / JSON-RPC surface used by most dapps:</p>
-        <ul>
-          <li><code>eth_requestAccounts</code>, <code>eth_accounts</code></li>
-          <li><code>eth_chainId</code>, <code>wallet_switchEthereumChain</code>, <code>wallet_addEthereumChain</code></li>
-          <li><code>wallet_getCapabilities</code> (EIP-5792 discovery; no atomic batch / paymaster)</li>
-          <li><code>eth_sendTransaction</code>, <code>personal_sign</code>, <code>eth_signTypedData_v4</code></li>
-          <li>Events: <code>accountsChanged</code>, <code>chainChanged</code>, <code>connect</code>, <code>disconnect</code></li>
-        </ul>
+        <p>
+          Connect, switch chain, send, <code>personal_sign</code>, and typed data (Permit2, EIP-2612,
+          Pendle orders). <code>wallet_getCapabilities</code> always returns empty per-chain objects
+          so Uniswap / wagmi fall back to <code>eth_sendTransaction</code>. Full table — including
+          what we do not implement and what dapps use instead — is on{' '}
+          <Link href="/rpc" className="text-text underline-offset-4 hover:underline">
+            RPC methods
+          </Link>
+          .
+        </p>
 
         <h2>For AI agents</h2>
         <p>

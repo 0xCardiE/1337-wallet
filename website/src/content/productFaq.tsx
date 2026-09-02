@@ -97,6 +97,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <Link href="/integrate" className={linkClass}>
                 integration guide
               </Link>
+              {' · '}
+              <Link href="/rpc" className={linkClass}>
+                RPC methods
+              </Link>
               .
             </p>
           </>
