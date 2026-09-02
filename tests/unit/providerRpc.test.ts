@@ -50,7 +50,7 @@ describe('handleProviderRpc wallet_getCapabilities', () => {
     expect(caps[toHexChainId(1)].atomic).toBeUndefined();
   });
 
-  it('rejects a different account with 4100', async () => {
+  it('returns empty capabilities for a different account instead of 4100', async () => {
     await connectAddress(ORIGIN, TEST_ADDRESS);
     const res = await handleProviderRpc(
       TEST_PK,
@@ -61,9 +61,25 @@ describe('handleProviderRpc wallet_getCapabilities', () => {
       },
       ORIGIN,
     );
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error.code).toBe(4100);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.result).toEqual({});
+  });
+
+  it('answers when the origin is not connected', async () => {
+    const res = await handleProviderRpc(
+      TEST_PK,
+      {
+        id: '2b',
+        method: 'wallet_getCapabilities',
+        params: [TEST_ADDRESS],
+      },
+      ORIGIN,
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    const caps = res.result as Record<string, Record<string, unknown>>;
+    expect(caps[toHexChainId(1)]).toEqual({});
   });
 
   it('still rejects wallet_sendCalls as unsupported', async () => {

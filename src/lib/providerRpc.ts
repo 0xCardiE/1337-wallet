@@ -187,6 +187,20 @@ export async function handleProviderRpc(
       return { id, ok: true, result: null, disconnected: true };
     }
 
+    // Discovery only — always succeed. Uniswap calls this after Permit2/swap;
+    // 4100/"unsupported" surfaces as a DEV error even when the swap worked.
+    if (method === 'wallet_getCapabilities') {
+      const parsed = parseWalletGetCapabilitiesParams(params);
+      if (
+        parsed.address &&
+        sessionAddr &&
+        parsed.address.toLowerCase() !== sessionAddr.toLowerCase()
+      ) {
+        return { id, ok: true, result: {} };
+      }
+      return { id, ok: true, result: eip5792Capabilities(parsed.chainIds) };
+    }
+
     if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
       if (!sessionAddr) {
         if (method === 'eth_requestAccounts') {
@@ -217,19 +231,6 @@ export async function handleProviderRpc(
         new Error('eth_sign is disabled. Use personal_sign or eth_signTypedData_v4.'),
         { code: 4200 },
       );
-    }
-
-    if (method === 'wallet_getCapabilities') {
-      const parsed = parseWalletGetCapabilitiesParams(params);
-      if (parsed.address && parsed.address.toLowerCase() !== sessionAddr.toLowerCase()) {
-        throw Object.assign(new Error('Requested address is not the connected account.'), {
-          code: 4100,
-        });
-      }
-      if (origin && !(await isAddressConnected(origin, sessionAddr))) {
-        throw Object.assign(new Error('Unauthorized'), { code: 4100 });
-      }
-      return { id, ok: true, result: eip5792Capabilities(parsed.chainIds) };
     }
 
     if (method === 'wallet_switchEthereumChain') {
