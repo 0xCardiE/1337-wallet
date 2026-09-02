@@ -118,33 +118,28 @@ export function DappConnectionBar({
   const connected = status?.connected === true;
   const canConnect = status?.canConnect === true;
   const connectedShort = status?.connectedAddress ? shortAddress(status.connectedAddress) : null;
+  const showSite = Boolean(tab && (connected || canConnect));
 
   return (
     <div className={`w1337-dapp-bar${embedded ? ' w1337-dapp-bar--embedded' : ''}`} aria-label="Website connection">
       <div className="w1337-dapp-bar__site">
         {connected && tab ? (
-          <>
-            <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected />
-            <span className="w1337-dapp-bar__meta">
-              <span className="w1337-dapp-bar__host">{tab.hostname}</span>
-              <span className="w1337-dapp-bar__sub">
-                Connected
-                {connectedShort ? ` · ${connectedShort}` : ''}
-                {chainName ? ` · ${chainName}` : ''}
-              </span>
+          <span className="w1337-dapp-bar__meta">
+            <span className="w1337-dapp-bar__host">{tab.hostname}</span>
+            <span className="w1337-dapp-bar__sub">
+              Connected
+              {connectedShort ? ` · ${connectedShort}` : ''}
+              {chainName ? ` · ${chainName}` : ''}
             </span>
-          </>
+          </span>
         ) : canConnect && tab ? (
-          <>
-            <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected={false} />
-            <span className="w1337-dapp-bar__meta">
-              <span className="w1337-dapp-bar__host">{tab.hostname}</span>
-              <span className="w1337-dapp-bar__sub">
-                Not connected
-                {chainName ? ` · ${chainName}` : ''}
-              </span>
+          <span className="w1337-dapp-bar__meta">
+            <span className="w1337-dapp-bar__host">{tab.hostname}</span>
+            <span className="w1337-dapp-bar__sub">
+              Not connected
+              {chainName ? ` · ${chainName}` : ''}
             </span>
-          </>
+          </span>
         ) : (
           <span className="w1337-dapp-bar__meta">
             <span className="w1337-dapp-bar__host">Not connected</span>
@@ -156,6 +151,9 @@ export function DappConnectionBar({
       </div>
 
       <div className="w1337-dapp-bar__actions">
+        {showSite && tab ? (
+          <SiteIcon favIconUrl={tab.favIconUrl} label={tab.hostname} connected={connected} />
+        ) : null}
         {connected ? (
           <button
             type="button"

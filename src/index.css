@@ -3240,7 +3240,7 @@ button.w1337-mm-tabs__btn--on:hover:not(:disabled) {
   justify-content: space-between;
   gap: 10px;
   margin-top: auto;
-  padding: 10px 12px 12px;
+  padding: 10px 12px 12px 14px;
   border-top: 1px solid var(--border);
   background: var(--bg);
   flex-shrink: 0;
