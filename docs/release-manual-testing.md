@@ -101,16 +101,16 @@ Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accept
 
 ## 7. Hardware — Trezor
 
-Physical Trezor + Trezor Connect popup (`connect.trezor.io`).
+Physical Trezor + Trezor Connect popup (`connect.trezor.io`). Signing pass 2026-09-02 (production `dist/`, including the Permit2 `domain_separator_hash` fix).
 
 - [x] Connect Trezor from Wallets; export address; address matches Trezor Suite
 - [ ] Connect popup blocked / closed — readable error
-- [x] **ERC-20 send** — confirm sheet + Trezor screens; approve — Ethereum and Arbitrum (2026-09-02)
-- [x] **Native send** — dust ETH (or ARB) so the device sees empty `data` / value, not a token `transfer`
+- [x] **ERC-20 send** — Ethereum and Arbitrum
+- [x] **Native send** — dust; empty `data` / value on device
 - [x] **Reject on device** — request fails; no broadcast
-- [ ] **personal_sign** — dapp or console; approve on device
-- [ ] **EIP-712** — Permit (Uniswap / token) or a login typed-data; domain readable on device
-- [ ] **Quick Send** from Assets (native or token — skip if the ERC-20 send above was already this path)
+- [x] **personal_sign** — Chrome console
+- [x] **EIP-712** — Uniswap Permit2 (`PermitSingle`) on Arbitrum; Snapshot.org `Alias` typed data
+- [x] **Quick Send** from Assets — native + ERC-20 above
 - [ ] **Swap** (tiny amount) — quote, confirm sheet, device, receipt / History
 - [ ] **Gas Station** top-up to another chain
 - [ ] **Multisend** native (and ERC-20 if you have a test token) — one device confirm (+ approve)
@@ -174,9 +174,9 @@ Use small amounts. After each, check History + the site.
 | Automated suite | | | |
 | Software + dapp pass | | | |
 | Ledger pass | | | |
-| Trezor pass | | | |
+| Trezor pass | signing (connect, native, ERC-20 ETH+Arb, reject, personal_sign, Permit2, Snapshot Alias) | 2026-09-02 | unpacked `dist/` |
 | Store zip review | | | |
 
 Known issues found this pass (link issues or list here):
 
--
+- Trezor EIP-712 / Uniswap Permit2 failed with missing `domain_separator_hash` until hashed locally (`src/lib/eip712Hashes.ts`). Fixed; retested on Arbitrum.

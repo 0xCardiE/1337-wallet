@@ -4,6 +4,7 @@ import {
   bytesToHexMessage,
   parseTypedDataParam,
 } from './backgroundSign';
+import { ensureEip712DomainType } from './eip712Hashes';
 import { chainJsonRpcCall } from './ethereum';
 import { applyGasOverrides, type GasOverrideInput } from './gasOverrides';
 import { signEip712WithLedger, signPersonalMessageWithLedger, signTxWithLedger } from './ledger';
@@ -35,31 +36,7 @@ function messageParamToDeviceFormats(raw: unknown): { ledgerHex: string; trezorM
 }
 
 export function normalizeTypedDataForHardware(typed: ReturnType<typeof parseTypedDataParam>) {
-  const domain = { ...typed.domain };
-  if (domain.chainId !== undefined) {
-    const cid = domain.chainId;
-    if (typeof cid === 'string') {
-      domain.chainId = cid.startsWith('0x') ? Number.parseInt(cid, 16) : Number(cid);
-    }
-  }
-  const types = { ...typed.types };
-  if (!types.EIP712Domain) {
-    const fields: Array<{ name: string; type: string }> = [];
-    if (domain.name !== undefined) fields.push({ name: 'name', type: 'string' });
-    if (domain.version !== undefined) fields.push({ name: 'version', type: 'string' });
-    if (domain.chainId !== undefined) fields.push({ name: 'chainId', type: 'uint256' });
-    if (domain.verifyingContract !== undefined) {
-      fields.push({ name: 'verifyingContract', type: 'address' });
-    }
-    if (domain.salt !== undefined) fields.push({ name: 'salt', type: 'bytes32' });
-    types.EIP712Domain = fields;
-  }
-  return {
-    domain,
-    types,
-    primaryType: typed.primaryType,
-    message: typed.message,
-  };
+  return ensureEip712DomainType(typed);
 }
 
 function parseTypedDataFromParams(method: string, params: unknown[]) {

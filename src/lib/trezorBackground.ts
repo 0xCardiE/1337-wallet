@@ -1,4 +1,5 @@
 import TrezorConnect from '@trezor/connect-webextension';
+import { prepareTrezorTypedData, type Eip712Payload } from './eip712Hashes';
 
 const TREZOR_CONNECT_SRC = 'https://connect.trezor.io/9/';
 
@@ -117,10 +118,13 @@ export async function handleTrezorMessage(message: {
       if (!path || !data || typeof data !== 'object') {
         return { success: false, error: 'Missing path or typed data.' };
       }
+      const prepared = prepareTrezorTypedData(data as Eip712Payload);
       const result = await TrezorConnect.ethereumSignTypedData({
         path,
-        data: data as never,
+        data: prepared.data as never,
         metamask_v4_compat: message.metamask_v4_compat ?? true,
+        domain_separator_hash: prepared.domain_separator_hash,
+        message_hash: prepared.message_hash,
       });
       if (!result.success) {
         return {

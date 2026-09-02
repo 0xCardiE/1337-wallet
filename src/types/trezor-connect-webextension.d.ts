@@ -30,6 +30,18 @@ declare module '@trezor/connect-webextension' {
       path: string;
       transaction: EthereumTransaction;
     }): Promise<Response<{ v: string | number; r: string; s: string }>>;
+    ethereumSignMessage(params: {
+      path: string;
+      message: string;
+      hex?: boolean;
+    }): Promise<Response<{ address: string; signature: string }>>;
+    ethereumSignTypedData(params: {
+      path: string;
+      data: Record<string, unknown>;
+      metamask_v4_compat?: boolean;
+      domain_separator_hash?: string;
+      message_hash?: string;
+    }): Promise<Response<{ address: string; signature: string }>>;
   };
 
   const TrezorConnect: TrezorConnectApi;
