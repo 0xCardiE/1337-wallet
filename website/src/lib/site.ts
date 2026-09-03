@@ -3,7 +3,7 @@ export const SITE = {
   shortName: '1337',
   tagline: 'A professional EVM signer for developers, hackers, and advanced users.',
   description:
-    'Other wallets route your activity through their servers to power previews and telemetry. 1337 runs everything against your own RPC — readable confirms, local simulation, approval revokes — with no backend, no analytics, and no one watching. Works with every MetaMask dapp.',
+    'Dense confirms, your RPCs, approvals, swaps, ENS, multisend. Built for people who already read the request. No analytics. No 1337 server. Works with every MetaMask dapp.',
   chromeStoreUrl: '#download',
   contactEmail: 'hello@1337wallet.io',
   githubUrl: 'https://github.com',
