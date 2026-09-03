@@ -1,0 +1,12 @@
+#!/bin/sh
+# Rebuild unpacked dist/ before push and ask Chrome to reload 1337.
+# Same HEAD as the last rebuild is a no-op (commit + push does not build twice).
+if [ -n "$CI" ]; then
+  exit 0
+fi
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root" || exit 0
+mkdir -p "$root/node_modules/.cache"
+echo "1337: rebuilding unpacked extension in the background"
+node "$root/scripts/rebuild-extension.mjs" >>"$root/node_modules/.cache/1337-ext-rebuild.log" 2>&1 &
+exit 0

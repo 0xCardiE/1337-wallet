@@ -39,6 +39,8 @@ npm run build   # Webpack + LavaMoat (popup, background) + content scripts
 
 Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpacked).
 
+`npm install` installs git hooks that rebuild `dist/` after **commit** and **push**, then open a tiny extension page that calls `chrome.runtime.reload()` (unpacked only). Run `npm run ext:rebuild` yourself if you want that without git. If Chrome does not pick it up, click Reload on `chrome://extensions`.
+
 ### Tests
 
 ```bash

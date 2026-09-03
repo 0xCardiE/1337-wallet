@@ -19,7 +19,10 @@ npm run test:watch
 
 npm run test:e2e                  # rebuilds dist/, then Playwright --load-extension=dist
 npm run test:all                  # unit, then E2E
+npm run ext:rebuild               # production dist/ + reload unpacked 1337 in Chrome
 ```
+
+Git **post-commit** and **pre-push** hooks (installed by `npm install`) run `ext:rebuild` in the background. The same HEAD is not built twice. Store packages ignore `dev-reload.html` (`update_url` is set).
 
 `test:e2e` always runs `npm run build` first (a few seconds). This matters: `npm run lavamoat:check` / `build:policy` overwrite `dist/` with a **policy-generation** build whose service worker does not run normally — testing that dist fails all E2E with `waiting for event "serviceworker"` timeouts.
 

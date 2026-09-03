@@ -82,20 +82,21 @@ On a **software** account, from a real page (not the E2E `example.com` stub):
 
 ## 6. Hardware — Ledger
 
-Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accepted.
+Physical Nano + current Ledger Live Ethereum app. WebHID prompt must stay accepted. Signing pass 2026-09-03 (unpacked `dist/`, Nano S hashed Permit2 `0x6d00`, then wallet-notice UX in `76843ba`).
 
-- [ ] Connect Ledger from Wallets — opens a full 1337 tab if HID is not granted; Allow Ledger shows Chrome's HID picker; then a list of addresses (Ledger Live / BIP-44 / Legacy, Next 5); import one or more; addresses match Ledger Live
+- [x] Connect Ledger from Wallets — opens a full 1337 tab if HID is not granted; Allow Ledger shows Chrome's HID picker; then a list of addresses (Ledger Live / BIP-44 / Legacy, Next 5); import one or more; addresses match Ledger Live
 - [ ] Disconnect / reject WebHID — readable error, no unsigned tx
-- [ ] **Dapp send** — confirm sheet, then device screens; approve on device
-- [ ] **Reject on device** — request fails; no broadcast
-- [ ] **personal_sign** and **EIP-712** on device — Uniswap Permit2 (`PermitSingle`) on Nano S uses hashed EIP-712 fallback (`0x6d00`); enable Blind signing if the device asks
-- [ ] **Quick Send** from Assets
-- [ ] **Swap** (tiny amount) — quote, confirm sheet, device, receipt / History
+- [x] **Dapp send** — confirm sheet, then device screens; approve on device (Uniswap swap)
+- [x] **Reject on device** — request fails; no broadcast (Quick Send + `personal_sign` from Uniswap console)
+- [x] **personal_sign** and **EIP-712** on device — Uniswap Permit2 (`PermitSingle`) on Nano S uses hashed EIP-712 fallback (`0x6d00`); enable Blind signing if the device asks. `personal_sign` reject confirmed; approve-after-notice not re-screenshotted
+- [x] **Quick Send** from Assets — native send + reject on device
+- [x] **Swap** (tiny amount) — Uniswap, confirm sheet, device
 - [ ] **Gas Station** top-up to another chain
 - [ ] **Multisend** native (and ERC-20 if you have a test token) — one device confirm (+ approve)
 - [ ] **ENS** record or register path opens the device confirm (skip paying if you do not intend to)
 - [ ] Unplug mid-sign — error, not a hang; replug works
 - [ ] Switch back to a software account; Ledger is not left as the silent signer
+- [x] `eth_sign` from Uniswap console — 4200, device does not light up (disabled on purpose)
 
 ---
 
@@ -127,7 +128,7 @@ Do **not** run this on a website tab (or MetaMask). `__1337` is not there. Use o
 2. Open the 1337 side panel or popup, right-click **inside 1337** → Inspect. Console context must be `chrome-extension://…` (not `top` of a web page).
 
 ```js
-await chrome.runtime.sendMessage({ type: 'HW_RESET' })
+await chrome.runtime.sendMessage({ type: 'HW_RESET' });
 // { ledgerForgotten: 1, trezorReset: true }
 ```
 
@@ -143,7 +144,7 @@ Store builds reject `HW_RESET`. Manual fallbacks: `chrome://settings/content/hid
 
 Use small amounts. After each, check History + the site.
 
-- [ ] Uniswap (or another AMM) — swap; unlimited approve warning is visible
+- [x] Uniswap (or another AMM) — swap on Ledger + Permit2; unlimited approve warning not separately checked
 - [ ] Aave / similar — supply or approve
 - [ ] OpenSea or an NFT marketplace — `setApprovalForAll` card
 - [ ] Snapshot / another SIWE login
@@ -172,7 +173,7 @@ Use small amounts. After each, check History + the site.
 - [ ] History fills from explorer (Etherscan key and/or Blockscout fallback on OP/Base/etc.)
 - [ ] Failed tx shows as failed, not a success
 - [ ] Assets: native row; hide a junk token; it stays in Other / hidden
-- [ ] Quick Send to a checksummed address; reject once, then a dust send
+- [ ] Quick Send to a checksummed address; reject once on Ledger, then a dust ETH send
 - [ ] No analytics / mystery 1337 backend hosts in the Network panel (RPC, LiFi, explorer, hardware Connect only)
 - [ ] Side panel vs popup (Settings) both render; confirm sheet still works in the chosen surface
 
@@ -190,14 +191,17 @@ Use small amounts. After each, check History + the site.
 
 ## 12. Sign-off
 
-| Role | Name | Date | Build / commit |
-|------|------|------|----------------|
-| Automated suite | | | |
-| Software + dapp pass | | | |
-| Ledger pass | | | |
-| Trezor pass | signing (connect, native, ERC-20 ETH+Arb, reject, personal_sign, Permit2, Snapshot Alias) | 2026-09-02 | unpacked `dist/` |
-| Store zip review | | | |
+| Role                 | Name                                                                                                                           | Date       | Build / commit                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------ |
+| Automated suite      |                                                                                                                                |            |                                      |
+| Software + dapp pass |                                                                                                                                |            |                                      |
+| Ledger pass          | signing (connect, Uniswap swap, Permit2 hashed EIP-712, Quick Send native, device reject, personal_sign reject, eth_sign 4200) | 2026-09-03 | unpacked `dist/` (`76843ba` notices) |
+| Trezor pass          | signing (connect, native, ERC-20 ETH+Arb, reject, personal_sign, Permit2, Snapshot Alias)                                      | 2026-09-02 | unpacked `dist/`                     |
+| Store zip review     |                                                                                                                                |            |                                      |
 
 Known issues found this pass (link issues or list here):
 
 - Trezor EIP-712 / Uniswap Permit2 failed with missing `domain_separator_hash` until hashed locally (`src/lib/eip712Hashes.ts`). Fixed; retested on Arbitrum.
+- Ledger Nano S Permit2 hit `INS_NOT_SUPPORTED (0x6d00)` until hashed EIP-712 fallback (`signEIP712HashedMessage`). Fixed; retested on Uniswap.
+- Device reject and disabled `eth_sign` opened the DEV RPC dump. Fixed: short wallet notices (`76843ba`).
+- Quick Send “rejected on the device” line stayed until the panel closed. Auto-clears after 20s (reload unpacked `dist/` after that change).
