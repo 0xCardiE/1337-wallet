@@ -23,6 +23,7 @@ import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
 import type { AppSettings } from '../lib/storageState';
 
 const COLLAPSE_AFTER_SEC = 30;
+const SEND_ERR_DISMISS_MS = 20_000;
 
 type SendPhase = 'preparing' | 'broadcasting' | 'pending';
 
@@ -182,6 +183,12 @@ export function QuickSendInline({
   useEffect(() => {
     setConfirming(false);
   }, [toRaw, amountStr]);
+
+  useEffect(() => {
+    if (!err) return;
+    const id = window.setTimeout(() => setErr(null), SEND_ERR_DISMISS_MS);
+    return () => window.clearTimeout(id);
+  }, [err]);
 
   useEffect(
     () => () => {
