@@ -6063,8 +6063,16 @@ button.w1337-approvals__toggle:hover:not(:disabled) {
   gap: 8px;
 }
 
+.w1337-signings__intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
 .w1337-signings__lead {
-  margin: -6px 0 14px;
+  margin: 0;
   font-size: 12px;
   line-height: 1.45;
 }

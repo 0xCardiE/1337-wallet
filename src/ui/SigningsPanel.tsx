@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAddress } from 'viem';
 import { getUnlockedAccount } from '../lib/accountSession';
 import { chainById } from '../lib/chainCatalog';
-import { chainLogoUri } from '../lib/chainLogo';
 import {
   clearSigningHistory,
   loadSigningHistory,
@@ -15,7 +14,6 @@ import { type AppSettings } from '../lib/storageState';
 import { pagePathAndQuery } from '../lib/txAction';
 import { describeError, shortHash } from '../lib/utils';
 import { ApprovalFact, ExternalLinkIcon } from './ApprovalsScanOlder';
-import { LiFiIcon } from './LiFiIcon';
 
 const KIND_LABEL: Record<SigningKind, string> = {
   message: 'Message',
@@ -251,8 +249,6 @@ export function SigningsPanel({ settings: _settings }: { settings: AppSettings }
   useEffect(() => subscribeSigningHistory(() => void reload()), [reload]);
 
   const groups = useMemo(() => groupRowsByDate(rows), [rows]);
-  const latestChain = rows[0] ? chainById(rows[0].chainId) : undefined;
-  const chainLogo = latestChain ? chainLogoUri(latestChain) : undefined;
 
   async function onClear() {
     if (!addr) return;
@@ -284,24 +280,10 @@ export function SigningsPanel({ settings: _settings }: { settings: AppSettings }
 
   return (
     <div className="w1337-approvals w1337-signings">
-      <div className="w1337-tx-history__head">
-        <div className="w1337-tx-history__head-main">
-          {chainLogo ? (
-            <LiFiIcon logoURI={chainLogo} label={latestChain?.name} size={28} rounded />
-          ) : (
-            <span className="w1337-signings__mark w1337-signings__mark--message" aria-hidden>
-              SIG
-            </span>
-          )}
-          <div>
-            <p className="w1337-tx-history__head-title">This wallet</p>
-            <p className="w1337-tx-history__head-sub muted">
-              {rows.length > 0
-                ? `${rows.length} local signing${rows.length === 1 ? '' : 's'}`
-                : 'Local signing history'}
-            </p>
-          </div>
-        </div>
+      <div className="w1337-signings__intro">
+        <p className="w1337-signings__lead muted">
+          Messages and typed data this wallet signed. Stored on this device only — not on-chain.
+        </p>
         {rows.length > 0 ? (
           <button
             type="button"
@@ -314,10 +296,6 @@ export function SigningsPanel({ settings: _settings }: { settings: AppSettings }
           </button>
         ) : null}
       </div>
-
-      <p className="w1337-signings__lead muted">
-        Messages and typed data this wallet signed. Stored on this device only — not on-chain.
-      </p>
 
       {err ? <p className="error">{err}</p> : null}
 

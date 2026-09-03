@@ -12,8 +12,7 @@ export function Hero() {
 
         <div className="max-w-3xl">
           <h1 className="text-4xl font-semibold tracking-tight md:text-6xl md:leading-[1.05]">
-            The EVM wallet when you want{' '}
-            <span className="text-accent-deep">RPC control</span>, readable txs, and zero bloat.
+            The wallet that doesn&apos;t <span className="text-accent-deep">phone home</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{SITE.description}</p>
         </div>

@@ -3,7 +3,7 @@ export const SITE = {
   shortName: '1337',
   tagline: 'A professional EVM signer for developers, hackers, and advanced users.',
   description:
-    'Self-custody signer: understand the request, judge the risk, sign or reject. RPC control, readable confirms, LiFi swaps, ENS, and MetaMask-compatible dapps. No analytics. No central server. Not a Foundry lab.',
+    'Other wallets route your activity through their servers to power previews and telemetry. 1337 runs everything against your own RPC — readable confirms, local simulation, approval revokes — with no backend, no analytics, and no one watching. Works with every MetaMask dapp.',
   chromeStoreUrl: '#download',
   contactEmail: 'hello@1337wallet.io',
   githubUrl: 'https://github.com',
@@ -72,12 +72,6 @@ export const TOOLS = [
     id: 'approvals',
     title: 'Approvals',
     description: 'Review and revoke ERC-20, NFT, and Permit2 allowances from the wallet.',
-  },
-  {
-    id: 'inspect',
-    title: 'Inspect',
-    description:
-      'Paste an address, token, ENS name, or tx hash before you send or approve. Off until you enable it.',
   },
   {
     id: 'swap',
