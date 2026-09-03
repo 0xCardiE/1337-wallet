@@ -18,14 +18,11 @@ describe('extension packaging', () => {
     expect(manifest.version).toBe(pkg.version);
     expect(brand.version).toBe(pkg.version);
     expect(manifest.name).toBe(brand.name);
-    expect(manifest.permissions).toEqual([
-      'storage',
-      'sidePanel',
-      'windows',
-      'tabs',
-      'scripting',
-    ]);
+    expect(manifest.permissions).toEqual(['storage', 'sidePanel', 'scripting']);
+    expect(manifest.host_permissions).toEqual(['<all_urls>']);
     expect(manifest.permissions).not.toContain('hid');
+    expect(manifest.permissions).not.toContain('tabs');
+    expect(manifest.permissions).not.toContain('windows');
   });
 
   it('ships PNG icons for every size declared in the manifest', () => {

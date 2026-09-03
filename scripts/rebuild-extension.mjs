@@ -4,7 +4,7 @@
  * Used by post-commit / pre-push hooks and `npm run ext:rebuild`.
  */
 import { createHash } from 'node:crypto';
-import { execFile as execFileCb, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -17,9 +17,6 @@ import {
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
-
-const execFile = promisify(execFileCb);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(root, 'dist');
 const cacheDir = path.join(root, 'node_modules', '.cache');
@@ -55,20 +52,28 @@ function writeStamp(head) {
   writeFileSync(stampPath, `${JSON.stringify({ head, at: Date.now() })}\n`);
 }
 
-async function acquireLock() {
+function tryAcquireLock() {
   mkdirSync(cacheDir, { recursive: true });
-  const started = Date.now();
-  while (true) {
-    try {
-      mkdirSync(lockDir);
-      return;
-    } catch {
-      if (Date.now() - started > 180_000) {
-        throw new Error('Timed out waiting for the extension rebuild lock.');
-      }
-      await new Promise(r => setTimeout(r, 400));
-    }
+  try {
+    mkdirSync(lockDir);
+    return true;
+  } catch {
+    return false;
   }
+}
+
+async function acquireLock() {
+  if (tryAcquireLock()) return true;
+  // Hooks must not wait — git commit/push inherit the hook process group.
+  if (process.env.SKIP_IF_LOCKED === '1') return false;
+  const started = Date.now();
+  while (!tryAcquireLock()) {
+    if (Date.now() - started > 180_000) {
+      throw new Error('Timed out waiting for the extension rebuild lock.');
+    }
+    await new Promise(r => setTimeout(r, 400));
+  }
+  return true;
 }
 
 function releaseLock() {
@@ -98,21 +103,9 @@ function findLoadedUnpacked() {
   return hits;
 }
 
-async function reloadInChrome(url) {
-  if (process.platform !== 'darwin') {
-    const opened = spawnSync('open', ['-a', 'Google Chrome', url], { encoding: 'utf8' });
-    return opened.status === 0;
-  }
-  try {
-    await execFile('osascript', [
-      '-e',
-      `tell application "Google Chrome" to open location ${JSON.stringify(url)}`,
-    ]);
-    return true;
-  } catch {
-    const opened = spawnSync('open', ['-a', 'Google Chrome', url], { encoding: 'utf8' });
-    return opened.status === 0;
-  }
+function reloadInChrome(url) {
+  const opened = spawnSync('open', ['-a', 'Google Chrome', url], { encoding: 'utf8' });
+  return opened.status === 0;
 }
 
 async function reloadExtension() {
@@ -130,8 +123,7 @@ async function reloadExtension() {
   } else {
     console.log(`1337: reloading unpacked extension ${id}`);
   }
-  const ok = await reloadInChrome(url);
-  if (!ok) {
+  if (!reloadInChrome(url)) {
     console.log('1337: built. Reload 1337 on chrome://extensions.');
   }
 }
@@ -153,7 +145,11 @@ async function main() {
     return;
   }
   const head = gitHead();
-  await acquireLock();
+  const locked = await acquireLock();
+  if (!locked) {
+    console.log('1337: rebuild already running, skip');
+    return;
+  }
   try {
     const stamp = readStamp();
     if (head && stamp?.head === head && existsSync(path.join(distDir, 'manifest.json'))) {
