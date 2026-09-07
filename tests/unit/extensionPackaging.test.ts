@@ -25,6 +25,13 @@ describe('extension packaging', () => {
     expect(manifest.version).toBe(pkg.version);
     expect(brand.version).toBe(pkg.version);
     expect(manifest.name).toBe(brand.name);
+    expect(String(manifest.name).length).toBeLessThanOrEqual(75);
+    expect(manifest.description).toBe(
+      (brand.messaging as { chromeExtensionDescription: string }).chromeExtensionDescription,
+    );
+    expect(String(manifest.description).length).toBeLessThanOrEqual(132);
+    expect(manifest).not.toHaveProperty('key');
+    expect(manifest).not.toHaveProperty('update_url');
     expect(manifest.permissions).toEqual(['storage', 'sidePanel', 'scripting']);
     expect(manifest.host_permissions).toEqual(['<all_urls>']);
     expect(manifest.permissions).not.toContain('hid');

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "1337 Wallet",
   "version": "2.1.1",
-  "description": "1337 — advanced Ethereum wallet for developers and power users. Seed/private-key accounts, Ledger/Trezor, LiFi swaps, multi-RPC, multi-send, MetaMask-compatible dapps. No analytics. No 1337 server.",
+  "description": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No 1337 server.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

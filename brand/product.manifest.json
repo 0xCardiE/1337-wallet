@@ -55,7 +55,7 @@
     ]
   },
   "messaging": {
-    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, local simulation, approvals, Ledger/Trezor, LiFi swaps, multi-RPC. No analytics. No 1337 server.",
+    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No 1337 server.",
     "onboardingLead": "A signer for developers and power users. Create or import a seed phrase or private key — encrypted locally with your password. Add Ledger or Trezor later in Settings.",
     "settingsPrivacyHeading": "Privacy & data",
     "settingsPrivacyLead": "No analytics. No 1337 server. Everything below stays on your machine unless you initiate a swap, RPC call, or explorer lookup.",
