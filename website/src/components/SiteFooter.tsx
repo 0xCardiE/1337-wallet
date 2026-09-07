@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BuiltOnEthereumBadge } from '@/components/BuiltOnEthereumBadge';
 import { FOOTER_EXTRA_LINKS, NAV_LINKS, SITE } from '@/lib/site';
 
 export function SiteFooter() {
@@ -86,8 +87,13 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-border/60 px-5 py-5 text-center text-xs text-muted">
-        © {new Date().getFullYear()} {SITE.name}. Self-custody. Inspect before you trust.
+      <div className="border-t border-border/60 px-5 py-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
+          <BuiltOnEthereumBadge />
+          <p className="text-center text-xs text-muted">
+            © {new Date().getFullYear()} {SITE.name}. Self-custody. Inspect before you trust.
+          </p>
+        </div>
       </div>
     </footer>
   );
