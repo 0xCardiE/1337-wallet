@@ -9,6 +9,7 @@
     "dev": "node scripts/watch-extension.mjs",
     "dev:ext": "node scripts/watch-extension.mjs",
     "build": "NODE_ENV=production webpack --config webpack.config.cjs && NODE_ENV=production webpack --config webpack.ui.config.cjs && NODE_ENV=production webpack --config webpack.content.config.cjs",
+    "package:store": "node scripts/package-store-zip.mjs",
     "ext:rebuild": "node scripts/rebuild-extension.mjs",
     "prepare": "node scripts/install-git-hooks.mjs",
     "build:policy": "LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.config.cjs && LAVAMOAT_GENERATE_POLICY=1 NODE_ENV=production webpack --config webpack.ui.config.cjs",

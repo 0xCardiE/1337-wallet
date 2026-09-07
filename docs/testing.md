@@ -20,6 +20,7 @@ npm run test:watch
 npm run test:e2e                  # rebuilds dist/, then Playwright --load-extension=dist
 npm run test:all                  # unit, then E2E
 npm run ext:rebuild               # production dist/ + reload unpacked 1337 in Chrome
+npm run package:store             # production dist/ → gitignored release/1337-wallet-<version>.zip
 ```
 
 Git **post-commit** and **pre-push** hooks (installed by `npm install`) run `ext:rebuild` in the background. The same HEAD is not built twice. Store packages ignore `dev-reload.html` (`update_url` is set).

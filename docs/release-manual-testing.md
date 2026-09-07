@@ -181,7 +181,7 @@ Use small amounts. After each, check History + the site.
 
 ## 11. Store / release packaging
 
-- [ ] Zip is production `dist/` only (no `.map` if you strip them for the store; keep maps in a GitHub release if you want them)
+- [ ] Zip is production `dist/` only: `npm run package:store` → `release/1337-wallet-<version>.zip` (no `.map`, no `dev-reload`; keep maps in a GitHub release if you want them)
 - [ ] Store listing: name, screenshots, privacy text match [brand/product.manifest.json](../brand/product.manifest.json) — no analytics, no 1337 server
 - [ ] Permissions still match `public/manifest.json` (`storage`, `sidePanel`, `scripting`, `<all_urls>`)
 - [ ] Version bump in `package.json` + `public/manifest.json`

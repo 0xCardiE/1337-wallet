@@ -140,7 +140,7 @@ Product, UX, infra, and platform work that is not a security control.
 | [x] | P1 | Playwright E2E (extension load + bootstrap) | Ambire | Medium | `e2e/` + `docs/testing.md`. Hardware / live dapps: `docs/release-manual-testing.md` |
 | [~] | P1 | Lightweight tx humanizer (local) | Ambire | Medium | Confirm sheet + History titles. See `src/lib/txHumanize.ts`. Expand known selectors as needed |
 | [ ] | P2 | Chain list sync + fallback pattern | Rabby | Medium | Remote-first catalog + local fallback + periodic refresh; unify `findChain()` across RPC, UI, provider. See `src/lib/chainCatalog.ts`, `chainRpcRegistry.ts` |
-| [ ] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `build:extensions`-style script for store uploads; maps in GitHub release artifacts |
+| [x] | P2 | Release pipeline: strip sourcemaps + zip | Ambire | Low | `npm run package:store` → `release/1337-wallet-<version>.zip` (gitignored). Webpack already has `devtool: false`. |
 | [x] | P1 | Blockscout fallback when Etherscan Free excludes the chain | 1337 | Medium | OP/Base/Scroll/zkSync/Ink/Gnosis via per-instance Blockscout. BSC/Avalanche have no instance. `explorerApis.ts`. See `docs/explorer-history.md` |
 | [ ] | P2 | Four-byte + contract source in approval (expand) | 1337 + Rabby | Low | Already partial via `fourByteDirectory.ts`, `explorerContractSource.ts` — expand coverage and surface in action UI |
 | [ ] | P3 | EIP-7702 / smart-account path | Ambire | High | `AccountOp`-style abstraction, delegation UI, `sign7702` on signers. Needs relayer/bundler strategy. Unlock EIP-5792 execution below — discovery already answers empty capabilities. |
@@ -219,6 +219,7 @@ EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilitie
 
 | Date | Change |
 |------|--------|
+| 2026-09-07 | Chrome Web Store zip: `npm run package:store` writes gitignored `release/*.zip` |
 | 2026-09-03 | Tools: Signings (local message/typed-data history) is the default tab; Inspect is opt-in |
 | 2026-09-02 | Smart-account follow-ups: EIP-5792 atomic batch / paymaster / session keys wait on 7702; discovery (`wallet_getCapabilities`) already ships empty |
 | 2026-09-02 | Vitest unit suite + Playwright extension E2E + pre-release manual checklist (`docs/testing.md`, `docs/release-manual-testing.md`) |

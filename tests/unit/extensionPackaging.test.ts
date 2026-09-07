@@ -1,6 +1,13 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  collectStoreZipEntries,
+  isStoreZipEntry,
+  storeZipBasename,
+  writeStoreZipFromDir,
+} from '../../scripts/package-store-zip.mjs';
 import { unpackedChromeExtensionId } from '../../scripts/rebuild-extension.mjs';
 
 const root = join(__dirname, '../..');
@@ -53,4 +60,56 @@ describe('extension packaging', () => {
       'llcedjlonmkgibpfodlmfkflkkmdojao',
     );
   });
+
+  it('names the store zip from the package version', () => {
+    expect(storeZipBasename('2.1.1')).toBe('1337-wallet-2.1.1.zip');
+  });
+
+  it('omits sourcemaps, Finder junk, and unpacked-only reload files from the store zip', () => {
+    expect(isStoreZipEntry('manifest.json')).toBe(true);
+    expect(isStoreZipEntry('background.js')).toBe(true);
+    expect(isStoreZipEntry('assets/popup.js')).toBe(true);
+    expect(isStoreZipEntry('dev-reload.html')).toBe(false);
+    expect(isStoreZipEntry('dev-reload.js')).toBe(false);
+    expect(isStoreZipEntry('background.js.map')).toBe(false);
+    expect(isStoreZipEntry('assets/popup.js.map')).toBe(false);
+    expect(isStoreZipEntry('.DS_Store')).toBe(false);
+    expect(isStoreZipEntry('icons/.DS_Store')).toBe(false);
+    expect(isStoreZipEntry('1337-wallet-2.1.1.zip')).toBe(false);
+  });
+
+  it('zips dist files with manifest.json at the archive root', () => {
+    const dir = mkdtempSync(join(tmpdir(), '1337-store-zip-'));
+    mkdirSync(join(dir, 'icons'));
+    writeFileSync(join(dir, 'manifest.json'), '{"name":"1337 Wallet","version":"2.1.1"}\n');
+    writeFileSync(join(dir, 'background.js'), 'ok');
+    writeFileSync(join(dir, 'icons/icon-16.png'), 'png');
+    writeFileSync(join(dir, 'dev-reload.js'), 'no');
+    writeFileSync(join(dir, 'background.js.map'), 'no');
+    writeFileSync(join(dir, '.DS_Store'), 'no');
+    const zipPath = join(dir, 'out.zip');
+    const { files } = writeStoreZipFromDir(dir, zipPath);
+    expect(files).toEqual(['background.js', 'icons/icon-16.png', 'manifest.json']);
+    expect(collectStoreZipEntries(dir).map(e => e.rel)).toEqual(files);
+    expect(existsSync(zipPath)).toBe(true);
+    expect(zipCentralNames(readFileSync(zipPath))).toEqual(files);
+    rmSync(dir, { recursive: true, force: true });
+  });
 });
+
+function zipCentralNames(buf: Buffer) {
+  const names: string[] = [];
+  let i = 0;
+  while (i + 46 <= buf.length) {
+    if (buf.readUInt32LE(i) !== 0x02014b50) {
+      i += 1;
+      continue;
+    }
+    const nameLen = buf.readUInt16LE(i + 28);
+    const extraLen = buf.readUInt16LE(i + 30);
+    const commentLen = buf.readUInt16LE(i + 32);
+    names.push(buf.subarray(i + 46, i + 46 + nameLen).toString('utf8'));
+    i += 46 + nameLen + extraLen + commentLen;
+  }
+  return names;
+}

@@ -4,6 +4,10 @@ node_modules/
 # Extension build output
 dist/
 
+# Chrome Web Store upload zips (`npm run package:store`)
+release/*.zip
+/*.zip
+
 # OS / editor
 .DS_Store
 *.pem
