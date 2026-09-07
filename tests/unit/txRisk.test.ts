@@ -209,4 +209,65 @@ Issued At: 2026-01-01T00:00:00.000Z`;
     );
     expect(report.hits).toEqual([]);
   });
+
+  it('flags typed data that omits domain.chainId (cross-chain replay)', () => {
+    const typed = {
+      types: {
+        EIP712Domain: [{ name: 'name', type: 'string' }],
+        Mail: [{ name: 'contents', type: 'string' }],
+      },
+      primaryType: 'Mail',
+      domain: { name: 'Unchained' },
+      message: { contents: 'hi' },
+    };
+    const report = classifyRequest(
+      { id: '1', method: 'eth_signTypedData_v4', params: [SPENDER, typed] },
+      { chainId: 1 },
+    );
+    expect(report.hits).toContain('eip712ChainMismatch');
+    expect(report.eip712Chain).toMatchObject({ missing: true, mismatch: true, walletChainId: 1 });
+  });
+
+  it('flags an expired or missing permit deadline', () => {
+    const expired = permitTyped(1, 100n);
+    expired.message.deadline = '1';
+    const expiredReport = classifyRequest(
+      {
+        id: '1',
+        method: 'eth_signTypedData_v4',
+        params: [expired.message.owner, JSON.stringify(expired)],
+      },
+      { chainId: 1 },
+    );
+    expect(expiredReport.permit?.deadlineExpired).toBe(true);
+    expect(expiredReport.permit?.ownerMismatch).toBe(false);
+
+    const base = permitTyped(1, 100n);
+    const message = { ...base.message };
+    delete (message as { deadline?: string }).deadline;
+    const noDeadline = { ...base, message };
+    const missingReport = classifyRequest(
+      {
+        id: '1',
+        method: 'eth_signTypedData_v4',
+        params: [noDeadline.message.owner, JSON.stringify(noDeadline)],
+      },
+      { chainId: 1 },
+    );
+    expect(missingReport.permit?.deadlineMissing).toBe(true);
+    expect(missingReport.permit?.deadlineExpired).toBe(false);
+  });
+
+  it('flags a permit whose owner is not the signing account', () => {
+    const typed = permitTyped(1, 100n);
+    const report = classifyRequest(
+      {
+        id: '1',
+        method: 'eth_signTypedData_v4',
+        params: [SPENDER, JSON.stringify(typed)],
+      },
+      { chainId: 1 },
+    );
+    expect(report.permit?.ownerMismatch).toBe(true);
+  });
 });

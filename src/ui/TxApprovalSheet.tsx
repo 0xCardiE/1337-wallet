@@ -59,6 +59,16 @@ import {
 } from '../lib/approvalBridge';
 import { isInternalWalletOrigin, type PendingApproval } from '../lib/pendingApprovals';
 
+function formatPermitDeadline(deadline: bigint): string {
+  const n = Number(deadline);
+  if (!Number.isSafeInteger(n) || n <= 0) return deadline.toString();
+  try {
+    return new Date(n * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  } catch {
+    return deadline.toString();
+  }
+}
+
 function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -206,9 +216,10 @@ function PermitCard({
   permit: PermitAction;
   meta: TokenMeta | null;
 }) {
+  const warn = permit.unlimited || permit.deadlineExpired || permit.deadlineMissing || permit.ownerMismatch;
   return (
     <div
-      className={`w1337-tx-approval__action${permit.unlimited ? ' w1337-tx-approval__action--warn' : ''}`}
+      className={`w1337-tx-approval__action${warn ? ' w1337-tx-approval__action--warn' : ''}`}
     >
       <p className="w1337-tx-approval__action-kicker">Permit signature</p>
       <h3 className="w1337-tx-approval__action-title">
@@ -219,6 +230,21 @@ function PermitCard({
       {permit.unlimited ? (
         <p className="w1337-tx-approval__action-warn">
           This signature can grant spending rights without sending a transaction.
+        </p>
+      ) : null}
+      {permit.deadlineMissing ? (
+        <p className="w1337-tx-approval__action-warn">
+          This permit has no deadline and can be submitted later.
+        </p>
+      ) : null}
+      {permit.deadlineExpired ? (
+        <p className="w1337-tx-approval__action-warn">
+          This permit deadline has already passed. Signing it will not work on-chain.
+        </p>
+      ) : null}
+      {permit.ownerMismatch && permit.owner ? (
+        <p className="w1337-tx-approval__action-warn">
+          This permit names a different owner ({permit.owner}).
         </p>
       ) : null}
       <dl className="w1337-tx-approval__action-dl">
@@ -243,6 +269,14 @@ function PermitCard({
             <dt>Amount</dt>
             <dd className={permit.unlimited ? 'w1337-tx-approval__action-unlimited' : undefined}>
               {formatApprovalAmount(permit.amount, meta?.decimals ?? 18)}
+            </dd>
+          </div>
+        ) : null}
+        {permit.deadline != null ? (
+          <div>
+            <dt>Deadline</dt>
+            <dd className={permit.deadlineExpired ? 'w1337-tx-approval__action-unlimited' : undefined}>
+              {formatPermitDeadline(permit.deadline)}
             </dd>
           </div>
         ) : null}
@@ -424,7 +458,9 @@ function InstantPausedBanner({
 function SiweWarnBanner({ risk }: { risk: TxRiskReport }) {
   const siwe = risk.siwe;
   if (!siwe) return null;
-  if (!siwe.domainMismatch && !siwe.uriMismatch && !siwe.chainMismatch) return null;
+  if (!siwe.domainMismatch && !siwe.uriMismatch && !siwe.chainMismatch && !siwe.addressMismatch) {
+    return null;
+  }
   const parts: string[] = [];
   if (siwe.domainMismatch) {
     parts.push(`This login claims to be from ${siwe.domain}, which does not match this page.`);
@@ -435,12 +471,22 @@ function SiweWarnBanner({ risk }: { risk: TxRiskReport }) {
   if (siwe.chainMismatch) {
     parts.push(`SIWE chain ID ${siwe.chainId} does not match the active network.`);
   }
+  if (siwe.addressMismatch && siwe.address) {
+    parts.push(`This login is for ${siwe.address}, which is not the account that would sign.`);
+  }
   return <p className="w1337-tx-approval__danger-banner">{parts.join(' ')} Do not sign unless you trust this.</p>;
 }
 
 function Eip712ChainBanner({ risk }: { risk: TxRiskReport }) {
   const check = risk.eip712Chain;
   if (!check?.mismatch) return null;
+  if (check.missing) {
+    return (
+      <p className="w1337-tx-approval__danger-banner">
+        This typed data has no chain ID. The signature can be replayed on any network.
+      </p>
+    );
+  }
   return (
     <p className="w1337-tx-approval__danger-banner">
       This signature is for chain {check.domainChainId}, but the wallet is on chain{' '}

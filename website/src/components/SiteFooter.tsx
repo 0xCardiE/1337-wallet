@@ -37,6 +37,11 @@ export function SiteFooter() {
           <p className="text-sm font-medium text-text">Trust</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
             <li>
+              <Link href="/privacy" className="hover:text-text">
+                Privacy policy
+              </Link>
+            </li>
+            <li>
               <Link href="/security" className="hover:text-text">
                 Security FAQ
               </Link>
@@ -66,6 +71,11 @@ export function SiteFooter() {
               <Link href="/rpc" className="hover:text-text">
                 RPC methods
               </Link>
+            </li>
+            <li>
+              <a href={SITE.githubUrl} className="hover:text-text">
+                GitHub
+              </a>
             </li>
             <li>
               <a href={`mailto:${SITE.contactEmail}`} className="hover:text-text">

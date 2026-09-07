@@ -84,6 +84,29 @@
   ],
   "links": {
     "aestheticReference": "https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk",
-    "liFi": "https://li.fi"
+    "liFi": "https://li.fi",
+    "homepage": "https://1337wallet.io/",
+    "support": "https://1337wallet.io/faq",
+    "privacy": "https://1337wallet.io/privacy",
+    "github": "https://github.com/0xCardiE/1337-wallet"
+  },
+  "chromeWebStore": {
+    "category": "Productivity",
+    "language": "English",
+    "matureContent": false,
+    "officialUrl": "https://1337wallet.io/",
+    "homepageUrl": "https://1337wallet.io/",
+    "supportUrl": "https://1337wallet.io/faq",
+    "privacyPolicyUrl": "https://1337wallet.io/privacy",
+    "remoteCode": true,
+    "singlePurpose": "1337 Wallet is a self-custody Ethereum (EVM) signer. Users create or import accounts, connect to dapps, review signing requests, and approve or reject them. Swaps, approvals, multisend, and hardware are the same purpose: the user authorizing their own crypto.",
+    "permissionJustifications": {
+      "storage": "Stores the encrypted vault (seed or private keys), accounts, settings, custom RPCs, and connected-site permissions in chrome.storage on this device. There is no 1337 cloud backup. storage is required so the wallet persists across sessions.",
+      "sidePanel": "The wallet UI can open in Chrome's side panel so the user can keep a dapp and the signer visible at the same time. Users can switch to a toolbar popup in Settings. sidePanel only loads 1337's own page (index.html), not a panel on third-party sites.",
+      "scripting": "Injects the in-page Ethereum provider (window.ethereum / EIP-6963) so websites can request accounts and signatures. Content scripts run at document_start on pages the user visits. Scripting is not used to scrape pages or run analytics.",
+      "host": "Needed to (1) inject the dapp provider on sites the user visits, (2) call user-selected RPC endpoints and optional explorer or LI.FI APIs, and (3) talk to Trezor Connect (connect.trezor.io) when a Trezor is used. 1337 does not scrape browsing history and has no 1337 backend."
+    },
+    "remoteCodeJustification": "When the user connects a Trezor, @trezor/connect-webextension opens Trezor's official Connect UI from https://connect.trezor.io/9/ so keys stay on the device. That hosted UI is JavaScript not in our zip. Ledger uses WebHID with code bundled in the package. We do not load other remote scripts and we do not eval third-party strings. Popup and background bundles are in the uploaded package.",
+    "detailedDescription": "1337 is a self-custody EVM signer for developers, hackers, and power users. Understand the request, judge the risk, then sign or reject.\n\nWhy 1337\n• Readable confirms — human summary, local simulation (pass / fail / revert / gas), and contract danger flags\n• Your RPCs — 20+ chains, switch endpoints, network doctor\n• Hardware — Ledger (WebHID) and Trezor Connect alongside seed and private-key accounts\n• Signer tools — Signings history, Approvals (ERC-20 / NFT / Permit2), LiFi swaps, multisend, gas top-up, optional Inspect\n• Normal or Burner Mode — confirm every request by default, or mark a software account as a disposable auto-signer with risk gates\n\nPrivacy\nNo analytics. No 1337 server. No user accounts. Your encrypted vault stays in Chrome storage on this device. Network calls happen only when you use RPCs, swaps, explorers, or hardware. Policy: https://1337wallet.io/privacy\n\nNot a lab\n1337 is a signer, not a Foundry, Hardhat, or Etherscan replacement. No ABI playground, storage inspector, or cast-style converters.\n\nWorks with MetaMask-compatible dapps (EIP-6963, optional window.ethereum). Open the build and verify before you trust.\n\nSite: https://1337wallet.io/"
   }
 }

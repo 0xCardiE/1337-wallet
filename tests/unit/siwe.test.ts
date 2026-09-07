@@ -37,6 +37,24 @@ describe('parseSiweMessage', () => {
     );
     expect(parsed?.chainId).toBe(10);
   });
+
+  it('reads Chain ID from the URI field block, not a spoofed statement line', () => {
+    const spoofed = `app.uniswap.org wants you to sign in with your Ethereum account:
+0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+Please confirm
+Chain ID: 1
+URI: https://evil.com
+
+URI: https://app.uniswap.org
+Version: 1
+Chain ID: 999
+Nonce: abc
+Issued At: 2026-01-01T00:00:00.000Z`;
+    const parsed = parseSiweMessage(spoofed);
+    expect(parsed?.uri).toBe('https://app.uniswap.org');
+    expect(parsed?.chainId).toBe(999);
+  });
 });
 
 describe('siweDomainMatchesOrigin', () => {
@@ -62,6 +80,7 @@ describe('checkSiweAgainstOrigin', () => {
       domainMismatch: true,
       uriMismatch: true,
       chainMismatch: true,
+      addressMismatch: false,
     });
   });
 
@@ -71,6 +90,19 @@ describe('checkSiweAgainstOrigin', () => {
       domainMismatch: false,
       uriMismatch: false,
       chainMismatch: false,
+      addressMismatch: false,
     });
+  });
+
+  it('flags when the SIWE address is not the signing account', () => {
+    const parsed = parseSiweMessage(SIWE)!;
+    const check = checkSiweAgainstOrigin(
+      parsed,
+      'https://app.uniswap.org',
+      1,
+      '0x1111111111111111111111111111111111111111',
+    );
+    expect(check.addressMismatch).toBe(true);
+    expect(check.domainMismatch).toBe(false);
   });
 });

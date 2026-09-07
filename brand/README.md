@@ -4,7 +4,7 @@
 
 - Product positioning (developer / hacker / advanced Ethereum wallet)
 - Privacy and no-analytics claims
-- Chrome Web Store description drafts
+- Chrome Web Store description drafts and listing assets (`brand/chrome-web-store/`, `npm run store:assets`)
 - Onboarding and Settings copy (imported via `src/lib/productManifest.ts`)
 - Future website, landing page, or promo material
 

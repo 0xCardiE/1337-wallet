@@ -11,6 +11,7 @@ import { chainById } from './chainCatalog';
 import { bytesToHexMessage, parseTypedDataParam } from './backgroundSign';
 import type { ProviderRequest } from '../provider/types';
 import { classifyRequest, parseDomainChainId, type TxRiskReport } from './txRisk';
+import { siweCheckFailed } from './siwe';
 import type { TxAction } from './txAction';
 
 export type ApprovalDetailField = {
@@ -277,12 +278,41 @@ function typedDataSections(
       );
 
     const domainChainId = parseDomainChainId(typed.domain.chainId);
+    const domainHasChainId = typed.domain.chainId !== undefined && typed.domain.chainId !== '';
+    const missingChain = !domainHasChainId || domainChainId == null;
     const chainMismatch =
-      domainChainId != null && walletChainId != null && domainChainId !== walletChainId;
+      !missingChain && domainChainId != null && walletChainId != null && domainChainId !== walletChainId;
     const walletChainName = walletChainId != null ? chainById(walletChainId)?.name : undefined;
     const typedChainName = domainChainId != null ? chainById(domainChainId)?.name : undefined;
 
     return [
+      ...(missingChain
+        ? [
+            {
+              id: 'typed-chain-warn',
+              title: 'Missing chain ID',
+              defaultOpen: true,
+              fields: [
+                field(
+                  'Replay risk',
+                  'domain.chainId is omitted, so this signature can be reused on any network.',
+                  { warn: true },
+                ),
+                ...(walletChainId != null
+                  ? [
+                      field(
+                        'Wallet chain',
+                        walletChainName
+                          ? `${walletChainName} (${walletChainId})`
+                          : String(walletChainId),
+                        { warn: true },
+                      ),
+                    ]
+                  : []),
+              ],
+            },
+          ]
+        : []),
       ...(chainMismatch
         ? [
             {
@@ -473,7 +503,7 @@ export function buildApprovalDetailSections(
     const siwe = risk.siwe;
     const sections: ApprovalDetailSection[] = [];
     if (siwe) {
-      const mismatch = siwe.domainMismatch || siwe.uriMismatch || siwe.chainMismatch;
+      const mismatch = siweCheckFailed(siwe);
       sections.push({
         id: 'siwe',
         title: mismatch ? 'Sign-In with Ethereum — mismatch' : 'Sign-In with Ethereum',
@@ -496,7 +526,13 @@ export function buildApprovalDetailSections(
               ]
             : []),
           ...(siwe.address
-            ? [field('Account', siwe.address, { mono: true, copyable: true })]
+            ? [
+                field('Account', siwe.address, {
+                  mono: true,
+                  copyable: true,
+                  warn: siwe.addressMismatch,
+                }),
+              ]
             : []),
         ],
       });
@@ -661,8 +697,7 @@ export function approvalTitle(
   }
   if (risk?.permit) return 'Sign token permit';
   if (risk?.siwe) {
-    const bad =
-      risk.siwe.domainMismatch || risk.siwe.uriMismatch || risk.siwe.chainMismatch;
+    const bad = siweCheckFailed(risk.siwe);
     return bad ? 'Sign-in request — check domain' : 'Sign in with Ethereum';
   }
   if (action?.kind === 'send') return action.token ? 'Send tokens' : 'Send';

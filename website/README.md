@@ -4,7 +4,8 @@ Next.js landing page and integration docs for **1337 Wallet**.
 
 ## Pages
 
-- `/` — landing (features, tools, video placeholder, privacy, contact/FAQ)
+- `/` — landing (features, tools, screenshots, privacy, contact/FAQ)
+- `/privacy` — privacy policy (Chrome Web Store privacy-policy URL)
 - `/security` — security FAQ (MetaMask / Rabby comparisons, hardware, burner keys)
 - `/faq` — product FAQ
 - `/integrate` — builder & AI integration guide (EIP-1193, EIP-6963, Wagmi, Ethers)
@@ -38,4 +39,5 @@ npm run website:build
 - Copy & links: `src/lib/site.ts`
 - Chrome Web Store URL: set `SITE.chromeStoreUrl` when published
 - Contact email: set `SITE.contactEmail`
-- Product video: replace placeholder in `src/components/VideoSection.tsx`
+- Screenshots: `npm run store:assets` from the repo root copies into `public/screenshots/`
+- How-it-works gallery: `src/components/VideoSection.tsx`

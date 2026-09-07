@@ -11,6 +11,10 @@ export function PrivacySection() {
             <p className="mt-4 max-w-xl text-muted">
               Vault, settings, and session data stay in Chrome extension storage on your machine.
               Network calls happen only when you use RPCs, swaps, explorer history, or hardware SDKs.{' '}
+              <a href="/privacy" className="text-text underline-offset-4 hover:underline">
+                Privacy policy
+              </a>
+              {' · '}
               <a href="/security" className="text-text underline-offset-4 hover:underline">
                 Security FAQ
               </a>

@@ -240,7 +240,11 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               No analytics, no telemetry, no 1337 backend. Vault and settings stay in Chrome
               extension storage on your machine. That is stricter than typical MetaMask/Rabby
               product analytics. Third parties you choose (RPC, LI.FI, explorer, Trezor Connect)
-              still see what those features need.
+              still see what those features need. Full policy:{' '}
+              <Link href="/privacy" className={linkClass}>
+                /privacy
+              </Link>
+              .
             </p>
           </>
         ),

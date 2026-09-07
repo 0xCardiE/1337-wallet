@@ -2,6 +2,7 @@ import { formatEther, getAddress, isAddress } from 'viem';
 import { chainById } from './chainCatalog';
 import type { TxHistoryRow } from './explorerTxHistory';
 import type { ProviderRequest } from '../provider/types';
+import { siweCheckFailed } from './siwe';
 import {
   formatApprovalAmount,
   type TokenMeta,
@@ -87,8 +88,7 @@ export function humanizePendingRequest(args: {
   const tokenLabel = tokenMeta?.symbol || tokenMeta?.name || 'token';
 
   if (risk.siwe) {
-    const bad =
-      risk.siwe.domainMismatch || risk.siwe.uriMismatch || risk.siwe.chainMismatch;
+    const bad = siweCheckFailed(risk.siwe);
     return {
       headline: bad
         ? `Sign-in claim does not match this page (${risk.siwe.domain})`

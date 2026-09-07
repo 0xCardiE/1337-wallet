@@ -23,6 +23,7 @@
     "build:watch": "npm run dev:ext",
     "preview": "npx serve dist",
     "icons": "node scripts/generate-extension-icons.mjs",
+    "store:assets": "node scripts/generate-store-listing-assets.mjs",
     "update-chain-dex-ranks": "node scripts/fetch-defillama-chain-dex-volume.mjs",
     "wallet-research": "npm run dev --prefix wallet-research",
     "wallet-research:x-login": "npm run x:login --prefix wallet-research",

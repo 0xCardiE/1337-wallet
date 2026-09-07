@@ -40,7 +40,7 @@ npm run package:store   # production dist/ → release/1337-wallet-<version>.zip
 
 Load the unpacked extension from `dist/` in Chrome (Developer mode → Load unpacked).
 
-Chrome Web Store uploads are zips of production `dist/` (`manifest.json` at the zip root, no source maps, no unpacked-only `dev-reload` files). `npm run package:store` writes that file under `release/` (gitignored). Upload the zip, not a `.crx`.
+Chrome Web Store uploads are zips of production `dist/` (`manifest.json` at the zip root, no source maps, no unpacked-only `dev-reload` files). `npm run package:store` writes that file under `release/` (gitignored). Upload the zip, not a `.crx`. Listing images: `npm run store:assets` → `brand/chrome-web-store/`.
 
 `npm install` installs git hooks that rebuild `dist/` after **commit** and **push**, then open a tiny extension page that calls `chrome.runtime.reload()` (unpacked only). Run `npm run ext:rebuild` yourself if you want that without git. If Chrome does not pick it up, click Reload on `chrome://extensions`.
 

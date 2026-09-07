@@ -33,6 +33,7 @@ export function App() {
   const [overlay, setOverlay] = useState<Overlay>('none');
   const [overlayBack, setOverlayBack] = useState<Exclude<Overlay, 'wallets'>>('settings');
   const [mainTab, setMainTab] = useState<MainTab>('assets');
+  const [sessionTick, setSessionTick] = useState(0);
 
   const refresh = useCallback(async () => {
     const s = await loadPersisted();
@@ -52,6 +53,12 @@ export function App() {
       await hydrateAccountFromBackground();
       setScreen('main');
     })();
+  }, []);
+
+  useEffect(() => {
+    const onSession = () => setSessionTick(n => n + 1);
+    window.addEventListener('1337-session-changed', onSession);
+    return () => window.removeEventListener('1337-session-changed', onSession);
   }, []);
 
   /* Keep wallet UI in sync when a dapp switches chain (or another surface patches settings). */
@@ -82,6 +89,7 @@ export function App() {
     window.addEventListener('keydown', bump, true);
     void pingSessionActivity();
     const iv = window.setInterval(() => {
+      void pingSessionActivity();
       void verifyBackgroundSessionStillUnlocked().then((ok) => {
         if (!ok) window.location.reload();
       });
@@ -93,7 +101,7 @@ export function App() {
     };
   }, [screen]);
 
-  const unlocked = isUnlocked();
+  const unlocked = sessionTick >= 0 && isUnlocked();
   const ledgerHidSurface = new URLSearchParams(window.location.search).has('ledgerhid');
   const routeKey =
     screen === 'load'

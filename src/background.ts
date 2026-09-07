@@ -42,6 +42,17 @@ import { toHexChainId } from './provider/types';
 import { reportInternalFailure } from './lib/devErrorReport';
 import { recordSuccessfulSigning } from './lib/signingHistory';
 import { getAddress } from 'viem';
+import {
+  applySessionPatch,
+  LEGACY_ACTIVITY_KEY,
+  LEGACY_HW_SESSION_KEY,
+  LEGACY_SESSION_PK_KEY,
+  LEGACY_UNLOCK_PASSWORD_KEY,
+  sessionBlobFromLegacy,
+  UNLOCKED_SESSION_BLOB_KEY,
+  type HardwareSessionBlob,
+  type UnlockedSessionBlob,
+} from './lib/sessionIntegrity';
 
 const POPUP_PATH = 'index.html';
 const HW_CONFIRM_PATH = 'index.html?hwconfirm=1';
@@ -119,20 +130,83 @@ chrome.storage.onChanged.addListener((changes, area) => {
 void syncToolbarOpenModeFromSettings();
 void loadPersistedSettingsOnStart();
 
-const SESSION_KEY = '1337_session_pk';
-const UNLOCK_PASSWORD_KEY = '1337_session_unlock';
-const ACTIVITY_KEY = '1337_last_activity';
-const HW_SESSION_KEY = '1337_session_hw';
-
 let memoryPk: string | null = null;
 let memoryUnlockPassword: string | null = null;
-type HwSession = {
-  kind: 'ledger' | 'trezor';
-  accountId: string;
-  address: string;
-  derivationPath: string;
-};
+type HwSession = HardwareSessionBlob;
 let memoryHw: HwSession | null = null;
+let memoryBlob: UnlockedSessionBlob | null = null;
+
+const LEGACY_SESSION_KEYS = [
+  LEGACY_SESSION_PK_KEY,
+  LEGACY_UNLOCK_PASSWORD_KEY,
+  LEGACY_HW_SESSION_KEY,
+  LEGACY_ACTIVITY_KEY,
+] as const;
+
+function applyBlobToMemory(blob: UnlockedSessionBlob): void {
+  memoryBlob = blob;
+  memoryPk = blob.privateKeyHex ?? null;
+  memoryUnlockPassword = blob.unlockPassword ?? null;
+  memoryHw = blob.hardware ?? null;
+}
+
+async function readSessionBlob(): Promise<UnlockedSessionBlob> {
+  if (memoryBlob && sessionFieldsLoaded(memoryBlob)) return memoryBlob;
+  const data = await chrome.storage.session.get([
+    UNLOCKED_SESSION_BLOB_KEY,
+    ...LEGACY_SESSION_KEYS,
+  ]);
+  const stored = data[UNLOCKED_SESSION_BLOB_KEY];
+  if (stored && typeof stored === 'object') {
+    const blob = stored as UnlockedSessionBlob;
+    applyBlobToMemory(blob);
+    return blob;
+  }
+  const migrated = sessionBlobFromLegacy({
+    privateKeyHex: data[LEGACY_SESSION_PK_KEY],
+    unlockPassword: data[LEGACY_UNLOCK_PASSWORD_KEY],
+    hardware: data[LEGACY_HW_SESSION_KEY],
+    lastActivity: data[LEGACY_ACTIVITY_KEY],
+  });
+  applyBlobToMemory(migrated);
+  if (sessionFieldsLoaded(migrated)) {
+    await chrome.storage.session.set({ [UNLOCKED_SESSION_BLOB_KEY]: migrated });
+    await chrome.storage.session.remove([...LEGACY_SESSION_KEYS]);
+  }
+  return migrated;
+}
+
+function sessionFieldsLoaded(blob: UnlockedSessionBlob): boolean {
+  return (
+    Boolean(blob.privateKeyHex) ||
+    Boolean(blob.unlockPassword) ||
+    blob.hardware != null ||
+    blob.lastActivity != null
+  );
+}
+
+async function writeSessionBlob(blob: UnlockedSessionBlob): Promise<void> {
+  applyBlobToMemory(blob);
+  await chrome.storage.session.set({ [UNLOCKED_SESSION_BLOB_KEY]: blob });
+  await chrome.storage.session.remove([...LEGACY_SESSION_KEYS]);
+}
+
+async function patchSession(
+  patch: Parameters<typeof applySessionPatch>[1],
+): Promise<UnlockedSessionBlob> {
+  const current = await readSessionBlob();
+  const next = applySessionPatch(current, patch);
+  await writeSessionBlob(next);
+  return next;
+}
+
+async function clearSessionBlob(): Promise<void> {
+  memoryPk = null;
+  memoryHw = null;
+  memoryUnlockPassword = null;
+  memoryBlob = null;
+  await chrome.storage.session.remove([UNLOCKED_SESSION_BLOB_KEY, ...LEGACY_SESSION_KEYS]);
+}
 
 async function emitToTab(
   tabId: number,
@@ -442,8 +516,8 @@ type Msg =
 async function sessionUnlockPassword(): Promise<string | null> {
   await maybeAutoLockExpired();
   if (memoryUnlockPassword) return memoryUnlockPassword;
-  const data = await chrome.storage.session.get([UNLOCK_PASSWORD_KEY]);
-  const pwd = data[UNLOCK_PASSWORD_KEY];
+  const blob = await readSessionBlob();
+  const pwd = blob.unlockPassword;
   if (typeof pwd === 'string' && pwd.length > 0) {
     memoryUnlockPassword = pwd;
     return pwd;
@@ -454,8 +528,8 @@ async function sessionUnlockPassword(): Promise<string | null> {
 async function sessionPrivateKey(): Promise<`0x${string}` | null> {
   await maybeAutoLockExpired();
   if (memoryPk && isValidPkHex(memoryPk)) return memoryPk as `0x${string}`;
-  const data = await chrome.storage.session.get([SESSION_KEY]);
-  const hex = data[SESSION_KEY];
+  const blob = await readSessionBlob();
+  const hex = blob.privateKeyHex;
   if (typeof hex === 'string' && isValidPkHex(hex)) {
     memoryPk = hex;
     memoryHw = null;
@@ -467,8 +541,8 @@ async function sessionPrivateKey(): Promise<`0x${string}` | null> {
 async function sessionHardware(): Promise<HwSession | null> {
   await maybeAutoLockExpired();
   if (memoryHw?.address) return memoryHw;
-  const data = await chrome.storage.session.get([HW_SESSION_KEY]);
-  const row = data[HW_SESSION_KEY] as HwSession | undefined;
+  const blob = await readSessionBlob();
+  const row = blob.hardware;
   if (
     row &&
     (row.kind === 'ledger' || row.kind === 'trezor') &&
@@ -494,7 +568,7 @@ function isValidPkHex(s: string): boolean {
 }
 
 async function touchActivity(): Promise<void> {
-  await chrome.storage.session.set({ [ACTIVITY_KEY]: Date.now() });
+  await patchSession({ lastActivity: Date.now() });
 }
 
 async function maybeAutoLockExpired(): Promise<void> {
@@ -502,19 +576,11 @@ async function maybeAutoLockExpired(): Promise<void> {
     const { settings } = await loadPersisted();
     const mins = settings.autoLockMinutes ?? 0;
     if (!Number.isFinite(mins) || mins <= 0) return;
-    const data = await chrome.storage.session.get([ACTIVITY_KEY]);
-    const last = typeof data[ACTIVITY_KEY] === 'number' ? data[ACTIVITY_KEY] : 0;
+    const blob = await readSessionBlob();
+    const last = typeof blob.lastActivity === 'number' ? blob.lastActivity : 0;
     if (!last) return;
     if (Date.now() - last > mins * 60 * 1000) {
-      memoryPk = null;
-      memoryHw = null;
-      memoryUnlockPassword = null;
-      await chrome.storage.session.remove([
-        SESSION_KEY,
-        UNLOCK_PASSWORD_KEY,
-        HW_SESSION_KEY,
-        ACTIVITY_KEY,
-      ]);
+      await clearSessionBlob();
       cancelPendingApprovals('Wallet locked; pending request cancelled');
       void broadcastAccountsChanged(null);
     }
@@ -992,58 +1058,62 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.type === 'SET_SESSION') {
-      if (typeof message.privateKeyHex === 'string') {
-        if (!isValidPkHex(message.privateKeyHex)) {
-          sendResponse({ ok: false, error: 'invalid key' });
-          return;
+      void (async () => {
+        try {
+          if (typeof message.privateKeyHex === 'string') {
+            if (!isValidPkHex(message.privateKeyHex)) {
+              sendResponse({ ok: false, error: 'invalid key' });
+              return;
+            }
+            const blob = await patchSession({
+              privateKeyHex: message.privateKeyHex,
+              unlockPassword: message.unlockPassword,
+            });
+            void broadcastAccountsChanged(
+              addressFromPrivateKey(blob.privateKeyHex as `0x${string}`),
+            );
+            sendResponse({ ok: true });
+            return;
+          }
+          if (
+            message.session &&
+            (message.session.kind === 'ledger' || message.session.kind === 'trezor')
+          ) {
+            const blob = await patchSession({
+              hardware: message.session,
+              unlockPassword: message.unlockPassword,
+            });
+            if (blob.hardware) {
+              void broadcastAccountsChanged(getAddress(blob.hardware.address));
+            }
+            sendResponse({ ok: true });
+            return;
+          }
+          if (typeof message.unlockPassword === 'string' && message.unlockPassword.length > 0) {
+            await patchSession({ unlockPassword: message.unlockPassword });
+            sendResponse({ ok: true });
+            return;
+          }
+          sendResponse({ ok: false, error: 'invalid session' });
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
         }
-        memoryPk = message.privateKeyHex;
-        memoryHw = null;
-        if (typeof message.unlockPassword === 'string' && message.unlockPassword.length > 0) {
-          memoryUnlockPassword = message.unlockPassword;
-          void chrome.storage.session.set({ [UNLOCK_PASSWORD_KEY]: memoryUnlockPassword });
-        }
-        void chrome.storage.session.set({ [SESSION_KEY]: memoryPk });
-        void chrome.storage.session.remove([HW_SESSION_KEY]);
-        void touchActivity();
-        void broadcastAccountsChanged(addressFromPrivateKey(memoryPk as `0x${string}`));
-        sendResponse({ ok: true });
-        return;
-      }
-      if (message.session && (message.session.kind === 'ledger' || message.session.kind === 'trezor')) {
-        memoryHw = message.session;
-        memoryPk = null;
-        void chrome.storage.session.set({ [HW_SESSION_KEY]: memoryHw });
-        void chrome.storage.session.remove([SESSION_KEY]);
-        void touchActivity();
-        void broadcastAccountsChanged(getAddress(memoryHw.address));
-        sendResponse({ ok: true });
-        return;
-      }
-      if (typeof message.unlockPassword === 'string' && message.unlockPassword.length > 0) {
-        memoryUnlockPassword = message.unlockPassword;
-        void chrome.storage.session.set({ [UNLOCK_PASSWORD_KEY]: memoryUnlockPassword });
-        void touchActivity();
-        sendResponse({ ok: true });
-        return;
-      }
-      sendResponse({ ok: false, error: 'invalid session' });
-      return;
+      })();
+      return true;
     }
 
     if (message.type === 'CLEAR_SESSION') {
-      memoryPk = null;
-      memoryHw = null;
-      memoryUnlockPassword = null;
-      void chrome.storage.session.remove([
-        SESSION_KEY,
-        UNLOCK_PASSWORD_KEY,
-        HW_SESSION_KEY,
-        ACTIVITY_KEY,
-      ]);
-      cancelPendingApprovals('Wallet locked; pending request cancelled');
-      void broadcastAccountsChanged(null);
-      sendResponse({ ok: true });
+      void (async () => {
+        try {
+          await clearSessionBlob();
+          cancelPendingApprovals('Wallet locked; pending request cancelled');
+          void broadcastAccountsChanged(null);
+          sendResponse({ ok: true });
+        } catch (e) {
+          sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+        }
+      })();
+      return true;
     }
   },
 );

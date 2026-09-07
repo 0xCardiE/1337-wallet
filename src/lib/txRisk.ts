@@ -20,7 +20,12 @@ import {
 } from './instantGates';
 import { parseChainIdParam } from '../provider/types';
 import type { ProviderRequest } from '../provider/types';
-import { checkSiweAgainstOrigin, parseSiweMessage, type ParsedSiwe } from './siwe';
+import {
+  checkSiweAgainstOrigin,
+  parseSiweMessage,
+  siweCheckFailed,
+  type ParsedSiwe,
+} from './siwe';
 
 const MAX_UINT160 = (1n << 160n) - 1n;
 
@@ -98,20 +103,27 @@ export type PermitAction = {
   primaryType: string;
   spender?: `0x${string}`;
   token?: `0x${string}`;
+  owner?: `0x${string}`;
   amount?: bigint;
   unlimited: boolean;
+  deadline?: bigint;
+  deadlineMissing: boolean;
+  deadlineExpired: boolean;
+  ownerMismatch: boolean;
 };
 
 export type SiweRisk = ParsedSiwe & {
   domainMismatch: boolean;
   uriMismatch: boolean;
   chainMismatch: boolean;
+  addressMismatch: boolean;
 };
 
 export type Eip712ChainRisk = {
-  domainChainId: number;
+  domainChainId?: number;
   walletChainId: number;
   mismatch: boolean;
+  missing: boolean;
 };
 
 export type TxRiskReport = {
@@ -209,11 +221,18 @@ function decodeTokenApproval(tx: Record<string, unknown>): TokenApprovalAction |
   return undefined;
 }
 
-function decodePermit(typed: {
-  primaryType: string;
-  domain: Record<string, unknown>;
-  message: Record<string, unknown>;
-}): PermitAction | undefined {
+function nowUnixSeconds(): bigint {
+  return BigInt(Math.floor(Date.now() / 1000));
+}
+
+function decodePermit(
+  typed: {
+    primaryType: string;
+    domain: Record<string, unknown>;
+    message: Record<string, unknown>;
+  },
+  signingAddress?: `0x${string}`,
+): PermitAction | undefined {
   if (!PERMIT_PRIMARY_TYPES.has(typed.primaryType)) return undefined;
   const msg = typed.message;
   const details =
@@ -222,16 +241,48 @@ function decodePermit(typed: {
       : undefined;
 
   const spender = asAddress(msg.spender);
+  const owner = asAddress(msg.owner);
   const token = asAddress(details?.token ?? msg.token ?? typed.domain.verifyingContract);
   const amount = hexBigInt(details?.amount ?? msg.value ?? msg.amount ?? msg.allowed);
+  const deadline = hexBigInt(
+    msg.deadline ?? msg.sigDeadline ?? details?.expiration ?? details?.deadline,
+  );
+  const deadlineMissing = deadline == null;
+  const deadlineExpired = deadline != null && deadline < nowUnixSeconds();
+  const ownerMismatch = Boolean(
+    owner && signingAddress && owner.toLowerCase() !== signingAddress.toLowerCase(),
+  );
 
   return {
     primaryType: typed.primaryType,
     spender,
     token,
+    owner,
     amount,
     unlimited: amount != null ? isUnlimitedAmount(amount) : false,
+    deadline,
+    deadlineMissing,
+    deadlineExpired,
+    ownerMismatch,
   };
+}
+
+function signerFromRequest(request: ProviderRequest): `0x${string}` | undefined {
+  const { method, params = [] } = request;
+  if (method === 'personal_sign') {
+    return asAddress(params[1]) ?? asAddress(params[0]);
+  }
+  if (method === 'eth_signTypedData_v3' || method === 'eth_signTypedData_v4') {
+    return asAddress(params[0]);
+  }
+  if (method === 'eth_signTypedData') {
+    return asAddress(params[0]) ?? asAddress(params[1]);
+  }
+  if (method === 'eth_sendTransaction') {
+    const tx = (params[0] ?? {}) as Record<string, unknown>;
+    return asAddress(tx.from);
+  }
+  return undefined;
 }
 
 function messageToUtf8(raw: unknown): string | null {
@@ -294,16 +345,16 @@ export function classifyRequest(
     }
   }
 
+  const signingAddress = signerFromRequest(request);
+
   if (method === 'personal_sign') {
     const text = messageToUtf8(params[0]);
     if (text) {
       const parsed = parseSiweMessage(text);
       if (parsed) {
-        const check = checkSiweAgainstOrigin(parsed, opts.origin, opts.chainId);
+        const check = checkSiweAgainstOrigin(parsed, opts.origin, opts.chainId, signingAddress);
         report.siwe = { ...parsed, ...check };
-        if (check.domainMismatch || check.uriMismatch || check.chainMismatch) {
-          hits.add('siweMismatch');
-        }
+        if (siweCheckFailed(check)) hits.add('siweMismatch');
       }
     }
   }
@@ -315,17 +366,18 @@ export function classifyRequest(
   ) {
     try {
       const typed = parseTypedDataParam(typedPayload(method, params));
+      const domainHasChainId = typed.domain.chainId !== undefined && typed.domain.chainId !== '';
       const domainChainId = parseDomainChainId(typed.domain.chainId);
-      if (domainChainId != null) {
-        const mismatch = domainChainId !== opts.chainId;
-        report.eip712Chain = {
-          domainChainId,
-          walletChainId: opts.chainId,
-          mismatch,
-        };
-        if (mismatch) hits.add('eip712ChainMismatch');
-      }
-      const permit = decodePermit(typed);
+      const missing = !domainHasChainId || domainChainId == null;
+      const mismatch = missing || domainChainId !== opts.chainId;
+      report.eip712Chain = {
+        domainChainId: domainChainId ?? undefined,
+        walletChainId: opts.chainId,
+        mismatch,
+        missing,
+      };
+      if (mismatch) hits.add('eip712ChainMismatch');
+      const permit = decodePermit(typed, signingAddress);
       if (permit) {
         report.permit = permit;
         hits.add('permit');

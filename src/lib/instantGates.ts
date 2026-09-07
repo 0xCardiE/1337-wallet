@@ -35,11 +35,13 @@ export const INSTANT_GATE_META: Record<
   },
   eip712ChainMismatch: {
     title: 'EIP-712 chain ID mismatch',
-    description: 'Typed data whose domain.chainId does not match the active network.',
+    description:
+      'Typed data whose domain.chainId is missing or does not match the active network (cross-chain replay).',
   },
   siweMismatch: {
     title: 'SIWE domain mismatch',
-    description: 'Sign-In with Ethereum messages whose domain or URI does not match the page.',
+    description:
+      'Sign-In with Ethereum messages whose domain, URI, chain, or account does not match this page or wallet.',
   },
 };
 

@@ -10,7 +10,6 @@ import {
 } from './accounts';
 import {
   activateAccount,
-  clearAccountSession,
   getAccountsMeta,
   getActiveAccountId,
   getLocalKeys,
@@ -20,7 +19,6 @@ import {
   setLocalKeys,
   setSessionMnemonic,
   setSessionPassword,
-  setUnlockedAccount,
 } from './accountSession';
 import {
   loadPersisted,
@@ -41,7 +39,8 @@ import {
 import {
   persistSessionPrivateKey,
   persistUnlockPassword,
-  clearSessionInBackground,
+  persistHardwareSession as persistHardwareSessionBlob,
+  lockWallet,
 } from './sessionBridge';
 
 function normalizeAddress(address: string): `0x${string}` {
@@ -176,7 +175,8 @@ async function ensureLocalKeyForAccount(accountId: string): Promise<`0x${string}
     }
   }
 
-  throw new Error('Local key missing — unlock again.');
+  await lockWallet();
+  throw new Error('Wallet session expired. Unlock again.');
 }
 
 export async function hydrateLocalKeysFromVault(password: string): Promise<void> {
@@ -267,7 +267,7 @@ export async function createInitialWallet(password: string): Promise<{
   setLocalKeys({ [id]: pk });
   setAccountsMeta([account], id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return { mnemonic, privateKey: pk, account };
 }
 
@@ -293,7 +293,7 @@ export async function createInitialPrivateKeyWallet(password: string): Promise<{
   setLocalKeys({ [id]: pk });
   setAccountsMeta([account], id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return { privateKey: pk, account };
 }
 
@@ -321,7 +321,7 @@ export async function importInitialWallet(
   setLocalKeys({ [id]: pk });
   setAccountsMeta([account], id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return account;
 }
 
@@ -348,7 +348,7 @@ export async function importInitialMnemonicWallet(
   setLocalKeys({ [id]: pk });
   setAccountsMeta([account], id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return account;
 }
 
@@ -391,7 +391,7 @@ export async function addLocalAccount(opts: {
   setLocalKeys(nextKeys);
   setAccountsMeta(accounts, id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return account;
 }
 
@@ -428,7 +428,7 @@ export async function addDerivedSeedAccount(label?: string): Promise<WalletAccou
   setLocalKeys(nextKeys);
   setAccountsMeta(accounts, id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return account;
 }
 
@@ -436,6 +436,8 @@ async function importMnemonicIntoVault(
   mnemonicInput: string,
   label?: string,
 ): Promise<WalletAccount> {
+  const password = getSessionPassword();
+  if (!password) throw new Error('Unlock the wallet to add an account.');
   const mnemonic = parseImportMnemonic(mnemonicInput);
   const existing = getAccountsMeta();
   if (getSessionMnemonic()) {
@@ -467,7 +469,7 @@ async function importMnemonicIntoVault(
   setLocalKeys(nextKeys);
   setAccountsMeta(accounts, id);
   activateAccount(id);
-  await persistSessionPrivateKey(pk);
+  await persistSessionPrivateKey(pk, password);
   return account;
 }
 
@@ -618,20 +620,18 @@ export async function setAccountInstant(accountId: string, instant: boolean): Pr
 }
 
 export async function lockManagedWallet(): Promise<void> {
-  await clearSessionInBackground();
-  clearAccountSession();
-  setUnlockedAccount(null, null);
+  await lockWallet();
 }
 
 async function persistHardwareSession(account: WalletAccount): Promise<void> {
-  await chrome.runtime.sendMessage({
-    type: 'SET_SESSION',
-    session: {
-      kind: account.kind,
-      accountId: account.id,
-      address: account.address,
-      derivationPath: account.derivationPath || DEFAULT_ETH_DERIVATION_PATH,
-    },
+  if (account.kind !== 'ledger' && account.kind !== 'trezor') {
+    throw new Error('Not a hardware account.');
+  }
+  await persistHardwareSessionBlob({
+    kind: account.kind,
+    accountId: account.id,
+    address: account.address,
+    derivationPath: account.derivationPath || DEFAULT_ETH_DERIVATION_PATH,
   });
 }
 
