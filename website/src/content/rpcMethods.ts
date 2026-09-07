@@ -69,8 +69,8 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
       {
         method: 'wallet_addEthereumChain',
         status: 'yes',
-        weDo: 'Add or update a custom chain, then switch.',
-        dappsUse: 'Unknown L2 / new rollup.',
+        weDo: 'Switch if the chain is already in Networks. Ignores dapp RPCs. Unknown chain → 4902 (add it yourself).',
+        dappsUse: 'Same as switch for catalog chains. New networks are added in the wallet, not by the page.',
       },
     ],
   },

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleProviderRpc } from '../../src/lib/providerRpc';
 import { connectAddress } from '../../src/lib/dappConnections';
+import { preferredRpcFor } from '../../src/lib/chainRpcRegistry';
+import { loadPersisted, WALLET_PERSIST_KEY } from '../../src/lib/storageState';
 import { toHexChainId } from '../../src/provider/types';
 import { TEST_ADDRESS, TEST_PK } from './fixtures';
 
@@ -93,5 +95,84 @@ describe('handleProviderRpc wallet_getCapabilities', () => {
     if (res.ok) return;
     expect(res.error.code).toBe(4200);
     expect(res.error.message).toMatch(/wallet_sendCalls/);
+  });
+});
+
+describe('handleProviderRpc wallet_addEthereumChain', () => {
+  let localStore: Record<string, unknown>;
+
+  beforeEach(() => {
+    localStore = {};
+    chrome.storage.local.get = ((keys: unknown, cb: (r: Record<string, unknown>) => void) => {
+      const list =
+        keys == null
+          ? Object.keys(localStore)
+          : Array.isArray(keys)
+            ? keys
+            : [keys as string];
+      const out: Record<string, unknown> = {};
+      for (const k of list) if (k in localStore) out[k] = localStore[k];
+      cb(out);
+    }) as typeof chrome.storage.local.get;
+    chrome.storage.local.set = ((items: Record<string, unknown>, cb?: () => void) => {
+      Object.assign(localStore, items);
+      cb?.();
+    }) as typeof chrome.storage.local.set;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('switches a catalog chain and ignores the dapp RPC', async () => {
+    const evil = 'https://evil.example/rpc';
+    const res = await handleProviderRpc(
+      TEST_PK,
+      {
+        id: 'add-1',
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: '0x2105',
+            chainName: 'Fake Base',
+            rpcUrls: [evil],
+          },
+        ],
+      },
+      ORIGIN,
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.switchedChainId).toBe(8453);
+    const persisted = await loadPersisted();
+    expect(persisted.settings.activeChainId).toBe(8453);
+    expect(persisted.settings.preferredRpcByChain?.['8453']).toBeUndefined();
+    expect(persisted.settings.customRpcByChain?.['8453']).toBeUndefined();
+    expect(preferredRpcFor(8453)).toBeUndefined();
+    expect(localStore[WALLET_PERSIST_KEY]).toBeTruthy();
+  });
+
+  it('rejects an unknown chain instead of planting its RPC', async () => {
+    const res = await handleProviderRpc(
+      TEST_PK,
+      {
+        id: 'add-2',
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: '0x12345',
+            chainName: 'Phish',
+            rpcUrls: ['https://evil.example/rpc'],
+          },
+        ],
+      },
+      ORIGIN,
+    );
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error.code).toBe(4902);
+    const persisted = await loadPersisted();
+    expect(persisted.settings.customChains).toBeUndefined();
+    expect(persisted.settings.preferredRpcByChain).toBeUndefined();
   });
 });

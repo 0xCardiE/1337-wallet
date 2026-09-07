@@ -1,11 +1,5 @@
 import { getAddress } from 'viem';
-import {
-  allChains,
-  chainById,
-  getCustomChains,
-  isCuratedChain,
-  type ChainDefinition,
-} from './chainCatalog';
+import { allChains, chainById } from './chainCatalog';
 import {
   addressFromPrivateKey,
   bytesToHexMessage,
@@ -19,7 +13,6 @@ import {
   effectiveActiveChainId,
   loadPersisted,
   patchSettings,
-  type AppSettings,
 } from './storageState';
 import { accountInstantEnabled, shouldQueueDappApproval } from './txConfirmMode';
 import { getActiveAccount } from './accounts';
@@ -249,70 +242,19 @@ export async function handleProviderRpc(
     }
 
     if (method === 'wallet_addEthereumChain') {
-      const p = params[0] as {
-        chainId?: string;
-        chainName?: string;
-        rpcUrls?: string[];
-        nativeCurrency?: { name: string; symbol: string; decimals: number };
-        blockExplorerUrls?: string[];
-      };
-      const cid = parseChainIdParam(p?.chainId);
-      if (cid == null) throw new Error('Invalid chainId');
-      const rpc = p?.rpcUrls?.[0]?.trim();
-      const patch: AppSettings = { activeChainId: cid };
-      if (rpc) {
-        patch.preferredRpcByChain = {
-          ...(settings.preferredRpcByChain ?? {}),
-          [String(cid)]: rpc,
-        };
+      const p = params[0] as { chainId?: string } | undefined;
+      const next = parseChainIdParam(p?.chainId);
+      if (next == null) throw new Error('Invalid chainId');
+      /* Dapps may request a switch. They cannot plant or prefer an RPC — only
+         Networks (user) and the catalog own endpoints. */
+      if (!chainById(next)) {
+        throw Object.assign(
+          new Error(`Unrecognized chain ID ${next}. Add the chain in Networks first.`),
+          { code: 4902 },
+        );
       }
-      if (p?.rpcUrls?.length) {
-        const custom = [...(settings.customRpcByChain?.[String(cid)] ?? [])];
-        for (const u of p.rpcUrls) {
-          if (u?.trim() && !custom.includes(u.trim())) custom.push(u.trim());
-        }
-        patch.customRpcByChain = {
-          ...(settings.customRpcByChain ?? {}),
-          [String(cid)]: custom,
-        };
-      }
-      if (!isCuratedChain(cid) && !chainById(cid)) {
-        const name = (p?.chainName?.trim() || `Chain ${cid}`).slice(0, 64);
-        const symbol = (p?.nativeCurrency?.symbol?.trim() || 'ETH').slice(0, 16);
-        const decimals =
-          typeof p?.nativeCurrency?.decimals === 'number' &&
-          Number.isFinite(p.nativeCurrency.decimals)
-            ? Math.floor(p.nativeCurrency.decimals)
-            : 18;
-        const explorers = (p?.blockExplorerUrls ?? [])
-          .filter(u => typeof u === 'string' && u.trim())
-          .map(u => u.trim());
-        const rpcs = (p?.rpcUrls ?? [])
-          .filter(u => typeof u === 'string' && u.trim())
-          .map(u => u.trim());
-        if (rpcs.length === 0) throw new Error('At least one RPC URL is required');
-        const def: ChainDefinition = {
-          chainId: cid,
-          name,
-          shortName:
-            name
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .slice(0, 24) || `chain-${cid}`,
-          kind: 'mainnet',
-          nativeCurrency: {
-            name: p?.nativeCurrency?.name?.trim() || symbol,
-            symbol,
-            decimals,
-          },
-          rpcUrls: rpcs,
-          blockExplorerUrls: explorers,
-        };
-        const existing = getCustomChains().filter(c => c.chainId !== cid);
-        patch.customChains = [...existing, def];
-      }
-      await patchSettings(patch);
-      return { id, ok: true, result: null, switchedChainId: cid };
+      await patchSettings({ activeChainId: next });
+      return { id, ok: true, result: null, switchedChainId: next };
     }
 
     if (isSignMethod(method)) {
