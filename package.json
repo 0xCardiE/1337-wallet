@@ -1,6 +1,6 @@
 {
   "name": "1337-wallet",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "EVM signer for developers and power users. Readable confirms, no analytics, no 1337 server.",
   "private": true,
   "type": "module",

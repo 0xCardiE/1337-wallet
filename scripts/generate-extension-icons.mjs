@@ -33,9 +33,14 @@ for (const w of sizes) {
 writeFileSync(join(outDir, '1337-logo.svg'), skullIconSvg(128));
 console.log('wrote', join(outDir, '1337-logo.svg'));
 
-const websiteLogo = join(__dirname, '../website/public/logo.svg');
-writeFileSync(websiteLogo, skullIconSvg(128));
-console.log('wrote', websiteLogo);
+const websitePublic = join(__dirname, '../website/public');
+const skullSvg = readFileSync(join(outDir, '1337-skull.svg'));
+writeFileSync(join(websitePublic, '1337-skull.svg'), skullSvg);
+writeFileSync(join(websitePublic, 'logo.svg'), skullSvg);
+writeFileSync(join(websitePublic, 'icon-128.png'), readFileSync(join(outDir, 'icon-128.png')));
+console.log('wrote', join(websitePublic, '1337-skull.svg'));
+console.log('wrote', join(websitePublic, 'logo.svg'));
+console.log('wrote', join(websitePublic, 'icon-128.png'));
 
 const icon128 = readFileSync(join(outDir, 'icon-128.png'));
 writeFileSync(

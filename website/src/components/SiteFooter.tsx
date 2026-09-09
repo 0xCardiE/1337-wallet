@@ -7,7 +7,17 @@ export function SiteFooter() {
     <footer className="border-t border-border/80 bg-bg">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
-          <p className="text-lg font-semibold">{SITE.name}</p>
+          <p className="flex items-center gap-2 text-lg font-semibold">
+            <img
+              src="/1337-skull.svg"
+              alt=""
+              width={22}
+              height={22}
+              className="size-[22px] [image-rendering:pixelated]"
+              draggable={false}
+            />
+            {SITE.name}
+          </p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">{SITE.tagline}</p>
           <p className="mt-4 text-xs text-muted">No analytics. No tracking server.</p>
         </div>
