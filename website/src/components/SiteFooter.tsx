@@ -25,15 +25,13 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-medium text-text">Site</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
-            {NAV_LINKS.filter(link => link.href !== '/security' && link.href !== '/faq').map(
-              link => (
-                <li key={link.href}>
-                  <Link href={link.href} className="hover:text-text">
-                    {link.label}
-                  </Link>
-                </li>
-              ),
-            )}
+            {NAV_LINKS.filter(link => link.href !== '/faq').map(link => (
+              <li key={link.href}>
+                <Link href={link.href} className="hover:text-text">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
             {FOOTER_EXTRA_LINKS.map(link => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-text">
@@ -59,12 +57,12 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href="/security" className="hover:text-text">
-                Security FAQ
+                Security
               </Link>
             </li>
             <li>
               <Link href="/faq" className="hover:text-text">
-                Product FAQ
+                FAQ
               </Link>
             </li>
             <li>
@@ -116,7 +114,7 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
           <BuiltOnEthereumBadge />
           <p className="text-center text-xs text-muted">
-            © {new Date().getFullYear()} {SITE.name}. Self-custody tool — you hold the keys; we do
+            © {new Date().getFullYear()} {SITE.name}. Self-custody tool. You hold the keys. We do
             not guarantee funds.
           </p>
         </div>

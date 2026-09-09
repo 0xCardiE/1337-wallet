@@ -22,7 +22,7 @@ export function PrivacySection() {
               </a>
               {' · '}
               <a href="/security" className="text-text underline-offset-4 hover:underline">
-                Security FAQ
+                Security
               </a>
               .
             </p>

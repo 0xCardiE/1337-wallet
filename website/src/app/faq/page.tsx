@@ -21,11 +21,11 @@ export default function FaqPage() {
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
             Install, dapps, tools, networks, and privacy. Keys, hardware, and “what if I do not
-            trust it?” live on the{' '}
+            trust it?” live on{' '}
             <Link href="/security" className="text-text underline-offset-4 hover:underline">
-              security FAQ
-            </Link>{' '}
-            — that is the comparison with MetaMask and Rabby.
+              Security
+            </Link>
+            .
           </p>
         </div>
       </section>
@@ -35,7 +35,7 @@ export default function FaqPage() {
 
         <div className="mt-16 flex flex-wrap gap-4">
           <Link href="/security" className="btn-secondary">
-            Security FAQ
+            Security
           </Link>
           <DiscordJoin>Ask on Discord</DiscordJoin>
         </div>

@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE.name} — Advanced EVM wallet for power users`,
+    default: `${SITE.name}`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,

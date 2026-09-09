@@ -10,7 +10,7 @@ export function ToolsSection() {
             Signer tools
           </h2>
           <p className="mt-4 text-muted">
-            Signings, approvals, swaps, ENS, multisend, and gas — things you do in a wallet. Hide
+            Signings, approvals, swaps, ENS, multisend, and gas. Things you do in a wallet. Hide
             what you do not use in Settings.
           </p>
         </div>

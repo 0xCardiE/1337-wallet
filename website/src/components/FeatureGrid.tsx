@@ -70,7 +70,7 @@ export function FeatureGrid() {
           Features
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-          Power-user tooling, not consumer fluff
+          The details before you sign
         </h2>
         <p className="mt-4 text-muted">
           Inspired by wallets like{' '}

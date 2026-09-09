@@ -14,13 +14,13 @@ export default function IntegratePage() {
     <div className="mx-auto max-w-4xl px-5 py-16 md:py-20">
       <div className="max-w-3xl">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-          For builders &amp; AIs
+          For builders
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
           Integrate {SITE.name}
         </h1>
         <p className="mt-5 text-lg leading-relaxed text-muted">
-          1337 exposes a standard EIP-1193 provider with EIP-6963 discovery — similar to how{' '}
+          1337 exposes a standard EIP-1193 provider with EIP-6963 discovery, similar to how{' '}
           <a
             href="https://rabby.io/docs/integrating-rabby-wallet"
             className="text-text underline-offset-4 hover:underline"
@@ -56,7 +56,7 @@ export default function IntegratePage() {
         </p>
 
         <h2>1. Vanilla JavaScript (EIP-6963)</h2>
-        <p>Recommended for multi-wallet environments — listen for announced providers:</p>
+        <p>Recommended for multi-wallet environments. Listen for announced providers:</p>
         <CodeBlock title="discover-and-connect.ts">
           {`let provider: EIP1193Provider | null = null;
 
@@ -138,7 +138,7 @@ const address = await signer.getAddress();`}
         <h2>5. UI labels for wallet pickers</h2>
         <p>
           Low-cost integration (Rabby&apos;s recommended approach): show both MetaMask and 1337
-          buttons when <code>window.ethereum</code> exists — they hit the same provider object in
+          buttons when <code>window.ethereum</code> exists. They hit the same provider object in
           drop-in mode, but users recognize the brand they installed.
         </p>
         <ul>
@@ -151,8 +151,8 @@ const address = await signer.getAddress();`}
         <p>
           Connect, switch chain, send, <code>personal_sign</code>, and typed data (Permit2, EIP-2612,
           Pendle orders). <code>wallet_getCapabilities</code> always returns empty per-chain objects
-          so Uniswap / wagmi fall back to <code>eth_sendTransaction</code>. Full table — including
-          what we do not implement and what dapps use instead — is on{' '}
+          so Uniswap / wagmi fall back to <code>eth_sendTransaction</code>. Full table, including
+          what we do not implement and what dapps use instead, is on{' '}
           <Link href="/rpc" className="text-text underline-offset-4 hover:underline">
             RPC methods
           </Link>
@@ -164,7 +164,7 @@ const address = await signer.getAddress();`}
           Machine-readable summary: {SITE.name} is a Chrome MV3 extension exposing{' '}
           <code>window.ethereum</code> (optional MetaMask shim) and EIP-6963 provider{' '}
           <code>{PROVIDER.rdns}</code>. No WalletConnect server required for extension users.
-          Transaction previews include decoded calldata and Etherscan deep links — expect users to
+          Transaction previews include decoded calldata and Etherscan deep links. Expect users to
           review details in Normal mode before signing.
         </p>
       </div>

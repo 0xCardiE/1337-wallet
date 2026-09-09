@@ -62,7 +62,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           Software keys are encrypted with your password before they are written to disk. Hardware
-          accounts store address and derivation path only — private keys stay on Ledger or Trezor.
+          accounts store address and derivation path only. Private keys stay on Ledger or Trezor.
         </p>
 
         <h2>When the extension uses the network</h2>
@@ -114,11 +114,11 @@ export default function PrivacyPage() {
           </Link>
           {' · '}
           <Link href="/security" className="text-text underline-offset-4 hover:underline">
-            Security FAQ
+            Security
           </Link>
           {' · '}
           <Link href="/faq" className="text-text underline-offset-4 hover:underline">
-            Product FAQ
+            FAQ
           </Link>
         </p>
       </article>

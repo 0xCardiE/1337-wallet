@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { STORE_SCREENSHOTS } from '@/lib/site';
 
+const SHOT_CACHE = '?v=4';
+
 export function ScreenshotGallery() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -58,11 +60,12 @@ export function ScreenshotGallery() {
             >
               <span className="relative block aspect-[16/10] w-full bg-black">
                 <Image
-                  src={item.src}
+                  src={`${item.src}${SHOT_CACHE}`}
                   alt={item.alt}
                   fill
+                  unoptimized
                   sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover object-center transition duration-200 group-hover:brightness-110"
+                  className="object-contain object-center"
                 />
               </span>
               <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-xs text-white opacity-90 backdrop-blur-sm group-hover:opacity-100">
@@ -91,9 +94,10 @@ export function ScreenshotGallery() {
             </p>
             <div className="relative aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-black shadow-2xl">
               <Image
-                src={shot.src}
+                src={`${shot.src}${SHOT_CACHE}`}
                 alt={shot.alt}
                 fill
+                unoptimized
                 sizes="(min-width: 768px) 1024px, 94vw"
                 className="object-contain object-center"
                 priority

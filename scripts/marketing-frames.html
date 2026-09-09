@@ -13,12 +13,11 @@
       :root {
         --ink: #041108;
         --paper: #f4fff0;
-        --lime: #d6ff00;
-        --cyan: #14f1d9;
-        --violet: #6d28ff;
-        --magenta: #ff2bd6;
-        --alert: #ff2a3a;
-        --amber: #ffbf1a;
+        --lime: #b4e62a;
+        --amber: #d9a014;
+        --alert: #c41e2a;
+        --forest: #4a8c32;
+        --moss: #6aa83a;
       }
       * { box-sizing: border-box; }
       html, body {
@@ -103,15 +102,28 @@
         position: absolute;
         z-index: 5;
         left: 64px;
-        bottom: 34px;
+        bottom: 36px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         font-weight: 800;
-        letter-spacing: 0.08em;
-        font-size: 20px;
+        letter-spacing: 0.06em;
+        font-size: 18px;
+        line-height: 1;
       }
-      .brand img { width: 36px; height: 36px; image-rendering: pixelated; }
+      .brand img {
+        display: block;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        object-fit: contain;
+        image-rendering: pixelated;
+        transform: translateY(-2px);
+      }
+      .brand span {
+        display: block;
+        line-height: 1;
+      }
       .device {
         position: absolute;
         z-index: 6;
@@ -122,6 +134,10 @@
         border-radius: 22px;
         overflow: hidden;
         background: #050806;
+        box-shadow:
+          0 0 0 3px #041108,
+          0 0 0 6px rgba(180, 230, 42, 0.55),
+          0 24px 64px rgba(0, 0, 0, 0.5);
       }
       .device img {
         display: block;
@@ -129,7 +145,7 @@
         width: auto;
       }
 
-      /* Theme: acid lime billboard */
+      /* Hero — keys, promo, accounts */
       .theme-lime { background: #08140a; color: var(--ink); }
       .theme-lime .field {
         background: var(--lime);
@@ -137,255 +153,90 @@
       }
       .theme-lime .wash {
         background:
-          radial-gradient(circle at 78% 30%, rgba(214,255,0,0.28), transparent 36%),
+          radial-gradient(circle at 78% 30%, rgba(180,230,42,0.16), transparent 36%),
           linear-gradient(115deg, transparent 48%, #041108 48%);
       }
       .theme-lime .kicker,
-      .theme-lime .brand { color: #14300a; }
+      .theme-lime .brand { color: #1a360c; }
       .theme-lime h1 { color: #041108; }
-      .theme-lime .sub { color: #16380c; }
-      .theme-lime .device {
-        box-shadow:
-          0 0 0 3px #041108,
-          0 0 0 7px var(--lime),
-          0 28px 80px rgba(0,0,0,0.45),
-          0 0 64px rgba(214,255,0,0.28);
-      }
+      .theme-lime .sub { color: #1c3a10; }
 
-      /* Theme: deep teal / balances */
-      .theme-cyan { background: #022028; color: var(--ink); }
-      .theme-cyan .field {
-        background: var(--cyan);
+      /* Default family — tools, assets, history */
+      .theme-forest { background: #06120a; color: var(--ink); }
+      .theme-forest .field {
+        background: var(--forest);
         clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
       }
-      .theme-cyan .wash {
-        background: linear-gradient(105deg, transparent 46%, #022028 46%);
+      .theme-forest .wash {
+        background: linear-gradient(105deg, transparent 46%, #06120a 46%);
       }
-      .theme-cyan .kicker,
-      .theme-cyan .brand { color: #08332e; }
-      .theme-cyan h1 { color: #041414; }
-      .theme-cyan .sub { color: #0a3d38; }
-      .theme-cyan .device {
-        box-shadow:
-          0 0 0 3px #022028,
-          0 0 0 7px var(--cyan),
-          0 28px 80px rgba(0,0,0,0.5),
-          0 0 70px rgba(20,241,217,0.28);
-      }
+      .theme-forest .kicker,
+      .theme-forest .brand { color: #0e2410; }
+      .theme-forest h1 { color: #041108; }
+      .theme-forest .sub { color: #123016; }
 
-      /* Theme: send / transfer */
-      .theme-teal { background: #01241f; color: var(--ink); }
-      .theme-teal .field {
-        background: #3cffb0;
-        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
+      /* Slightly lighter green — send, signings, ens, gas */
+      .theme-moss { background: #07140b; color: var(--ink); }
+      .theme-moss .field {
+        background: var(--moss);
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
       }
-      .theme-teal .wash {
-        background: linear-gradient(108deg, transparent 45%, #01241f 45%);
+      .theme-moss .wash {
+        background: linear-gradient(105deg, transparent 46%, #07140b 46%);
       }
-      .theme-teal .kicker,
-      .theme-teal .brand { color: #03382c; }
-      .theme-teal h1 { color: #041410; }
-      .theme-teal .sub { color: #0a4032; }
-      .theme-teal .device {
-        transform: translateY(-50%) rotate(-2.4deg);
-        box-shadow:
-          0 0 0 3px #01241f,
-          0 0 0 7px #3cffb0,
-          0 36px 70px rgba(0,0,0,0.5);
-      }
+      .theme-moss .kicker,
+      .theme-moss .brand { color: #143016; }
+      .theme-moss h1 { color: #041108; }
+      .theme-moss .sub { color: #163818; }
 
-      /* Theme: empty / void */
-      .theme-void { background: #070b12; color: var(--ink); }
-      .theme-void .field {
-        background: #7dd3fc;
-        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
-      }
-      .theme-void .wash {
-        background: linear-gradient(107deg, transparent 46%, #070b12 46%);
-      }
-      .theme-void .kicker,
-      .theme-void .brand { color: #0b2740; }
-      .theme-void h1 { color: #082033; }
-      .theme-void .sub { color: #0b3050; }
-      .theme-void .device {
-        box-shadow: 0 0 0 3px #070b12, 0 0 0 7px #7dd3fc, 0 28px 80px rgba(0,0,0,0.55);
-      }
-
-      /* Theme: history / indigo */
-      .theme-indigo { background: #12082a; color: #fff7ff; }
-      .theme-indigo .field {
-        background: #7c3aed;
-        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
-      }
-      .theme-indigo .wash {
-        background: linear-gradient(107deg, transparent 46%, #12082a 46%);
-      }
-      .theme-indigo .kicker { color: #f3e8ff; }
-      .theme-indigo .brand { color: #f3e8ff; }
-      .theme-indigo .device {
-        box-shadow: 0 0 0 3px #12082a, 0 0 0 7px #c4b5fd, 0 28px 80px rgba(0,0,0,0.5);
-      }
-
-      /* Theme: confirm / amber signer */
-      .theme-amber { background: #1a1204; color: var(--ink); }
+      /* Confirm — caution */
+      .theme-amber { background: #161208; color: var(--ink); }
       .theme-amber .field {
         background: var(--amber);
         clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
       }
       .theme-amber .wash {
-        background: linear-gradient(105deg, transparent 46%, #1a1204 46%);
+        background: linear-gradient(105deg, transparent 46%, #161208 46%);
       }
       .theme-amber .kicker,
-      .theme-amber .brand { color: #3b2200; }
-      .theme-amber h1 { color: #1a1204; }
-      .theme-amber .sub { color: #3b2200; }
+      .theme-amber .brand { color: #3a2408; }
+      .theme-amber h1 { color: #161208; }
+      .theme-amber .sub { color: #3a2408; }
       .theme-amber .device {
         box-shadow:
-          0 0 0 3px #1a1204,
-          0 0 0 7px var(--amber),
-          0 28px 80px rgba(0,0,0,0.55),
-          0 0 70px rgba(255,191,26,0.28);
+          0 0 0 3px #161208,
+          0 0 0 6px rgba(217,160,20,0.55),
+          0 24px 64px rgba(0,0,0,0.5);
       }
 
-      /* Theme: signings / magenta */
-      .theme-magenta { background: #1a0518; color: #fff0fb; }
-      .theme-magenta .field {
-        background: #ff2bd6;
-        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
-      }
-      .theme-magenta .wash {
-        background: linear-gradient(107deg, transparent 46%, #1a0518 46%);
-      }
-      .theme-magenta .kicker,
-      .theme-magenta .brand { color: #3b0530; }
-      .theme-magenta h1 { color: #1a0518; }
-      .theme-magenta .sub { color: #3b0530; }
-      .theme-magenta .device {
-        box-shadow: 0 0 0 3px #1a0518, 0 0 0 7px #ff2bd6, 0 28px 80px rgba(0,0,0,0.5);
-      }
-
-      /* Theme: approvals / alert */
-      .theme-alert { background: #1a0508; color: var(--lime); }
+      /* Revoke — danger */
+      .theme-alert { background: #160808; color: var(--lime); }
       .theme-alert .field {
-        background: #ff2a3a;
-        clip-path: polygon(0 0, 58% 0, 46% 100%, 0 100%);
+        background: var(--alert);
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
       }
       .theme-alert .wash {
-        background: linear-gradient(110deg, transparent 44%, #140206 44%);
+        background: linear-gradient(105deg, transparent 46%, #140606 46%);
       }
       .theme-alert .kicker,
-      .theme-alert .brand { color: #2a0508; }
+      .theme-alert .brand { color: #2a0c0c; }
       .theme-alert h1 { color: var(--lime); }
-      .theme-alert .sub { color: #2a080c; }
+      .theme-alert .sub { color: #2a0c0c; }
       .theme-alert .copy { color: var(--lime); }
-      .theme-alert .device {
-        box-shadow: 0 0 0 3px #140206, 0 0 0 7px var(--lime), 0 28px 80px rgba(0,0,0,0.5);
-      }
 
-      /* Theme: swap / violet */
-      .theme-violet { background: #14062e; color: var(--lime); }
-      .theme-violet .field {
-        background: #6d28ff;
-        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
-      }
-      .theme-violet .wash {
-        background: linear-gradient(105deg, transparent 46%, #14062e 46%);
-      }
-      .theme-violet .kicker { color: #efe9ff; }
-      .theme-violet h1 { color: var(--lime); }
-      .theme-violet .sub { color: #efe9ff; }
-      .theme-violet .brand { color: #efe9ff; }
-      .theme-violet .device {
-        transform: translateY(-50%) rotate(2.2deg);
-        box-shadow: 0 0 0 3px #14062e, 0 0 0 7px var(--lime), 0 36px 80px rgba(0,0,0,0.45);
-      }
-
-      /* Theme: ens / blue */
-      .theme-blue { background: #041428; color: #041428; }
-      .theme-blue .field {
-        background: #38bdf8;
-        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
-      }
-      .theme-blue .wash {
-        background: linear-gradient(107deg, transparent 46%, #041428 46%);
-      }
-      .theme-blue .kicker,
-      .theme-blue .brand { color: #082f49; }
-      .theme-blue h1 { color: #041428; }
-      .theme-blue .sub { color: #0b3d5c; }
-      .theme-blue .device {
-        box-shadow: 0 0 0 3px #041428, 0 0 0 7px #38bdf8, 0 28px 80px rgba(0,0,0,0.5);
-      }
-
-      /* Theme: multisend / ice */
-      .theme-ice { background: #012033; color: var(--ink); }
-      .theme-ice .field {
-        background: #67e8f9;
-        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
-      }
-      .theme-ice .wash {
-        background: linear-gradient(105deg, transparent 46%, #012033 46%);
-      }
-      .theme-ice .kicker,
-      .theme-ice .brand { color: #083344; }
-      .theme-ice h1 { color: #04222e; }
-      .theme-ice .sub { color: #0b3d4f; }
-      .theme-ice .device {
-        box-shadow: 0 0 0 3px #012033, 0 0 0 7px #67e8f9, 0 28px 80px rgba(0,0,0,0.5);
-      }
-
-      /* Theme: gas / orange */
-      .theme-orange { background: #1c0d04; color: var(--ink); }
-      .theme-orange .field {
-        background: #fb923c;
-        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
-      }
-      .theme-orange .wash {
-        background: linear-gradient(107deg, transparent 46%, #1c0d04 46%);
-      }
-      .theme-orange .kicker,
-      .theme-orange .brand { color: #431407; }
-      .theme-orange h1 { color: #1c0d04; }
-      .theme-orange .sub { color: #431407; }
-      .theme-orange .device {
-        box-shadow: 0 0 0 3px #1c0d04, 0 0 0 7px #fb923c, 0 28px 80px rgba(0,0,0,0.5);
-      }
-
-      /* Theme: accounts / terminal */
-      .theme-term { background: #03140a; color: var(--ink); }
-      .theme-term .field {
-        background: var(--lime);
-        clip-path: polygon(0 0, 58% 0, 46% 100%, 0 100%);
-      }
-      .theme-term .wash {
-        background:
-          linear-gradient(110deg, transparent 44%, #03140a 44%),
-          repeating-linear-gradient(90deg, transparent 0 18px, rgba(34,197,94,0.08) 18px 36px);
-      }
-      .theme-term .kicker,
-      .theme-term .brand { color: #14300a; }
-      .theme-term h1 { color: #041108; }
-      .theme-term .sub { color: #16380c; }
-      .theme-term .device {
-        box-shadow: 0 0 0 3px #03140a, 0 0 0 7px #22c55e, 0 28px 80px rgba(0,0,0,0.55);
-      }
-
-      /* Theme: settings / charcoal */
-      .theme-char { background: #101114; color: var(--ink); }
+      /* Settings / empty — charcoal, lime type */
+      .theme-char { background: #101410; color: var(--lime); }
       .theme-char .field {
-        background: #a3e635;
-        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
+        background: #2a3326;
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
       }
       .theme-char .wash {
-        background: linear-gradient(108deg, transparent 45%, #101114 45%);
+        background: linear-gradient(105deg, transparent 46%, #101410 46%);
       }
       .theme-char .kicker,
-      .theme-char .brand { color: #1a2e05; }
-      .theme-char h1 { color: #101114; }
-      .theme-char .sub { color: #1a2e05; }
-      .theme-char .device {
-        box-shadow: 0 0 0 3px #101114, 0 0 0 7px #a3e635, 0 28px 80px rgba(0,0,0,0.55);
-      }
+      .theme-char .brand { color: #9cc46a; }
+      .theme-char h1 { color: var(--lime); }
+      .theme-char .sub { color: #8aaa68; }
 
       /* Promo marquee */
       .stage[data-layout='marquee'] .copy {

@@ -82,7 +82,7 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
       {
         method: 'eth_sendTransaction',
         status: 'yes',
-        weDo: 'Approve, swap, supply, lock, vote — one tx, local simulate.',
+        weDo: 'Approve, swap, supply, lock, vote. One tx, local simulate.',
         dappsUse: 'Default write path for Aave, Pendle, Curve, Uniswap.',
       },
       {
@@ -113,7 +113,7 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
       {
         method: 'wallet_getCapabilities',
         status: 'empty',
-        weDo: 'Always succeeds. Empty object per catalog chain — no atomic batch, no paymaster.',
+        weDo: 'Always succeeds. Empty object per catalog chain. No atomic batch, no paymaster.',
         dappsUse: 'Falls back to eth_sendTransaction. We do not advertise wallet_sendCalls.',
       },
       {
@@ -140,7 +140,7 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
   },
   {
     id: 'missing',
-    title: 'Not implemented — dapp fallback',
+    title: 'Not implemented. Dapp fallback',
     nav: 'Not implemented',
     lead: 'We do not stub these as success unless the spec allows a quiet no.',
     rows: [

@@ -21,10 +21,10 @@ export function Hero() {
         <div id="download" className="flex flex-wrap items-center gap-4 scroll-mt-24">
           <ChromeDownload />
           <Link href="/integrate" className="btn-secondary">
-            Integrate for dapps &amp; AIs
+            Integrate
           </Link>
           <Link href="/security" className="text-sm text-muted underline-offset-4 hover:text-text hover:underline">
-            Security vs MetaMask &amp; Rabby
+            Security
           </Link>
         </div>
 

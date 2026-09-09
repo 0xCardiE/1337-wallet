@@ -10,16 +10,6 @@ export const metadata: Metadata = {
     'How 1337 Wallet holds keys compared with MetaMask and Rabby. Hardware, burner accounts, confirmations, and what to do if you do not trust a new extension yet.',
 };
 
-const TOC = [
-  { href: '#trust', label: 'If you do not trust it yet' },
-  { href: '#compare', label: 'MetaMask & Rabby' },
-  { href: '#keys', label: 'Where keys live' },
-  { href: '#hardware', label: 'Hardware wallets' },
-  { href: '#signing', label: 'Before you sign' },
-  { href: '#build', label: 'How it is built' },
-  { href: '#practice', label: 'Keep risk lower' },
-] as const;
-
 export default function SecurityPage() {
   return (
     <div>
@@ -35,23 +25,15 @@ export default function SecurityPage() {
             1337 is a self-custody Chrome extension. Software keys stay encrypted on your machine.
             Hardware keys never leave Ledger or Trezor. There is no tracking server that could spend.
             If you do not trust a new wallet, use a burner for small amounts and hardware for the
-            rest — the same split careful people already use in MetaMask and Rabby.
+            rest. Same split careful people already use in MetaMask and Rabby.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            {TOC.map(item => (
-              <a key={item.href} href={item.href} className="btn-secondary px-4 py-2 text-sm">
-                {item.label}
-              </a>
-            ))}
-          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="text-2xl font-semibold tracking-tight">Side by side</h2>
         <p className="mt-2 max-w-3xl text-muted">
-          The scary question is usually “is this a different, weaker model?” It is not. Workflow
-          and privacy differ. Who can move funds does not.
+          Workflow and privacy differ. Who can move funds does not.
         </p>
 
         <div className="mt-8 overflow-x-auto rounded-2xl border border-border/80">
@@ -83,7 +65,7 @@ export default function SecurityPage() {
 
         <div className="mt-16 flex flex-wrap gap-4">
           <Link href="/faq" className="btn-secondary">
-            Product FAQ
+            FAQ
           </Link>
           <DiscordJoin>Ask on Discord</DiscordJoin>
         </div>

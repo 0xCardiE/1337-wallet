@@ -85,8 +85,8 @@ export default function TermsPage() {
         </p>
         <p>
           Burner Mode auto-signs ordinary requests on a software account you mark as disposable. That
-          is extra risk you choose. Hardware accounts still require confirmation on the device —
-          read the device screen, not only the extension.
+          is extra risk you choose. Hardware accounts still require confirmation on the device.
+          Read the device screen, not only the extension.
         </p>
 
         <h2>6. Eligibility</h2>
@@ -99,8 +99,8 @@ export default function TermsPage() {
         <h2>7. Limitation of liability</h2>
         <p>
           To the fullest extent permitted by law, the authors and operators of 1337 are not liable
-          for any loss of crypto, keys, profits, data, or other damages — direct, indirect,
-          incidental, special, consequential, or punitive — arising from your use of the software,
+          for any loss of crypto, keys, profits, data, or other damages (direct, indirect,
+          incidental, special, consequential, or punitive) arising from your use of the software,
           inability to use it, unauthorized access to your device or backups, third-party services,
           or any transaction you sign or fail to sign. Some places do not allow certain exclusions;
           in those places our liability is limited to the maximum the law allows (which may be
@@ -146,11 +146,11 @@ export default function TermsPage() {
           </Link>
           {' · '}
           <Link href="/security" className="text-text underline-offset-4 hover:underline">
-            Security FAQ
+            Security
           </Link>
           {' · '}
           <Link href="/faq" className="text-text underline-offset-4 hover:underline">
-            Product FAQ
+            FAQ
           </Link>
         </p>
       </article>

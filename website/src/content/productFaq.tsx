@@ -14,10 +14,9 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Developers, security researchers, and advanced users who want a serious signer —
-              readable confirms, easy RPC switching, and hardware — without a consumer toy UI. If
-              you already live in MetaMask or Rabby and wish the wallet assumed you can read a
-              transaction, you are the audience.
+              Developers, security researchers, and advanced users who want a serious signer.
+              Readable confirms, easy RPC switching, and hardware. If you already live in MetaMask
+              or Rabby and wish the wallet assumed you can read a transaction, you are the audience.
             </p>
           </>
         ),
@@ -52,16 +51,15 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Same job — connect to dapps, send, sign — with a denser toolkit: per-chain RPC picker
+              Same job (connect to dapps, send, sign) with a denser toolkit: per-chain RPC picker
               and network doctor, Inspect, approval revoke, LiFi swaps, multisend, ENS, side panel,
               optional Burner Mode on a disposable key. MetaMask is the compatibility baseline.
-              Rabby is the closest “power user extension” cousin. 1337 is local-first and has no
-              analytics.
+              Rabby is the closest power-user cousin. 1337 is local-first and has no analytics.
             </p>
             <p className="mt-3">
-              For keys and hardware, security is the same class. That question lives on the{' '}
+              For keys and hardware, security is the same class. That question lives on{' '}
               <Link href="/security" className={linkClass}>
-                security FAQ
+                Security
               </Link>
               .
             </p>
@@ -83,7 +81,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <a href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Chrome Web Store
               </a>
-              . After install it opens in the side panel by default; switch to popup in Settings if
+              . After install it opens in the side panel by default. Switch to popup in Settings if
               you prefer MetaMask-style chrome.
             </p>
           </>
@@ -95,8 +93,8 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               Yes. Enable MetaMask drop-in for <code>window.ethereum</code> sites that only look for
-              MetaMask, or connect as 1337 via EIP-6963 (the same discovery Rabby documents). Most
-              Wagmi / RainbowKit / Ethers stacks just work. Builders:{' '}
+              MetaMask, or connect as 1337 via EIP-6963. Most Wagmi / RainbowKit / Ethers stacks just
+              work. Builders:{' '}
               <Link href="/integrate" className={linkClass}>
                 integration guide
               </Link>
@@ -150,11 +148,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               Normal (default) confirms every dapp sign/send, like MetaMask and Rabby. Burner Mode
-              auto-signs ordinary requests on a local key you treat as disposable; risky actions
-              still pause unless you ungate them. Hardware always confirms on the device. More on
-              the{' '}
+              auto-signs ordinary requests on a local key you treat as disposable. Risky actions
+              still pause unless you ungate them. Hardware always confirms on the device. More on{' '}
               <Link href="/security#signing" className={linkClass}>
-                security FAQ
+                Security
               </Link>
               .
             </p>
@@ -175,7 +172,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               Signings (local message / typed-data history), Approvals (ERC-20, NFT operators,
               Permit2), Swap (LI.FI), ENS &amp; DNS, Multisend, and Gas station. Inspect (address,
               token, ENS, tx hash) is off until you enable it in Settings. Inspect is a search box,
-              not a fourth tab — nav stays Assets / History / Tools.
+              not a fourth tab. Nav stays Assets / History / Tools.
             </p>
           </>
         ),
@@ -187,8 +184,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
             <p>
               Cross-chain routes come from LI.FI when you open Swap. 1337 does not run a swap
               backend. You still confirm (or, on hardware, confirm on the device). Slippage and
-              route details are in the flow, same family as other wallets that embed a DEX
-              aggregator.
+              route details are in the flow.
             </p>
           </>
         ),
@@ -198,7 +194,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Paste a list of addresses and batch native or ERC-20 through Disperse.app — the
+              Paste a list of addresses and batch native or ERC-20 through Disperse.app, the
               familiar no-fee batch contract, including on hardware accounts. If a chain has no
               Disperse yet but has CreateX, the first user can deploy that same Disperse for
               everyone. It is a send tool.
@@ -242,11 +238,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
             <p>
               No. 1337 is a self-custody tool, not a bank. You hold the keys. We cannot recover a
               lost seed, reverse a send, or reimburse stolen or mis-sent assets. Software is
-              provided as-is; simulation and danger flags help you judge a request, they do not
-              insure the outcome. Same class of waiver as MetaMask and other non-custodial wallets.
-              Full text:{' '}
+              provided as-is. Simulation and danger flags help you judge a request. They do not
+              insure the outcome. Full text:{' '}
               <Link href="/terms" className={linkClass}>
-                /terms
+                Terms
               </Link>
               .
             </p>
@@ -259,11 +254,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               No analytics, no telemetry, no tracking server. Vault and settings stay in Chrome
-              extension storage on your machine. That is stricter than typical MetaMask/Rabby
-              product analytics. Third parties you choose (RPC, LI.FI, explorer, Trezor Connect)
-              still see what those features need. Full policy:{' '}
+              extension storage on your machine. Third parties you choose (RPC, LI.FI, explorer,
+              Trezor Connect) still see what those features need. Full policy:{' '}
               <Link href="/privacy" className={linkClass}>
-                /privacy
+                Privacy
               </Link>
               .
             </p>
@@ -278,7 +272,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               Ledger (WebHID) and Trezor Connect, alongside seed and private-key accounts. For
               “what if the extension is evil,” read{' '}
               <Link href="/security#hardware" className={linkClass}>
-                hardware on the security FAQ
+                hardware on Security
               </Link>
               .
             </p>
@@ -290,8 +284,8 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Yes today — a Chrome MV3 extension (side panel + popup). Chromium forks that run
-              MV3 extensions may work; we develop against Chrome.
+              Yes today. A Chrome MV3 extension (side panel + popup). Chromium forks that run MV3
+              extensions may work. We develop against Chrome.
             </p>
           </>
         ),
@@ -304,14 +298,14 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               Join{' '}
               <a href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Discord
-              </a>{' '}
-              to chat or report an issue. Dapp and AI integration lives on{' '}
+              </a>
+              . Dapp and AI integration lives on{' '}
               <Link href="/integrate" className={linkClass}>
-                /integrate
+                Integrate
               </Link>
-              . Keys, hardware, and MetaMask/Rabby comparisons:{' '}
+              . Keys, hardware, and MetaMask / Rabby comparisons:{' '}
               <Link href="/security" className={linkClass}>
-                /security
+                Security
               </Link>
               .
             </p>

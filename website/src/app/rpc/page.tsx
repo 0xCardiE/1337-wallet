@@ -39,7 +39,7 @@ export default function RpcMethodsPage() {
             RPC methods
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            What {SITE.shortName} answers on <code className="text-text">window.ethereum</code> —
+            What {SITE.shortName} answers on <code className="text-text">window.ethereum</code>,
             and what Uniswap, Aave, Pendle, and Curve do when we do not implement a call. We are a
             signer: send, sign, switch chain. We do not fake batch sends.
           </p>
