@@ -44,7 +44,7 @@ export function ScreenshotGallery() {
 
   return (
     <>
-      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-5 sm:grid-cols-2">
         {STORE_SCREENSHOTS.map((item, index) => (
           <figure key={item.src} className="card-surface overflow-hidden">
             <button
@@ -56,12 +56,12 @@ export function ScreenshotGallery() {
               }}
               aria-label={`Enlarge screenshot: ${item.alt}`}
             >
-              <span className="relative block aspect-[420/760] w-full bg-black">
+              <span className="relative block aspect-[16/10] w-full bg-black">
                 <Image
                   src={item.src}
                   alt={item.alt}
                   fill
-                  sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+                  sizes="(min-width: 1024px) 560px, (min-width: 640px) 50vw, 100vw"
                   className="object-cover object-center transition duration-200 group-hover:brightness-110"
                 />
               </span>
@@ -89,13 +89,13 @@ export function ScreenshotGallery() {
             <p id={titleId} className="sr-only">
               {shot.alt}
             </p>
-            <div className="relative h-[min(calc(100vh-10rem),760px)] w-[calc(min(calc(100vh-10rem),760px)*420/760)] max-w-full overflow-hidden rounded-2xl border border-border bg-black shadow-2xl">
+            <div className="relative aspect-[16/10] w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-black shadow-2xl">
               <Image
                 src={shot.src}
                 alt={shot.alt}
                 fill
-                sizes="(min-width: 768px) 420px, 90vw"
-                className="object-cover object-center"
+                sizes="(min-width: 768px) 1024px, 94vw"
+                className="object-contain object-center"
                 priority
               />
             </div>

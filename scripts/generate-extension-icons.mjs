@@ -13,7 +13,7 @@ const skullPath = join(outDir, '1337-skull.png');
 const skullB64 = readFileSync(skullPath).toString('base64');
 
 function skullIconSvg(size) {
-  const pad = Math.round(size * 0.12);
+  const pad = Math.round(size * 0.08);
   const inner = size - pad * 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="1337">
   <rect width="${size}" height="${size}" rx="${Math.round(size * 0.19)}" fill="#050806"/>
@@ -32,6 +32,10 @@ for (const w of sizes) {
 
 writeFileSync(join(outDir, '1337-logo.svg'), skullIconSvg(128));
 console.log('wrote', join(outDir, '1337-logo.svg'));
+
+const websiteLogo = join(__dirname, '../website/public/logo.svg');
+writeFileSync(websiteLogo, skullIconSvg(128));
+console.log('wrote', websiteLogo);
 
 const icon128 = readFileSync(join(outDir, 'icon-128.png'));
 writeFileSync(

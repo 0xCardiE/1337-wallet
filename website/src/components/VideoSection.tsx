@@ -11,8 +11,8 @@ export function VideoSection() {
           See the wallet before you install
         </h2>
         <p className="mt-4 text-muted">
-          Side panel or popup, readable confirms, easy RPC switching, and signer tools. These shots
-          are the production UI — click any of them to open a larger view.
+          Side panel or popup, readable confirms, easy RPC switching, and signer tools. Each card
+          is the production UI on a 1337 billboard — click any of them to open a larger view.
         </p>
       </div>
 

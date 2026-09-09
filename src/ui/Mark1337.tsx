@@ -12,13 +12,12 @@ export function Mark1337({
   /** When false, skips idle/hover glow. Default true. */
   animated?: boolean;
 }) {
-  const height = Math.round(size * (125 / 110));
   return (
     <img
       src={SKULL_SRC}
       alt=""
       width={size}
-      height={height}
+      height={size}
       className={`w1337-mark${animated ? ' w1337-mark--live' : ''}${className ? ` ${className}` : ''}`}
       decoding="async"
       draggable={false}

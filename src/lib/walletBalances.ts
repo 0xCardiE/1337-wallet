@@ -15,6 +15,7 @@ import {
   etherscanCommunityAccess,
   isBlockscoutOrigin,
 } from './explorerApis';
+import { applyFetchedUsdPrices, fetchLlamaUsdPrices } from './tokenPrices';
 
 export type WalletBalEntry = {
   address: string;
@@ -182,6 +183,13 @@ export async function hydrateAssetBalanceCache(): Promise<void> {
           if (v.main && !lastGoodMain.has(k)) lastGoodMain.set(k, v.main);
           if (v.other && !lastGoodOther.has(k)) lastGoodOther.set(k, v.other);
         }
+        for (const [k, snap] of lastGoodMain) {
+          const sep = k.indexOf(':');
+          const chainId = Number(k.slice(0, sep));
+          const holder = k.slice(sep + 1);
+          if (!Number.isFinite(chainId) || !isAddress(holder)) continue;
+          rememberHeldProbes(chainId, holder, snap.rows);
+        }
       })
       .catch(() => {});
   }
@@ -276,6 +284,40 @@ function balEntryToProbe(b: WalletBalEntry): OnChainBalanceProbe {
     logoURI: b.logoURI,
     priceUSD: b.priceUSD,
   };
+}
+
+export async function enrichMissingUsdPrices(rows: WalletBalEntry[]): Promise<WalletBalEntry[]> {
+  const need = rows.filter(r => !r.priceUSD && !isNativeWalletToken(r));
+  if (need.length === 0) return rows;
+  try {
+    const prices = await fetchLlamaUsdPrices(need);
+    return applyFetchedUsdPrices(rows, prices);
+  } catch {
+    return rows;
+  }
+}
+
+/** Add or refresh main-list rows without dropping tokens a partial scan missed. */
+export function mergeMainAssetRows(
+  current: WalletBalEntry[],
+  incoming: WalletBalEntry[],
+): WalletBalEntry[] {
+  const byKey = new Map(current.map(r => [r.address.toLowerCase(), r]));
+  for (const row of incoming) {
+    const key = row.address.toLowerCase();
+    const prev = byKey.get(key);
+    if (!prev) {
+      byKey.set(key, row);
+      continue;
+    }
+    byKey.set(key, {
+      ...prev,
+      ...row,
+      logoURI: row.logoURI || prev.logoURI,
+      priceUSD: row.priceUSD || prev.priceUSD,
+    });
+  }
+  return [...byKey.values()].sort(compareByUsd);
 }
 
 function compareByUsd(a: WalletBalEntry, b: WalletBalEntry): number {
@@ -688,13 +730,14 @@ export async function loadWalletBalancesRpcForChain(
   chainId: number,
 ): Promise<WalletBalEntry[]> {
   const probes = await collectBalanceProbes({ chainId, holder });
-  const rows = await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX);
-  rememberHeldProbes(
-    chainId,
-    holder,
-    rows.map(r => ({ ...r, chainId })),
+  const rows = await enrichMissingUsdPrices(
+    (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX)).map(r => ({
+      ...r,
+      chainId,
+    })),
   );
-  return enrichNativeRows(chainId, rows.map(r => ({ ...r, chainId })));
+  rememberHeldProbes(chainId, holder, rows);
+  return enrichNativeRows(chainId, rows);
 }
 
 /** Multi-chain Li.FI balances with optional per-chain RPC fallback. */
@@ -793,9 +836,11 @@ export async function loadWalletBalancesForChain(
       promoteAddresses: promote,
       includeDustProbes,
     });
-    const chainRows = (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX))
-      .map(r => ({ ...r, chainId }))
-      .filter(r => !skip.has(r.address.toLowerCase()));
+    const chainRows = await enrichMissingUsdPrices(
+      (await snapshotHeldTokensOnChain(chainId, holder, probes, RPC_SNAPSHOT_MAX))
+        .map(r => ({ ...r, chainId }))
+        .filter(r => !skip.has(r.address.toLowerCase())),
+    );
     rememberHeldProbes(chainId, holder, chainRows, { skip, promote });
     const rows = await enrichNativeRows(chainId, [...chainRows].sort(compareByUsd), lifiRows);
     rpcFresh.set(chainId, { at: Date.now(), rows });

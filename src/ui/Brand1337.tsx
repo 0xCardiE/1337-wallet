@@ -1,4 +1,4 @@
-/** Hero branding — CRT skull + 1337 wordmark (public/icons). */
+/** Hero branding — pixel skull + 1337 wordmark (public/icons). */
 
 const SKULL_SRC = 'icons/1337-skull.png';
 const WORDMARK_SRC = 'icons/1337-wordmark.png';
@@ -19,7 +19,7 @@ export function Brand1337({
         alt=""
         className="w1337-brand__skull"
         width={skullSize}
-        height={Math.round(skullSize * (125 / 110))}
+        height={skullSize}
         decoding="async"
         draggable={false}
       />
@@ -28,7 +28,7 @@ export function Brand1337({
         alt="1337"
         className="w1337-brand__wordmark"
         width={wordmarkWidth}
-        height={Math.round(wordmarkWidth * (126 / 329))}
+        height={Math.round(wordmarkWidth * (6 / 28))}
         decoding="async"
         draggable={false}
       />

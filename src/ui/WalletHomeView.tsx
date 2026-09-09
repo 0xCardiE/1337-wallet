@@ -5,11 +5,13 @@ import {
   forgetHeldProbes,
   fmtTokenAmount,
   fmtUsdValue,
+  enrichMissingUsdPrices,
   hydrateAssetBalanceCache,
   isNativeWalletToken,
   loadNativeBalanceForChain,
   loadWalletBalancesForChain,
   MAIN_STALE_MS,
+  mergeMainAssetRows,
   OTHER_STALE_MS,
   peekMainBalances,
   peekMainSnap,
@@ -92,6 +94,22 @@ export function WalletHomeView({
     [addr, chainId],
   );
 
+  const promotePricedRows = useCallback(
+    (rows: WalletBalEntry[], hiddenRows: HiddenTokenMeta[], touched: Set<string>) => {
+      if (!addr) return;
+      const { main, other } = splitRows(rows, hiddenRows, touched);
+      setOtherRows(other);
+      rememberOtherBalances(chainId, addr, other);
+      if (main.length === 0) return;
+      setMainRows(prev => {
+        const merged = mergeMainAssetRows(prev, main);
+        rememberMainBalances(chainId, addr, merged);
+        return merged;
+      });
+    },
+    [addr, chainId],
+  );
+
   const refreshMain = useCallback(async (force = false) => {
     if (!addr) return;
     const gen = loadGen.current;
@@ -146,18 +164,23 @@ export function WalletHomeView({
   const refreshOther = useCallback(
     async (force: boolean) => {
       if (!addr) return;
+      const gen = loadGen.current;
       const cached = peekOtherBalances(chainId, addr);
       if (cached) setOtherRows(cached.rows);
-      if (!force && cached && Date.now() - cached.at < OTHER_STALE_MS) return;
-      const gen = loadGen.current;
+      const [hiddenRows, touchedAddrs] = await Promise.all([
+        loadHiddenTokens(chainId, addr),
+        loadTouchedTokenAddresses(chainId, addr),
+      ]);
+      if (gen !== loadGen.current) return;
+      setHidden(hiddenRows);
+      if (!force && cached && Date.now() - cached.at < OTHER_STALE_MS) {
+        const priced = await enrichMissingUsdPrices(cached.rows);
+        if (gen !== loadGen.current) return;
+        promotePricedRows([...peekMainBalances(chainId, addr), ...priced], hiddenRows, touchedAddrs);
+        return;
+      }
       setOtherBusy(true);
       try {
-        const [hiddenRows, touchedAddrs] = await Promise.all([
-          loadHiddenTokens(chainId, addr),
-          loadTouchedTokenAddresses(chainId, addr),
-        ]);
-        if (gen !== loadGen.current) return;
-        setHidden(hiddenRows);
         const { rows: next, error } = await loadWalletBalancesForChain(addr, chainId, {
           refreshRpc: true,
           explorerApiKey: settings.explorerApiKey,
@@ -167,16 +190,15 @@ export function WalletHomeView({
         });
         if (gen !== loadGen.current) return;
         const split = splitRows(next, hiddenRows, touchedAddrs);
-        // Other must never rewrite the main list — a partial dust snapshot used to blank Assets.
+        // Other must never replace Main wholesale — a partial dust snapshot used to blank Assets.
         if (!error || split.other.length > 0 || !peekOtherBalances(chainId, addr)) {
-          setOtherRows(split.other);
-          rememberOtherBalances(chainId, addr, split.other);
+          promotePricedRows(next, hiddenRows, touchedAddrs);
         }
       } finally {
         if (gen === loadGen.current) setOtherBusy(false);
       }
     },
-    [addr, chainId, settings.explorerApiKey],
+    [addr, chainId, settings.explorerApiKey, promotePricedRows],
   );
 
   useEffect(() => {

@@ -40,5 +40,5 @@ npm run website:build
 - Copy & links: `src/lib/site.ts`
 - Chrome Web Store URL: `SITE.chromeStoreUrl`
 - Discord: `SITE.discordUrl`
-- Screenshots: `npm run store:assets` from the repo root copies into `public/screenshots/`
+- Screenshots: `npm run store:assets` from the repo root copies store cards into `public/screenshots/`. `npm run store:frames` re-renders the billboard frames from `brand/screenshot-sources/`
 - How-it-works gallery: `src/components/VideoSection.tsx`

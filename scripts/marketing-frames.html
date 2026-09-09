@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>1337 listing frames</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@600;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #041108;
+        --paper: #f4fff0;
+        --lime: #d6ff00;
+        --cyan: #14f1d9;
+        --violet: #6d28ff;
+        --magenta: #ff2bd6;
+        --alert: #ff2a3a;
+        --amber: #ffbf1a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        background: #000;
+        overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      .stage {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .stage[data-layout='shot'] { width: 1280px; height: 800px; }
+      .stage[data-layout='marquee'] { width: 1400px; height: 560px; }
+      .stage[data-layout='small'] { width: 440px; height: 280px; }
+
+      .field, .wash, .grid, .grain, .scan, .glow {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .field { z-index: 0; }
+      .wash { z-index: 1; }
+      .grid {
+        z-index: 2;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(ellipse at 70% 40%, #000 20%, transparent 75%);
+      }
+      .grain {
+        z-index: 8;
+        opacity: 0.22;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
+      }
+      .scan {
+        z-index: 9;
+        opacity: 0.1;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0 2px,
+          rgba(0,0,0,0.35) 2px 3px
+        );
+      }
+
+      .copy {
+        position: absolute;
+        z-index: 4;
+        left: 64px;
+        top: 50%;
+        transform: translateY(-52%);
+        width: 620px;
+      }
+      .kicker {
+        margin: 0 0 18px;
+        font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font-size: 72px;
+        line-height: 0.92;
+        font-weight: 900;
+        letter-spacing: -0.045em;
+        text-wrap: balance;
+      }
+      .sub {
+        margin: 22px 0 0;
+        max-width: 34ch;
+        font-size: 20px;
+        line-height: 1.35;
+        font-weight: 600;
+        opacity: 0.88;
+      }
+      .brand {
+        position: absolute;
+        z-index: 5;
+        left: 64px;
+        bottom: 34px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        font-size: 20px;
+      }
+      .brand img { width: 36px; height: 36px; image-rendering: pixelated; }
+      .device {
+        position: absolute;
+        z-index: 6;
+        right: 72px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 684px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #050806;
+      }
+      .device img {
+        display: block;
+        height: 684px;
+        width: auto;
+      }
+
+      /* Theme: acid lime billboard */
+      .theme-lime { background: #08140a; color: var(--ink); }
+      .theme-lime .field {
+        background: var(--lime);
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
+      }
+      .theme-lime .wash {
+        background:
+          radial-gradient(circle at 78% 30%, rgba(214,255,0,0.28), transparent 36%),
+          linear-gradient(115deg, transparent 48%, #041108 48%);
+      }
+      .theme-lime .kicker,
+      .theme-lime .brand { color: #14300a; }
+      .theme-lime h1 { color: #041108; }
+      .theme-lime .sub { color: #16380c; }
+      .theme-lime .device {
+        box-shadow:
+          0 0 0 3px #041108,
+          0 0 0 7px var(--lime),
+          0 28px 80px rgba(0,0,0,0.45),
+          0 0 64px rgba(214,255,0,0.28);
+      }
+
+      /* Theme: deep teal / balances */
+      .theme-cyan { background: #022028; color: var(--ink); }
+      .theme-cyan .field {
+        background: var(--cyan);
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
+      }
+      .theme-cyan .wash {
+        background: linear-gradient(105deg, transparent 46%, #022028 46%);
+      }
+      .theme-cyan .kicker,
+      .theme-cyan .brand { color: #08332e; }
+      .theme-cyan h1 { color: #041414; }
+      .theme-cyan .sub { color: #0a3d38; }
+      .theme-cyan .device {
+        box-shadow:
+          0 0 0 3px #022028,
+          0 0 0 7px var(--cyan),
+          0 28px 80px rgba(0,0,0,0.5),
+          0 0 70px rgba(20,241,217,0.28);
+      }
+
+      /* Theme: send / transfer */
+      .theme-teal { background: #01241f; color: var(--ink); }
+      .theme-teal .field {
+        background: #3cffb0;
+        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
+      }
+      .theme-teal .wash {
+        background: linear-gradient(108deg, transparent 45%, #01241f 45%);
+      }
+      .theme-teal .kicker,
+      .theme-teal .brand { color: #03382c; }
+      .theme-teal h1 { color: #041410; }
+      .theme-teal .sub { color: #0a4032; }
+      .theme-teal .device {
+        transform: translateY(-50%) rotate(-2.4deg);
+        box-shadow:
+          0 0 0 3px #01241f,
+          0 0 0 7px #3cffb0,
+          0 36px 70px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: empty / void */
+      .theme-void { background: #070b12; color: var(--ink); }
+      .theme-void .field {
+        background: #7dd3fc;
+        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
+      }
+      .theme-void .wash {
+        background: linear-gradient(107deg, transparent 46%, #070b12 46%);
+      }
+      .theme-void .kicker,
+      .theme-void .brand { color: #0b2740; }
+      .theme-void h1 { color: #082033; }
+      .theme-void .sub { color: #0b3050; }
+      .theme-void .device {
+        box-shadow: 0 0 0 3px #070b12, 0 0 0 7px #7dd3fc, 0 28px 80px rgba(0,0,0,0.55);
+      }
+
+      /* Theme: history / indigo */
+      .theme-indigo { background: #12082a; color: #fff7ff; }
+      .theme-indigo .field {
+        background: #7c3aed;
+        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
+      }
+      .theme-indigo .wash {
+        background: linear-gradient(107deg, transparent 46%, #12082a 46%);
+      }
+      .theme-indigo .kicker { color: #f3e8ff; }
+      .theme-indigo .brand { color: #f3e8ff; }
+      .theme-indigo .device {
+        box-shadow: 0 0 0 3px #12082a, 0 0 0 7px #c4b5fd, 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: confirm / amber signer */
+      .theme-amber { background: #1a1204; color: var(--ink); }
+      .theme-amber .field {
+        background: var(--amber);
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
+      }
+      .theme-amber .wash {
+        background: linear-gradient(105deg, transparent 46%, #1a1204 46%);
+      }
+      .theme-amber .kicker,
+      .theme-amber .brand { color: #3b2200; }
+      .theme-amber h1 { color: #1a1204; }
+      .theme-amber .sub { color: #3b2200; }
+      .theme-amber .device {
+        box-shadow:
+          0 0 0 3px #1a1204,
+          0 0 0 7px var(--amber),
+          0 28px 80px rgba(0,0,0,0.55),
+          0 0 70px rgba(255,191,26,0.28);
+      }
+
+      /* Theme: signings / magenta */
+      .theme-magenta { background: #1a0518; color: #fff0fb; }
+      .theme-magenta .field {
+        background: #ff2bd6;
+        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
+      }
+      .theme-magenta .wash {
+        background: linear-gradient(107deg, transparent 46%, #1a0518 46%);
+      }
+      .theme-magenta .kicker,
+      .theme-magenta .brand { color: #3b0530; }
+      .theme-magenta h1 { color: #1a0518; }
+      .theme-magenta .sub { color: #3b0530; }
+      .theme-magenta .device {
+        box-shadow: 0 0 0 3px #1a0518, 0 0 0 7px #ff2bd6, 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: approvals / alert */
+      .theme-alert { background: #1a0508; color: var(--lime); }
+      .theme-alert .field {
+        background: #ff2a3a;
+        clip-path: polygon(0 0, 58% 0, 46% 100%, 0 100%);
+      }
+      .theme-alert .wash {
+        background: linear-gradient(110deg, transparent 44%, #140206 44%);
+      }
+      .theme-alert .kicker,
+      .theme-alert .brand { color: #2a0508; }
+      .theme-alert h1 { color: var(--lime); }
+      .theme-alert .sub { color: #2a080c; }
+      .theme-alert .copy { color: var(--lime); }
+      .theme-alert .device {
+        box-shadow: 0 0 0 3px #140206, 0 0 0 7px var(--lime), 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: swap / violet */
+      .theme-violet { background: #14062e; color: var(--lime); }
+      .theme-violet .field {
+        background: #6d28ff;
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
+      }
+      .theme-violet .wash {
+        background: linear-gradient(105deg, transparent 46%, #14062e 46%);
+      }
+      .theme-violet .kicker { color: #efe9ff; }
+      .theme-violet h1 { color: var(--lime); }
+      .theme-violet .sub { color: #efe9ff; }
+      .theme-violet .brand { color: #efe9ff; }
+      .theme-violet .device {
+        transform: translateY(-50%) rotate(2.2deg);
+        box-shadow: 0 0 0 3px #14062e, 0 0 0 7px var(--lime), 0 36px 80px rgba(0,0,0,0.45);
+      }
+
+      /* Theme: ens / blue */
+      .theme-blue { background: #041428; color: #041428; }
+      .theme-blue .field {
+        background: #38bdf8;
+        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
+      }
+      .theme-blue .wash {
+        background: linear-gradient(107deg, transparent 46%, #041428 46%);
+      }
+      .theme-blue .kicker,
+      .theme-blue .brand { color: #082f49; }
+      .theme-blue h1 { color: #041428; }
+      .theme-blue .sub { color: #0b3d5c; }
+      .theme-blue .device {
+        box-shadow: 0 0 0 3px #041428, 0 0 0 7px #38bdf8, 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: multisend / ice */
+      .theme-ice { background: #012033; color: var(--ink); }
+      .theme-ice .field {
+        background: #67e8f9;
+        clip-path: polygon(0 0, 62% 0, 50% 100%, 0 100%);
+      }
+      .theme-ice .wash {
+        background: linear-gradient(105deg, transparent 46%, #012033 46%);
+      }
+      .theme-ice .kicker,
+      .theme-ice .brand { color: #083344; }
+      .theme-ice h1 { color: #04222e; }
+      .theme-ice .sub { color: #0b3d4f; }
+      .theme-ice .device {
+        box-shadow: 0 0 0 3px #012033, 0 0 0 7px #67e8f9, 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: gas / orange */
+      .theme-orange { background: #1c0d04; color: var(--ink); }
+      .theme-orange .field {
+        background: #fb923c;
+        clip-path: polygon(0 0, 61% 0, 49% 100%, 0 100%);
+      }
+      .theme-orange .wash {
+        background: linear-gradient(107deg, transparent 46%, #1c0d04 46%);
+      }
+      .theme-orange .kicker,
+      .theme-orange .brand { color: #431407; }
+      .theme-orange h1 { color: #1c0d04; }
+      .theme-orange .sub { color: #431407; }
+      .theme-orange .device {
+        box-shadow: 0 0 0 3px #1c0d04, 0 0 0 7px #fb923c, 0 28px 80px rgba(0,0,0,0.5);
+      }
+
+      /* Theme: accounts / terminal */
+      .theme-term { background: #03140a; color: var(--ink); }
+      .theme-term .field {
+        background: var(--lime);
+        clip-path: polygon(0 0, 58% 0, 46% 100%, 0 100%);
+      }
+      .theme-term .wash {
+        background:
+          linear-gradient(110deg, transparent 44%, #03140a 44%),
+          repeating-linear-gradient(90deg, transparent 0 18px, rgba(34,197,94,0.08) 18px 36px);
+      }
+      .theme-term .kicker,
+      .theme-term .brand { color: #14300a; }
+      .theme-term h1 { color: #041108; }
+      .theme-term .sub { color: #16380c; }
+      .theme-term .device {
+        box-shadow: 0 0 0 3px #03140a, 0 0 0 7px #22c55e, 0 28px 80px rgba(0,0,0,0.55);
+      }
+
+      /* Theme: settings / charcoal */
+      .theme-char { background: #101114; color: var(--ink); }
+      .theme-char .field {
+        background: #a3e635;
+        clip-path: polygon(0 0, 60% 0, 48% 100%, 0 100%);
+      }
+      .theme-char .wash {
+        background: linear-gradient(108deg, transparent 45%, #101114 45%);
+      }
+      .theme-char .kicker,
+      .theme-char .brand { color: #1a2e05; }
+      .theme-char h1 { color: #101114; }
+      .theme-char .sub { color: #1a2e05; }
+      .theme-char .device {
+        box-shadow: 0 0 0 3px #101114, 0 0 0 7px #a3e635, 0 28px 80px rgba(0,0,0,0.55);
+      }
+
+      /* Promo marquee */
+      .stage[data-layout='marquee'] .copy {
+        left: 72px;
+        width: 720px;
+        transform: translateY(-58%);
+      }
+      .stage[data-layout='marquee'] h1 { font-size: 78px; }
+      .stage[data-layout='marquee'] .sub { font-size: 22px; max-width: 40ch; }
+      .stage[data-layout='marquee'] .mascot {
+        position: absolute;
+        z-index: 6;
+        right: 80px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 420px;
+        height: 420px;
+        display: grid;
+        place-items: center;
+      }
+      .stage[data-layout='marquee'] .mascot img {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 12px 28px rgba(0,0,0,0.45));
+      }
+      .stage[data-layout='marquee'] .word {
+        position: absolute;
+        z-index: 6;
+        right: 88px;
+        bottom: 48px;
+        width: 280px;
+      }
+      .stage[data-layout='marquee'] .word img { width: 100%; height: auto; display: block; }
+
+      /* Promo small */
+      .stage[data-layout='small'] .copy {
+        left: 168px;
+        top: 50%;
+        width: 250px;
+        transform: translateY(-50%);
+      }
+      .stage[data-layout='small'] .kicker { font-size: 10px; margin-bottom: 8px; }
+      .stage[data-layout='small'] h1 { font-size: 42px; }
+      .stage[data-layout='small'] .sub { display: none; }
+      .stage[data-layout='small'] .brand { left: 168px; bottom: 22px; font-size: 12px; gap: 8px; color: #041108; }
+      .stage[data-layout='small'] .brand img { width: 18px; height: 18px; image-rendering: pixelated; }
+      .stage[data-layout='small'].theme-lime .field { clip-path: none; }
+      .stage[data-layout='small'].theme-lime .wash { display: none; }
+      .stage[data-layout='small'].theme-lime .grid { opacity: 0.2; }
+      .stage[data-layout='small'] .mascot {
+        position: absolute;
+        z-index: 6;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 132px;
+        height: 132px;
+      }
+      .stage[data-layout='small'] .mascot img {
+        width: 132px;
+        height: 132px;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="field"></div>
+      <div class="wash"></div>
+      <div class="grid"></div>
+      <div class="copy">
+        <p class="kicker" id="kicker"></p>
+        <h1 id="headline"></h1>
+        <p class="sub" id="sub"></p>
+      </div>
+      <div class="brand" id="brand">
+        <img id="brand-skull" alt="" />
+        <span>1337 WALLET</span>
+      </div>
+      <div class="device" id="device" hidden>
+        <img id="shot" alt="" />
+      </div>
+      <div class="mascot" id="mascot" hidden>
+        <img id="mascot-img" alt="" />
+      </div>
+      <div class="word" id="word" hidden>
+        <img id="word-img" alt="" />
+      </div>
+      <div class="grain"></div>
+      <div class="scan"></div>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const layout = q.get('layout') || 'shot';
+      const theme = q.get('theme') || 'lime';
+      const stage = document.getElementById('stage');
+      stage.dataset.layout = layout;
+      stage.classList.add('theme-' + theme);
+
+      const headline = (q.get('headline') || '').replace(/\|/g, '\n');
+      document.getElementById('headline').innerHTML = headline
+        .split('\n')
+        .map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;'))
+        .join('<br>');
+      document.getElementById('kicker').textContent = q.get('kicker') || '';
+      document.getElementById('sub').textContent = q.get('sub') || '';
+
+      const skull = q.get('skull') || '';
+      document.getElementById('brand-skull').src = skull;
+      document.getElementById('mascot-img').src = skull;
+
+      const word = q.get('word') || '';
+      if (word) document.getElementById('word-img').src = word;
+
+      const shot = q.get('shot') || '';
+      if (layout === 'shot' && shot) {
+        document.getElementById('device').hidden = false;
+        document.getElementById('shot').src = shot;
+      }
+      if (layout === 'marquee' || layout === 'small') {
+        document.getElementById('mascot').hidden = false;
+        if (layout === 'marquee' && word) document.getElementById('word').hidden = false;
+      }
+    </script>
+  </body>
+</html>

@@ -431,7 +431,7 @@ hr.sep {
   filter: drop-shadow(0 1px 2px rgba(34, 197, 94, 0.18));
 }
 
-/* ── 1337 skull mark + CRT wordmark ──────────────────────────────── */
+/* ── 1337 skull mark + wordmark ──────────────────────────────── */
 .w1337-mark {
   display: block;
   flex-shrink: 0;

@@ -5,6 +5,7 @@
 - Product positioning (developer / hacker / advanced Ethereum wallet)
 - Privacy and no-analytics claims
 - Chrome Web Store description drafts and listing assets (`brand/chrome-web-store/`, `npm run store:assets`)
+- Billboard frames: `scripts/marketing-frames.html` + `npm run store:frames` (re-frame without launching the extension). Raw popup PNGs live in `brand/screenshot-sources/`
 - Onboarding and Settings copy (imported via `src/lib/productManifest.ts`)
 - Future website, landing page, or promo material
 

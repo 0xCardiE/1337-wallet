@@ -52,6 +52,32 @@ describe('isMainAssetRow', () => {
     ).toBe(false);
   });
 
+  it('promotes a receipt token once it has a real USD value', () => {
+    expect(
+      isMainAssetRow(
+        entry({
+          address: '0x999999999991e178d52cd95afd4b00d066664144',
+          symbol: 'sPENDLE',
+          name: 'StakedPendle',
+          amount: '279359200000000000000',
+        }),
+        empty,
+      ),
+    ).toBe(false);
+    expect(
+      isMainAssetRow(
+        entry({
+          address: '0x999999999991e178d52cd95afd4b00d066664144',
+          symbol: 'sPENDLE',
+          name: 'StakedPendle',
+          amount: '279359200000000000000',
+          priceUSD: '2.04',
+        }),
+        empty,
+      ),
+    ).toBe(true);
+  });
+
   it('keeps untouched dust only when the user has used the token', () => {
     const addr = `0x${'44'.repeat(20)}`;
     expect(isMainAssetRow(entry({ address: addr, priceUSD: '0' }), empty)).toBe(false);

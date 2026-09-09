@@ -61,6 +61,48 @@ def promo_marquee(skull: Path, word: Path, dest: Path) -> None:
     save_jpg(canvas, dest)
 
 
+def _is_near_bg(pixel: tuple[int, int, int], bg: tuple[int, int, int] = BG, limit: int = 18) -> bool:
+    return abs(pixel[0] - bg[0]) + abs(pixel[1] - bg[1]) + abs(pixel[2] - bg[2]) <= limit
+
+
+def extract_ui(src: Path, dest: Path) -> None:
+    """Pull the popup out of a 1280×800 black frame, or pass a raw portrait through."""
+    shot = load_on_bg(src)
+    w, h = shot.size
+    if w <= 520 and h >= 600:
+        shot.save(dest, 'PNG', optimize=True)
+        return
+
+    px = shot.load()
+    minx, miny, maxx, maxy = w, h, 0, 0
+    found = False
+    for y in range(h):
+        for x in range(w):
+            if not _is_near_bg(px[x, y]):
+                found = True
+                if x < minx:
+                    minx = x
+                if y < miny:
+                    miny = y
+                if x > maxx:
+                    maxx = x
+                if y > maxy:
+                    maxy = y
+    if not found:
+        shot.save(dest, 'PNG', optimize=True)
+        return
+
+    # Drop the old 1px accent ring from the previous compositor.
+    inset = 2
+    box = (
+        max(0, minx + inset),
+        max(0, miny + inset),
+        min(w, maxx + 1 - inset),
+        min(h, maxy + 1 - inset),
+    )
+    shot.crop(box).save(dest, 'PNG', optimize=True)
+
+
 def frame_screenshot(src: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (1280, 800), BG)
     shot = load_on_bg(src)
@@ -84,6 +126,8 @@ def main() -> None:
         promo_marquee(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]))
     elif cmd == 'screenshot':
         frame_screenshot(Path(sys.argv[2]), Path(sys.argv[3]))
+    elif cmd == 'extract-ui':
+        extract_ui(Path(sys.argv[2]), Path(sys.argv[3]))
     else:
         raise SystemExit(f'unknown command {cmd}')
 
