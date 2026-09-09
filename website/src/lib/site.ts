@@ -24,6 +24,21 @@ export const STORE_SCREENSHOTS = [
     alt: '1337 Wallet Assets tab on Ethereum showing ETH, USDC, and other token balances',
   },
   {
+    src: '/screenshots/assets-send.jpg',
+    caption: 'Inline send — recipient and amount without leaving Assets',
+    alt: '1337 Wallet Assets tab with Derive expanded and an inline send form',
+  },
+  {
+    src: '/screenshots/assets-empty.jpg',
+    caption: 'Empty network — add a token or switch chain',
+    alt: '1337 Wallet Assets tab showing no tokens with balance on the selected network',
+  },
+  {
+    src: '/screenshots/history.jpg',
+    caption: 'History via your explorer key — hash, decode, open on Etherscan',
+    alt: '1337 Wallet History tab with an expanded approve transaction and Etherscan link',
+  },
+  {
     src: '/screenshots/confirm.jpg',
     caption: 'Readable confirm before you sign — origin, amount, reject or confirm',
     alt: '1337 Wallet confirm sheet for sending ETH from a dapp',
@@ -44,9 +59,29 @@ export const STORE_SCREENSHOTS = [
     alt: '1337 Wallet Swap tool showing an ETH to USDC quote',
   },
   {
+    src: '/screenshots/ens.jpg',
+    caption: 'ENS — names, expiry, and Swarm content hashes',
+    alt: '1337 Wallet ENS tool listing .eth names with an expanded Swarm content hash',
+  },
+  {
     src: '/screenshots/multisend.jpg',
     caption: 'Multisend via Disperse.app — one transaction, leftover ETH refunded',
     alt: '1337 Wallet Multisend tool with a filled recipient list',
+  },
+  {
+    src: '/screenshots/gas.jpg',
+    caption: 'Gas station — top up native token, pay with USDC',
+    alt: '1337 Wallet Gas tool quoting an Ethereum top-up paid with USDC',
+  },
+  {
+    src: '/screenshots/accounts.jpg',
+    caption: 'Switch account — seed, burner, hardware, and private key',
+    alt: '1337 Wallet account switcher listing seed, Trezor, Ledger, and private-key accounts',
+  },
+  {
+    src: '/screenshots/settings.jpg',
+    caption: 'Settings — networks, wallets, burner mode, tools, connected sites',
+    alt: '1337 Wallet Settings with networks, wallets, burner mode, and side panel options',
   },
 ] as const;
 

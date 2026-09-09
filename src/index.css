@@ -4805,10 +4805,8 @@ button.w1337-dd__option--on:hover:not(:disabled) {
   border-bottom: 1px solid rgba(34, 197, 94, 0.12);
 }
 
-.w1337-token-item--open button.w1337-token-row__main:hover:not(:disabled) {
-  background: rgba(34, 197, 94, 0.04);
-  color: inherit;
-  box-shadow: none;
+.w1337-token-item--open .w1337-token-row__main {
+  cursor: default;
 }
 
 .w1337-token-row {
@@ -4934,6 +4932,27 @@ button.w1337-token-row--action:hover:not(:disabled) {
 
 button.w1337-token-row__main:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.w1337-token-row__close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0 8px 0 0;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+button.w1337-token-row__close:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--acc) 40%, var(--border));
+  color: var(--text);
+  background: rgba(34, 197, 94, 0.08);
 }
 
 .w1337-token-row__hide,
@@ -6309,7 +6328,7 @@ button.w1337-signings__copy:hover:not(:disabled) {
   gap: 6px;
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 12px 12px;
+  padding: 10px 10px 12px;
   margin: 0;
   background: rgba(0, 0, 0, 0.1);
 }
@@ -6337,20 +6356,23 @@ button.w1337-signings__copy:hover:not(:disabled) {
   box-sizing: border-box;
 }
 
-.w1337-quick-send-inline__addr {
-  flex: 1 1 0;
-  min-width: 0;
+.w1337-quick-send-inline input.w1337-quick-send-inline__addr {
+  flex: 0 1 100px;
+  min-width: 84px;
+  max-width: 120px;
   width: auto;
-  max-width: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
   letter-spacing: -0.02em;
 }
 
-.w1337-quick-send-inline__amt {
-  flex: 0 0 84px;
-  width: 84px;
-  max-width: 84px;
+.w1337-quick-send-inline input.w1337-quick-send-inline__amt {
+  flex: 1 1 auto;
+  min-width: 128px;
+  width: auto;
+  max-width: none;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

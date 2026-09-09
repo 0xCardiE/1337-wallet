@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
+import { DiscordJoin } from '@/components/Outbound';
 import { SECURITY_COMPARISON, SECURITY_FAQ } from '@/content/securityFaq';
-import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Security',
@@ -85,14 +85,7 @@ export default function SecurityPage() {
           <Link href="/faq" className="btn-secondary">
             Product FAQ
           </Link>
-          <a
-            href={SITE.discordUrl}
-            className="btn-primary"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Ask on Discord
-          </a>
+          <DiscordJoin>Ask on Discord</DiscordJoin>
         </div>
       </div>
     </div>

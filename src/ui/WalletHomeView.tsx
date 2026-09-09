@@ -406,31 +406,52 @@ function AssetTokenItem({
 }) {
   const usd = fmtUsdValue(t);
   const key = tokenRowKey(t);
+  const identity = (
+    <>
+      <LiFiIcon logoURI={t.logoURI} label={t.symbol} size={40} rounded />
+      <div className="w1337-token-row__meta">
+        <span className="w1337-token-row__name">{t.name || t.symbol}</span>
+        <span className="w1337-token-row__sym">{t.symbol}</span>
+      </div>
+      <div className="w1337-token-row__vals">
+        <span className="w1337-token-row__usd">{usd ?? '—'}</span>
+        <span className="w1337-token-row__amt">
+          {fmtTokenAmount(t)} {t.symbol}
+        </span>
+      </div>
+    </>
+  );
   return (
-    <li className={`w1337-token-item${expanded ? ' w1337-token-item--open' : ''}`}>
+    <li className={`w1337-token-item${expanded ? ' w1337-token-item--open' : ''}`} aria-expanded={expanded}>
       <div className="w1337-token-row w1337-token-row--split">
-        <button
-          type="button"
-          className="w1337-token-row__main"
-          aria-expanded={expanded}
-          onClick={onToggle}
-        >
-          <LiFiIcon logoURI={t.logoURI} label={t.symbol} size={40} rounded />
-          <div className="w1337-token-row__meta">
-            <span className="w1337-token-row__name">{t.name || t.symbol}</span>
-            <span className="w1337-token-row__sym">{t.symbol}</span>
+        {expanded ? (
+          <div className="w1337-token-row__main">
+            {identity}
           </div>
-          <div className="w1337-token-row__vals">
-            <span className="w1337-token-row__usd">{usd ?? '—'}</span>
-            <span className="w1337-token-row__amt">
-              {fmtTokenAmount(t)} {t.symbol}
+        ) : (
+          <button
+            type="button"
+            className="w1337-token-row__main"
+            aria-expanded={false}
+            onClick={onToggle}
+          >
+            {identity}
+            <span className="w1337-token-row__toggle" aria-hidden>
+              +
             </span>
-          </div>
-          <span className="w1337-token-row__toggle" aria-hidden>
-            {expanded ? '−' : '+'}
-          </span>
-        </button>
-        {hideable !== false ? (
+          </button>
+        )}
+        {expanded ? (
+          <button
+            type="button"
+            className="w1337-token-row__close"
+            title="Close send"
+            aria-label="Close send"
+            onClick={onCollapse}
+          >
+            ×
+          </button>
+        ) : hideable !== false ? (
           <button
             type="button"
             className="w1337-token-row__hide"
