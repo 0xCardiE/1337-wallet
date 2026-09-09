@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 /**
  * Chrome Web Store listing images → brand/chrome-web-store/
- * Icon + promo tiles from brand PNGs; screenshots from a live unpacked dist/.
+ * Icon + promo tiles from brand PNGs; screenshots from a live unpacked dist/
+ * plus populated marketing mocks (LavaMoat blocks evaluate inside the extension).
  */
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'brand/chrome-web-store');
 const icons = path.join(root, 'public/icons');
 const py = path.join(root, 'scripts/store-listing-composite.py');
+const mocksHtml = path.join(root, 'scripts/marketing-wallet-mocks.html');
 
 const E2E_MNEMONIC =
   'test test test test test test test test test test test junk';
 const E2E_PASSWORD = '1337-e2e-password';
-const E2E_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 
 function runPy(args) {
   const result = spawnSync('python3', [py, ...args], { encoding: 'utf8' });
@@ -40,19 +41,17 @@ async function waitForServiceWorker(context) {
   return context.waitForEvent('serviceworker', { timeout: 30_000 });
 }
 
-async function openWallet(context, extensionId) {
-  const page = await context.newPage();
-  await page.setViewportSize({ width: 420, height: 760 });
-  await page.goto(`chrome-extension://${extensionId}/index.html`);
-  return page;
-}
-
 async function shot(page, dest) {
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(350);
   await page.screenshot({ path: dest, type: 'png', animations: 'disabled' });
 }
 
-async function captureScreens(rawDir) {
+async function waitImages(page) {
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+async function captureLive(rawDir) {
   const distDir = path.join(root, 'dist');
   if (!existsSync(path.join(distDir, 'background.js'))) npmBuild();
 
@@ -64,7 +63,9 @@ async function captureScreens(rawDir) {
   try {
     const worker = await waitForServiceWorker(context);
     const extensionId = new URL(worker.url()).host;
-    const page = await openWallet(context, extensionId);
+    const page = await context.newPage();
+    await page.setViewportSize({ width: 420, height: 760 });
+    await page.goto(`chrome-extension://${extensionId}/index.html`);
 
     await page.getByRole('tab', { name: 'Create' }).waitFor();
     await shot(page, path.join(rawDir, '01-onboarding.png'));
@@ -73,47 +74,66 @@ async function captureScreens(rawDir) {
     await page.getByTestId('onboarding-password').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-password-confirm').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-secret').fill(E2E_MNEMONIC);
+    await page.getByTestId('onboarding-terms').check();
     await page.getByTestId('onboarding-submit').click();
     await page.getByTestId('wallet-tab-assets').waitFor({ timeout: 20_000 });
-    await shot(page, path.join(rawDir, '02-assets.png'));
-
-    const dapp = await context.newPage();
-    await dapp.goto('https://example.com');
-    await dapp.waitForFunction(
-      () => typeof window.ethereum?.request === 'function',
-      null,
-      { timeout: 20_000 },
-    );
-    await dapp.evaluate(() => window.ethereum.request({ method: 'eth_requestAccounts' }));
-
-    const pending = dapp
-      .evaluate(
-        ({ addr }) =>
-          window.ethereum.request({
-            method: 'personal_sign',
-            params: ['Sign in to example.com', addr],
-          }),
-        { addr: E2E_ADDRESS },
-      )
-      .catch(() => {});
-    await page.bringToFront();
-    await page.getByTestId('tx-approve').waitFor();
-    await shot(page, path.join(rawDir, '03-confirm.png'));
-    await page.getByTestId('tx-reject').click();
-    await pending;
-    const dismiss = page.getByRole('button', { name: 'Dismiss' });
-    if (await dismiss.count()) await dismiss.click();
-    await page.getByTestId('tx-approve').waitFor({ state: 'hidden' });
 
     await page.getByTestId('wallet-tab-tools').click();
-    await page.getByTestId('tools-tab-signings').waitFor();
-    await shot(page, path.join(rawDir, '04-tools.png'));
+    await page.getByTestId('tools-tab-swap').click();
+    await page.locator('.w1337-exchange-card').waitFor({ timeout: 25_000 });
+    await page.waitForTimeout(2000);
+    const toCell = page.locator('.w1337-pair-cell').nth(1);
+    if (await toCell.count()) {
+      await toCell.click();
+      const search = page.getByPlaceholder('Search token or address');
+      if (await search.count()) {
+        await search.fill('USDC');
+        await page.waitForTimeout(400);
+        const usdc = page.getByRole('button', { name: /USDC/i }).first();
+        if (await usdc.count()) await usdc.click();
+        else await page.keyboard.press('Escape');
+      }
+    }
+    const amount = page.locator('.w1337-amount-massive');
+    if (await amount.count()) await amount.fill('0.42');
+    await page.waitForTimeout(400);
+    await shot(page, path.join(rawDir, '06-swap.png'));
 
     await page.getByTestId('tools-tab-multisend').click();
-    await page.getByTestId('tools-tab-multisend').waitFor();
-    await shot(page, path.join(rawDir, '05-multisend.png'));
+    await page.locator('#ms-addrs').waitFor({ timeout: 10_000 });
+    await page.locator('#ms-addrs').click();
+    await page.locator('#ms-addrs').fill(
+      [
+        '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+        '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+      ].join('\n'),
+    );
+    await page.locator('#ms-amt').click();
+    await page.locator('#ms-amt').fill('0.05');
+    await page.waitForTimeout(500);
+    await shot(page, path.join(rawDir, '07-multisend.png'));
   } finally {
     await context.close();
+  }
+}
+
+async function captureMocks(rawDir) {
+  const browser = await chromium.launch({ channel: 'chromium' });
+  const page = await browser.newPage({ viewport: { width: 420, height: 760 } });
+  try {
+    for (const [view, dest] of [
+      ['assets', '02-assets.png'],
+      ['confirm', '03-confirm.png'],
+      ['signings', '04-signings.png'],
+      ['approvals', '05-approvals.png'],
+    ]) {
+      await page.goto(`${pathToFileURL(mocksHtml).href}?view=${view}`);
+      await waitImages(page);
+      await shot(page, path.join(rawDir, dest));
+    }
+  } finally {
+    await browser.close();
   }
 }
 
@@ -129,17 +149,19 @@ async function main() {
 
   const rawDir = mkdtempSync(path.join(tmpdir(), '1337-cws-'));
   try {
-    await captureScreens(rawDir);
+    await captureLive(rawDir);
+    await captureMocks(rawDir);
     const shots = [
       ['01-onboarding.png', 'screenshot-01-onboarding-1280x800.jpg'],
       ['02-assets.png', 'screenshot-02-assets-1280x800.jpg'],
       ['03-confirm.png', 'screenshot-03-confirm-1280x800.jpg'],
-      ['04-tools.png', 'screenshot-04-tools-1280x800.jpg'],
-      ['05-multisend.png', 'screenshot-05-multisend-1280x800.jpg'],
+      ['04-signings.png', 'screenshot-04-signings-1280x800.jpg'],
+      ['05-approvals.png', 'screenshot-05-approvals-1280x800.jpg'],
+      ['06-swap.png', 'screenshot-06-swap-1280x800.jpg'],
+      ['07-multisend.png', 'screenshot-07-multisend-1280x800.jpg'],
     ];
     for (const [raw, named] of shots) {
-      const dest = path.join(outDir, named);
-      runPy(['screenshot', path.join(rawDir, raw), dest]);
+      runPy(['screenshot', path.join(rawDir, raw), path.join(outDir, named)]);
     }
     const siteShots = path.join(root, 'website/public/screenshots');
     mkdirSync(siteShots, { recursive: true });
@@ -147,8 +169,10 @@ async function main() {
       ['screenshot-01-onboarding-1280x800.jpg', 'onboarding.jpg'],
       ['screenshot-02-assets-1280x800.jpg', 'assets.jpg'],
       ['screenshot-03-confirm-1280x800.jpg', 'confirm.jpg'],
-      ['screenshot-04-tools-1280x800.jpg', 'tools.jpg'],
-      ['screenshot-05-multisend-1280x800.jpg', 'multisend.jpg'],
+      ['screenshot-04-signings-1280x800.jpg', 'signings.jpg'],
+      ['screenshot-05-approvals-1280x800.jpg', 'approvals.jpg'],
+      ['screenshot-06-swap-1280x800.jpg', 'swap.jpg'],
+      ['screenshot-07-multisend-1280x800.jpg', 'multisend.jpg'],
     ];
     for (const [from, to] of siteNames) {
       copyFileSync(path.join(outDir, from), path.join(siteShots, to));

@@ -144,9 +144,8 @@ export const SECURITY_FAQ: FaqGroup[] = [
               no 1337 backend that could “helpfully” hold a copy.
             </p>
             <p className="mt-3">
-              If you want proof instead of copy, build the extension from source, inspect the vault
-              and hardware paths, or start with a burner key and a hardware account that holds
-              almost nothing until you are satisfied.
+              If you want proof instead of copy, install only from the official Chrome Web Store,
+              start with a burner key, and keep size on hardware until you are satisfied.
             </p>
           </>
         ),
@@ -576,12 +575,14 @@ export const SECURITY_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              This page is the human version. The repo’s security notes cover vault encryption,
-              session behavior, LavaMoat, and a table of every account type versus MetaMask. Start
-              here, then read those if you want the engineering detail. For product questions that
-              are not about keys, see the{' '}
+              This page is the human version — vault, session, hardware, and how 1337 compares to
+              MetaMask and Rabby. For product questions that are not about keys, see the{' '}
               <Link href="/faq" className={linkClass}>
                 FAQ
+              </Link>
+              . Chat and reports:{' '}
+              <Link href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Discord
               </Link>
               .
             </p>

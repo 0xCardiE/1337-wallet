@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=420, initial-scale=1" />
+    <title>1337 mocks</title>
+    <style>
+      :root {
+        --bg: #050806;
+        --elev: #141416;
+        --panel: #18181c;
+        --border: rgba(42, 42, 48, 0.85);
+        --text: #f4f4f5;
+        --muted: #9ca3af;
+        --acc: #22c55e;
+        --acc-soft: rgba(34, 197, 94, 0.16);
+        --warn: #fbbf24;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 420px;
+        height: 760px;
+        overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+      }
+      .shell { display: flex; flex-direction: column; height: 760px; }
+      header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px 8px;
+      }
+      .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; }
+      .brand img { width: 22px; height: 22px; border-radius: 5px; }
+      .gear { width: 20px; height: 20px; color: var(--muted); }
+      .tabs { display: flex; gap: 6px; padding: 0 12px 8px; }
+      .tab {
+        flex: 1; border: 0; border-radius: 999px; padding: 8px 0;
+        background: var(--elev); color: var(--muted); font-weight: 600;
+      }
+      .tab.on { background: var(--acc); color: #041108; }
+      .net { padding: 0 12px 10px; }
+      .toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+      .pill {
+        border: 0; border-radius: 999px; padding: 5px 10px; font-size: 12px;
+        background: var(--elev); color: var(--muted);
+      }
+      .pill.on { background: var(--acc-soft); color: var(--acc); }
+      .selects { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .sel {
+        background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+        padding: 8px 10px; font-size: 12px;
+      }
+      .sel span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .04em; }
+      .rpc {
+        display: flex; align-items: center; gap: 6px; margin-top: 8px;
+        font-size: 11px; color: var(--muted);
+      }
+      .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); }
+      .doctor {
+        margin-left: auto; border: 0; border-radius: 8px; padding: 4px 8px;
+        background: var(--acc); color: #041108; font-weight: 700; font-size: 11px;
+      }
+      .tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; }
+      .tbtn {
+        border: 0; border-radius: 999px; padding: 6px 10px; font-size: 12px;
+        background: var(--elev); color: var(--muted);
+      }
+      .tbtn.on { background: var(--acc); color: #041108; font-weight: 600; }
+      main { flex: 1; overflow: hidden; padding: 0 12px; }
+      .row {
+        display: flex; align-items: center; gap: 10px;
+        background: var(--elev); border: 1px solid var(--border);
+        border-radius: 12px; padding: 10px; margin-bottom: 8px;
+      }
+      .row img, .mark {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      }
+      .mark {
+        display: grid; place-items: center; font-size: 10px; font-weight: 800;
+        background: var(--acc-soft); color: var(--acc);
+      }
+      .mark.pmt { color: #93c5fd; background: rgba(59,130,246,.18); }
+      .mark.td { color: #fbbf24; background: rgba(245,158,11,.16); }
+      .meta { flex: 1; min-width: 0; }
+      .name { font-weight: 650; }
+      .sub { color: var(--muted); font-size: 12px; }
+      .vals { text-align: right; }
+      .usd { font-weight: 650; }
+      .amt { color: var(--muted); font-size: 12px; }
+      .warn { color: var(--warn); font-weight: 650; }
+      .hide { border: 0; background: none; color: var(--muted); font-size: 18px; }
+      .revoke {
+        border: 0; border-radius: 8px; padding: 6px 8px;
+        background: var(--acc-soft); color: var(--acc); font-weight: 650; font-size: 12px;
+      }
+      .plus { color: var(--muted); width: 18px; text-align: center; }
+      .other {
+        display: flex; justify-content: space-between; align-items: center;
+        color: var(--muted); padding: 8px 4px; font-size: 13px;
+      }
+      .intro { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+      .date { color: var(--muted); font-size: 12px; margin: 12px 0 6px; }
+      footer {
+        border-top: 1px solid var(--border); padding: 10px 14px 12px;
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 13px;
+      }
+      .acct { display: flex; align-items: center; gap: 8px; }
+      .avatar {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e, #14532d);
+      }
+      .conn { color: var(--muted); font-size: 12px; }
+      .hidden { display: none; }
+      .confirm { padding: 4px 2px 0; }
+      .confirm h1 { font-size: 22px; margin: 0 0 8px; }
+      .from { color: var(--muted); font-size: 12px; line-height: 1.45; margin: 0 0 10px; }
+      .from strong { color: var(--text); }
+      .human {
+        background: var(--elev); border: 1px solid var(--border); border-radius: 12px;
+        padding: 12px 14px; margin-bottom: 8px;
+      }
+      .human small { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+      .human p { margin: 4px 0 0; font-weight: 650; }
+      .sim {
+        background: rgba(34, 197, 94, 0.14); color: var(--acc); border-radius: 10px;
+        padding: 8px 10px; font-size: 12px; margin-bottom: 10px;
+      }
+      .fact { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px; font-size: 13px; }
+      .fact span:first-child { color: var(--muted); }
+      .fact a { color: var(--acc); text-decoration: none; }
+      .actions { display: flex; gap: 8px; margin-top: 16px; }
+      .actions button { flex: 1; border: 0; border-radius: 12px; padding: 12px 0; font-weight: 700; }
+      .rej { background: #3f1d1d; color: #fecaca; }
+      .ok { background: var(--acc); color: #041108; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div class="brand">
+          <img src="../public/icons/1337-skull.png" alt="" />
+          1337
+        </div>
+        <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      </header>
+
+      <div class="tabs">
+        <button class="tab" id="tab-assets">Assets</button>
+        <button class="tab" id="tab-history">History</button>
+        <button class="tab" id="tab-tools">Tools</button>
+      </div>
+
+      <div class="net">
+        <div class="toggle">
+          <button class="pill on">Mainnets</button>
+          <button class="pill">Testnets</button>
+        </div>
+        <div class="selects">
+          <div class="sel"><span>CHAIN</span>Ethereum Mainnet</div>
+          <div class="sel"><span>RPC</span>eth.drpc.org · dRPC</div>
+        </div>
+        <div class="rpc">
+          <span class="dot"></span>
+          dRPC · eth.drpc.org · 108ms · 2 healthy
+          <button class="doctor">Doctor</button>
+        </div>
+      </div>
+
+      <div class="tools hidden" id="toolstrip">
+        <button class="tbtn" id="t-signings">Signings</button>
+        <button class="tbtn" id="t-approvals">Approvals</button>
+        <button class="tbtn">Swap</button>
+        <button class="tbtn">ENS</button>
+        <button class="tbtn">Multisend</button>
+        <button class="tbtn">Gas</button>
+      </div>
+
+      <main>
+        <section id="view-assets">
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png" alt="" />
+            <div class="meta"><div class="name">Ethereum</div><div class="sub">ETH</div></div>
+            <div class="vals"><div class="usd">$8,412.20</div><div class="amt">2.451 ETH</div></div>
+            <span class="plus">+</span>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png" alt="" />
+            <div class="meta"><div class="name">USD Coin</div><div class="sub">USDC</div></div>
+            <div class="vals"><div class="usd">$4,280.00</div><div class="amt">4,280 USDC</div></div>
+            <button class="hide">×</button>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" alt="" />
+            <div class="meta"><div class="name">Tether USD</div><div class="sub">USDT</div></div>
+            <div class="vals"><div class="usd">$1,150.40</div><div class="amt">1,150.4 USDT</div></div>
+            <button class="hide">×</button>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png" alt="" />
+            <div class="meta"><div class="name">Wrapped BTC</div><div class="sub">WBTC</div></div>
+            <div class="vals"><div class="usd">$3,214.88</div><div class="amt">0.0312 WBTC</div></div>
+            <button class="hide">×</button>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png" alt="" />
+            <div class="meta"><div class="name">Uniswap</div><div class="sub">UNI</div></div>
+            <div class="vals"><div class="usd">$186.40</div><div class="amt">24.8 UNI</div></div>
+            <button class="hide">×</button>
+          </div>
+          <div class="other">Other <span>+</span></div>
+        </section>
+
+        <section id="view-signings" class="hidden">
+          <p class="intro">Messages and typed data this wallet signed. Stored on this device only — not on-chain.</p>
+          <div class="date">Today</div>
+          <div class="row">
+            <div class="mark">SIWE</div>
+            <div class="meta"><div class="name">Sign in to app.ens.domains</div><div class="sub">Sign-in · app.ens.domains</div></div>
+            <div class="amt">18m ago</div>
+          </div>
+          <div class="row">
+            <div class="mark pmt">PMT</div>
+            <div class="meta"><div class="name">Permit Uniswap to spend USDC</div><div class="sub">Permit · app.uniswap.org</div></div>
+            <div class="amt">3h ago</div>
+          </div>
+          <div class="date">Yesterday</div>
+          <div class="row">
+            <div class="mark td">712</div>
+            <div class="meta"><div class="name">Seaport order</div><div class="sub">Typed data · opensea.io</div></div>
+            <div class="amt">Yesterday</div>
+          </div>
+        </section>
+
+        <section id="view-confirm" class="hidden">
+          <div class="confirm">
+            <h1>Send</h1>
+            <p class="from">Request from <strong>app.uniswap.org</strong><br />https://app.uniswap.org · Network · Ethereum (chainId 1)</p>
+            <div class="human">
+              <small>You are about to</small>
+              <p>Send 0.25 ETH to 0x7099…79C8</p>
+            </div>
+            <div class="sim">Simulation succeeded on the current chain state.</div>
+            <div class="fact"><span>Send</span><span>0.25 ETH</span></div>
+            <div class="fact"><span>To</span><a>0x7099…79C8</a></div>
+            <div class="fact"><span>Network fee</span><span>~$1.84 · Auto</span></div>
+            <div class="fact"><span>Method</span><span>eth_sendTransaction</span></div>
+            <div class="actions">
+              <button class="rej">Reject</button>
+              <button class="ok">Send</button>
+            </div>
+          </div>
+        </section>
+        <section id="view-approvals" class="hidden">
+          <p class="intro" style="font-weight:650;color:var(--text);margin-bottom:2px">Ethereum</p>
+          <p class="intro">4 active approvals · ~180 days</p>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png" alt="" />
+            <div class="meta"><div class="name">USDC</div><div class="sub">Token</div></div>
+            <div class="warn">Unlimited</div>
+            <button class="revoke">Revoke</button>
+            <span class="plus">+</span>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png" alt="" />
+            <div class="meta"><div class="name">USDT</div><div class="sub">Permit2</div></div>
+            <div class="amt">5,000</div>
+            <button class="revoke">Revoke</button>
+            <span class="plus">+</span>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png" alt="" />
+            <div class="meta"><div class="name">WETH</div><div class="sub">Token</div></div>
+            <div class="warn">Unlimited</div>
+            <button class="revoke">Revoke</button>
+            <span class="plus">+</span>
+          </div>
+          <div class="row">
+            <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png" alt="" />
+            <div class="meta"><div class="name">UNI</div><div class="sub">Token</div></div>
+            <div class="amt">120</div>
+            <button class="revoke">Revoke</button>
+            <span class="plus">+</span>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="acct"><span class="avatar"></span> Account 1</div>
+        <div class="conn">Not connected</div>
+      </footer>
+    </div>
+    <script>
+      const view = new URLSearchParams(location.search).get('view') || 'assets';
+      const show = (id, on) => document.getElementById(id).classList.toggle('hidden', !on);
+      const tools = view === 'signings' || view === 'approvals';
+      document.querySelector('.net').classList.toggle('hidden', view === 'confirm');
+      document.querySelector('.tabs').classList.toggle('hidden', view === 'confirm');
+      document.querySelector('footer').classList.toggle('hidden', view === 'confirm');
+      document.getElementById('tab-assets').classList.toggle('on', view === 'assets');
+      document.getElementById('tab-tools').classList.toggle('on', tools);
+      document.getElementById('toolstrip').classList.toggle('hidden', !tools);
+      document.getElementById('t-signings').classList.toggle('on', view === 'signings');
+      document.getElementById('t-approvals').classList.toggle('on', view === 'approvals');
+      show('view-assets', view === 'assets');
+      show('view-signings', view === 'signings');
+      show('view-approvals', view === 'approvals');
+      show('view-confirm', view === 'confirm');
+    </script>
+  </body>
+</html>
