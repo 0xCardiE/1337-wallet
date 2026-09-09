@@ -1,7 +1,7 @@
 {
   "name": "1337-wallet",
-  "version": "2.2.0",
-  "description": "EVM signer for developers and power users. Readable confirms, no analytics, no 1337 server.",
+  "version": "2.2.1",
+  "description": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
   "private": true,
   "type": "module",
   "scripts": {

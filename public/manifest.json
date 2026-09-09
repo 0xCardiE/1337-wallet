@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "1337 Wallet",
-  "version": "2.2.0",
-  "description": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No tracking server.",
+  "version": "2.2.1",
+  "description": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",

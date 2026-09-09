@@ -2,7 +2,7 @@
   "$schema": "./product.manifest.schema.json",
   "name": "1337 Wallet",
   "shortName": "1337",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "tagline": "A professional EVM signer for developers, hackers, and advanced users.",
   "elevatorPitch": "Self-custody signer: understand the request, judge the risk, sign or reject. Easy RPC switching, hardware, LiFi swaps, and a fast terminal UI — no 1337 accounts, no analytics, no tracking server.",
   "audience": [
@@ -55,7 +55,7 @@
     ]
   },
   "messaging": {
-    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No tracking server.",
+    "chromeExtensionDescription": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
     "onboardingLead": "A signer for developers and power users. Create or import a seed phrase or private key — encrypted locally with your password. Add Ledger or Trezor later in Settings.",
     "onboardingTermsLead": "1337 is a self-custody tool, not a bank. You hold the keys. We cannot recover, reverse, or reimburse lost funds.",
     "onboardingTermsCheckbox": "I understand I am solely responsible for my keys and funds, and that 1337 does not guarantee or recover assets.",
@@ -114,6 +114,6 @@
       "host": "Needed to (1) inject the dapp provider on sites the user visits, (2) call user-selected RPC endpoints and optional explorer or LI.FI APIs, and (3) talk to Trezor Connect (connect.trezor.io) when a Trezor is used. 1337 does not scrape browsing history and has no 1337 backend."
     },
     "remoteCodeJustification": "When the user connects a Trezor, @trezor/connect-webextension opens Trezor's official Connect UI from https://connect.trezor.io/9/ so keys stay on the device. That hosted UI is JavaScript not in our zip. Ledger uses WebHID with code bundled in the package. We do not load other remote scripts and we do not eval third-party strings. Popup and background bundles are in the uploaded package.",
-    "detailedDescription": "1337 is a self-custody EVM signer for developers, hackers, and power users. Understand the request, judge the risk, then sign or reject.\n\nWhy 1337\n• Readable confirms — human summary, local simulation (pass / fail / revert / gas), and contract danger flags\n• Easy RPC switching — 20+ chains, switch endpoints, network doctor\n• Hardware — Ledger (WebHID) and Trezor Connect alongside seed and private-key accounts\n• Signer tools — Signings history, Approvals (ERC-20 / NFT / Permit2), LiFi swaps, multisend, gas top-up, optional Inspect\n• Normal or Burner Mode — confirm every request by default, or mark a software account as a disposable auto-signer with risk gates\n\nPrivacy\nNo analytics. No tracking server. No user accounts. Your encrypted vault stays in Chrome storage on this device. Network calls happen only when you use RPCs, swaps, explorers, or hardware. Policy: https://1337wallet.io/privacy\n\nSelf-custody\n1337 is a tool, not a bank. You hold the keys. We do not guarantee, insure, or recover funds. Terms: https://1337wallet.io/terms\n\nWorks with MetaMask-compatible dapps (EIP-6963, optional window.ethereum).\n\nInstall: https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl\nDiscord: https://discord.gg/ZgADAzAKFd\nSite: https://1337wallet.io/"
+    "detailedDescription": "An EVM wallet for hackers. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. Works with every MetaMask dapp.\n\nReadable confirms\nHuman summary, local simulation (pass / fail / revert / gas), and contract danger flags before you sign.\n\nEasy RPC switching\n20+ EVM chains. Switch endpoints per chain, add a custom URL, run the network doctor.\n\nHardware\nLedger (WebHID) and Trezor Connect, plus seed and private-key accounts.\n\nTools\nSignings, approvals, LI.FI swaps, ENS, multisend, gas station. Inspect is opt-in.\n\nNormal or Burner Mode\nNormal confirms every dapp request. Burner Mode auto-signs ordinary requests on a disposable local key. Hardware always confirms on the device.\n\nPrivacy\nNo analytics. No tracking server. No user accounts. Your encrypted vault stays in Chrome storage on this device. Network calls happen only when you use RPCs, swaps, explorers, or hardware.\nhttps://1337wallet.io/privacy\n\nSelf-custody\nYou hold the keys. We do not guarantee, insure, or recover funds.\nhttps://1337wallet.io/terms\n\nSite: https://1337wallet.io/\nDiscord: https://discord.gg/ZgADAzAKFd"
   }
 }

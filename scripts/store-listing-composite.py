@@ -5,11 +5,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 BG = (5, 8, 6)
-ACCENT = (34, 197, 94)
-MUTED = (156, 163, 175)
+ACCENT = (0, 255, 0)
+MUTED = (140, 148, 140)
+INK = (244, 244, 245)
+FONT_BOLD = Path('/System/Library/Fonts/Supplemental/Arial Bold.ttf')
+FONT_REG = Path('/System/Library/Fonts/Supplemental/Arial.ttf')
 
 
 def load_on_bg(path: Path) -> Image.Image:
@@ -38,26 +41,79 @@ def store_icon(src: Path, dest: Path) -> None:
     save_png(im, dest)
 
 
+def punch_mark(path: Path) -> Image.Image:
+    """Keep only the green pixels. No baked black or dark-green box."""
+    im = Image.open(path).convert('RGBA')
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 16 or g < 80 or r > 80 or b > 80:
+                px[x, y] = (0, 0, 0, 0)
+            else:
+                px[x, y] = (0, 255, 0, 255)
+    box = im.getbbox()
+    return im.crop(box) if box else im
+
+
+def pixel_fit(im: Image.Image, box: tuple[int, int]) -> Image.Image:
+    w, h = im.size
+    scale = min(box[0] / w, box[1] / h)
+    nw = max(1, int(round(w * scale)))
+    nh = max(1, int(round(h * scale)))
+    return im.resize((nw, nh), Image.Resampling.NEAREST)
+
+
+def paste_mark(canvas: Image.Image, mark: Image.Image, xy: tuple[int, int]) -> None:
+    canvas.paste(mark, xy, mark)
+
+
+def font(path: Path, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    try:
+        return ImageFont.truetype(str(path), size)
+    except OSError:
+        return ImageFont.load_default()
+
+
 def promo_small(skull: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (440, 280), BG)
-    s = fit(load_on_bg(skull), (150, 150))
-    w = fit(load_on_bg(word), (220, 72))
-    canvas.paste(s, (28, (280 - s.height) // 2))
-    canvas.paste(w, (200, 88))
+    s = pixel_fit(punch_mark(skull), (118, 130))
+    w = pixel_fit(punch_mark(word), (196, 48))
+    gap = 22
+    lock_w = s.width + gap + w.width
+    lock_h = max(s.height, w.height + 28)
+    x0 = (440 - lock_w) // 2
+    y0 = (280 - lock_h) // 2
+    paste_mark(canvas, s, (x0, y0 + (lock_h - s.height) // 2))
+    wx = x0 + s.width + gap
+    wy = y0 + (lock_h - w.height - 28) // 2
+    paste_mark(canvas, w, (wx, wy))
     draw = ImageDraw.Draw(canvas)
-    draw.text((200, 172), 'WALLET  ·  EVM SIGNER', fill=MUTED)
+    draw.text((wx, wy + w.height + 10), 'WALLET', font=font(FONT_BOLD, 16), fill=MUTED)
     save_jpg(canvas, dest)
 
 
 def promo_marquee(skull: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (1400, 560), BG)
-    s = fit(load_on_bg(skull), (380, 380))
-    w = fit(load_on_bg(word), (620, 180))
-    canvas.paste(s, (80, (560 - s.height) // 2))
-    canvas.paste(w, (520, 160))
+    s = pixel_fit(punch_mark(skull), (280, 300))
+    w = pixel_fit(punch_mark(word), (520, 120))
+    gap = 56
+    lock_w = s.width + gap + max(w.width, 640)
+    x0 = (1400 - lock_w) // 2
+    paste_mark(canvas, s, (x0, (560 - s.height) // 2))
+    wx = x0 + s.width + gap
+    block_h = w.height + 28 + 36 + 28
+    wy = (560 - block_h) // 2
+    paste_mark(canvas, w, (wx, wy))
     draw = ImageDraw.Draw(canvas)
-    draw.text((524, 360), 'Self-custody signer  ·  no analytics  ·  no tracking server', fill=MUTED)
-    draw.rectangle((0, 0, 8, 560), fill=ACCENT)
+    draw.text((wx, wy + w.height + 28), 'An EVM wallet for hackers', font=font(FONT_BOLD, 28), fill=INK)
+    draw.text(
+        (wx, wy + w.height + 68),
+        'No analytics. No tracking server.',
+        font=font(FONT_REG, 22),
+        fill=MUTED,
+    )
     save_jpg(canvas, dest)
 
 

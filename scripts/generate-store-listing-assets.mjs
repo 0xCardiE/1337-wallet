@@ -314,38 +314,15 @@ async function renderListingFrames() {
   mkdirSync(sourceDir, { recursive: true });
   mkdirSync(siteShots, { recursive: true });
 
-  const skull = pathToFileURL(path.join(icons, '1337-skull.png')).href;
-  const word = pathToFileURL(path.join(icons, '1337-wordmark.png')).href;
-  const browser = await chromium.launch({ channel: 'chromium' });
-  const page = await browser.newPage();
-  try {
-    await renderFrame(
-      page,
-      path.join(outDir, 'promo-small-440x280.jpg'),
-      {
-        layout: 'small',
-        theme: 'lime',
-        kicker: 'EVM SIGNER',
-        headline: '1337',
-        skull,
-      },
-      { width: 440, height: 280 },
-    );
-    await renderFrame(
-      page,
-      path.join(outDir, 'promo-marquee-1400x560.jpg'),
-      {
-        layout: 'marquee',
-        theme: 'lime',
-        kicker: '> 1337.wallet',
-        headline: 'AN EVM WALLET|FOR HACKERS',
-        sub: 'Self-custody signer · no analytics · no tracking server',
-        skull,
-        word,
-      },
-      { width: 1400, height: 560 },
-    );
+    const skull = pathToFileURL(path.join(icons, '1337-skull.png')).href;
+    const skullPng = path.join(icons, '1337-skull.png');
+    const wordPng = path.join(icons, '1337-wordmark.png');
+    runPy(['promo-small', skullPng, wordPng, path.join(outDir, 'promo-small-440x280.jpg')]);
+    runPy(['promo-marquee', skullPng, wordPng, path.join(outDir, 'promo-marquee-1400x560.jpg')]);
 
+    const browser = await chromium.launch({ channel: 'chromium' });
+    const page = await browser.newPage();
+    try {
     for (const frame of STORE_FRAMES) {
       const ui = ensureUiSource(frame.raw, [
         path.join(sourceDir, frame.raw),
