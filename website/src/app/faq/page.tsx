@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
+import { DiscordJoin } from '@/components/Outbound';
 import { PRODUCT_FAQ } from '@/content/productFaq';
-import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -37,12 +37,7 @@ export default function FaqPage() {
           <Link href="/security" className="btn-secondary">
             Security FAQ
           </Link>
-          <a
-            href={`mailto:${SITE.contactEmail}?subject=1337%20Wallet%20question`}
-            className="btn-primary"
-          >
-            Email {SITE.contactEmail}
-          </a>
+          <DiscordJoin>Ask on Discord</DiscordJoin>
         </div>
       </div>
     </div>

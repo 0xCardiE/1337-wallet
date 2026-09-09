@@ -4,7 +4,7 @@
   "shortName": "1337",
   "version": "2.1.1",
   "tagline": "A professional EVM signer for developers, hackers, and advanced users.",
-  "elevatorPitch": "Self-custody signer: understand the request, judge the risk, sign or reject. RPC control, hardware, LiFi swaps, and a fast terminal UI — no 1337 accounts, no analytics, no central server. Not a Foundry or Etherscan lab.",
+  "elevatorPitch": "Self-custody signer: understand the request, judge the risk, sign or reject. Easy RPC switching, hardware, LiFi swaps, and a fast terminal UI — no 1337 accounts, no analytics, no tracking server.",
   "audience": [
     "Software developers",
     "Security researchers and hackers",
@@ -24,7 +24,7 @@
     "notA": [
       "Not a hosted wallet — keys never leave your browser except to chains you broadcast to",
       "Not an analytics product — we do not track how you use the extension",
-      "Not a Foundry, Hardhat, or Etherscan replacement — no ABI lab, storage inspector, or cast-style utilities",
+      "Not a Foundry, Hardhat, or Etherscan replacement — no ABI playground, storage inspector, or cast-style utilities",
       "Not a burner-only toy — suitable as a serious daily driver when hardened (Normal mode, auto-lock, hardware)"
     ]
   },
@@ -34,7 +34,7 @@
     "noTracking": true,
     "noUserAccounts": true,
     "noTelemetrySdk": true,
-    "summary": "1337 Wallet does not run analytics, does not phone home to a 1337 server, and does not create user profiles. Your vault, settings, and session live in Chrome extension storage on your machine.",
+    "summary": "1337 Wallet does not run analytics, does not phone home to a tracking server, and does not create user profiles. Your vault, settings, and session live in Chrome extension storage on your machine.",
     "storedLocally": [
       "Encrypted vault (seed / private keys) in chrome.storage.local",
       "Wallet settings, custom RPCs, and chain preferences in chrome.storage.local",
@@ -42,7 +42,7 @@
     ],
     "networkWhenYouUseFeatures": [
       "Public RPC endpoints you choose (balances, sends, dapp reads)",
-      "LI.FI API when you open Swap or fetch routes (integrator id only; no 1337 server)",
+      "LI.FI API when you open Swap or fetch routes (integrator id only; no 1337 backend)",
       "Optional Etherscan-compatible API key you paste in Settings (sent to the explorer provider for tx history)",
       "Ledger / Trezor device SDKs and Trezor Connect when you use hardware accounts",
       "Token logos and chain metadata from public HTTPS URLs (e.g. LI.FI catalog)"
@@ -55,16 +55,20 @@
     ]
   },
   "messaging": {
-    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No 1337 server.",
+    "chromeExtensionDescription": "1337 — EVM signer for developers and power users. Readable confirms, Ledger/Trezor, LiFi swaps. No analytics. No tracking server.",
     "onboardingLead": "A signer for developers and power users. Create or import a seed phrase or private key — encrypted locally with your password. Add Ledger or Trezor later in Settings.",
+    "onboardingTermsLead": "1337 is a self-custody tool, not a bank. You hold the keys. We cannot recover, reverse, or reimburse lost funds.",
+    "onboardingTermsCheckbox": "I understand I am solely responsible for my keys and funds, and that 1337 does not guarantee or recover assets.",
     "settingsPrivacyHeading": "Privacy & data",
-    "settingsPrivacyLead": "No analytics. No 1337 server. Everything below stays on your machine unless you initiate a swap, RPC call, or explorer lookup.",
+    "settingsPrivacyLead": "No analytics. No tracking server. Everything below stays on your machine unless you initiate a swap, RPC call, or explorer lookup.",
+    "settingsCustodyHeading": "Self-custody",
+    "settingsCustodyLead": "1337 is a tool, not a bank. You control your keys. Nobody at 1337 can recover a lost seed, reverse a send, or reimburse lost funds.",
     "promoBullets": [
       "A signer first — readable confirms, not a disposable burner toy",
-      "Swaps, multi-send, custom RPCs, 20+ chains — no Foundry lab in the wallet",
+      "Easy RPC switching, swaps, multisend, 20+ chains",
       "Hardware wallet support (Ledger WebHID, Trezor Connect)",
       "Zero 1337 analytics or central account system",
-      "Open build — inspect the extension; verify before you trust"
+      "No tracking server — vault stays on this device"
     ]
   },
   "features": [
@@ -86,9 +90,11 @@
     "aestheticReference": "https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk",
     "liFi": "https://li.fi",
     "homepage": "https://1337wallet.io/",
-    "support": "https://1337wallet.io/faq",
+    "support": "https://discord.gg/ZgADAzAKFd",
     "privacy": "https://1337wallet.io/privacy",
-    "github": "https://github.com/0xCardiE/1337-wallet"
+    "terms": "https://1337wallet.io/terms",
+    "chromeWebStore": "https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl",
+    "discord": "https://discord.gg/ZgADAzAKFd"
   },
   "chromeWebStore": {
     "category": "Productivity",
@@ -96,8 +102,9 @@
     "matureContent": false,
     "officialUrl": "https://1337wallet.io/",
     "homepageUrl": "https://1337wallet.io/",
-    "supportUrl": "https://1337wallet.io/faq",
+    "supportUrl": "https://discord.gg/ZgADAzAKFd",
     "privacyPolicyUrl": "https://1337wallet.io/privacy",
+    "termsOfUseUrl": "https://1337wallet.io/terms",
     "remoteCode": true,
     "singlePurpose": "1337 Wallet is a self-custody Ethereum (EVM) signer. Users create or import accounts, connect to dapps, review signing requests, and approve or reject them. Swaps, approvals, multisend, and hardware are the same purpose: the user authorizing their own crypto.",
     "permissionJustifications": {
@@ -107,6 +114,6 @@
       "host": "Needed to (1) inject the dapp provider on sites the user visits, (2) call user-selected RPC endpoints and optional explorer or LI.FI APIs, and (3) talk to Trezor Connect (connect.trezor.io) when a Trezor is used. 1337 does not scrape browsing history and has no 1337 backend."
     },
     "remoteCodeJustification": "When the user connects a Trezor, @trezor/connect-webextension opens Trezor's official Connect UI from https://connect.trezor.io/9/ so keys stay on the device. That hosted UI is JavaScript not in our zip. Ledger uses WebHID with code bundled in the package. We do not load other remote scripts and we do not eval third-party strings. Popup and background bundles are in the uploaded package.",
-    "detailedDescription": "1337 is a self-custody EVM signer for developers, hackers, and power users. Understand the request, judge the risk, then sign or reject.\n\nWhy 1337\n• Readable confirms — human summary, local simulation (pass / fail / revert / gas), and contract danger flags\n• Your RPCs — 20+ chains, switch endpoints, network doctor\n• Hardware — Ledger (WebHID) and Trezor Connect alongside seed and private-key accounts\n• Signer tools — Signings history, Approvals (ERC-20 / NFT / Permit2), LiFi swaps, multisend, gas top-up, optional Inspect\n• Normal or Burner Mode — confirm every request by default, or mark a software account as a disposable auto-signer with risk gates\n\nPrivacy\nNo analytics. No 1337 server. No user accounts. Your encrypted vault stays in Chrome storage on this device. Network calls happen only when you use RPCs, swaps, explorers, or hardware. Policy: https://1337wallet.io/privacy\n\nNot a lab\n1337 is a signer, not a Foundry, Hardhat, or Etherscan replacement. No ABI playground, storage inspector, or cast-style converters.\n\nWorks with MetaMask-compatible dapps (EIP-6963, optional window.ethereum). Open the build and verify before you trust.\n\nSite: https://1337wallet.io/"
+    "detailedDescription": "1337 is a self-custody EVM signer for developers, hackers, and power users. Understand the request, judge the risk, then sign or reject.\n\nWhy 1337\n• Readable confirms — human summary, local simulation (pass / fail / revert / gas), and contract danger flags\n• Easy RPC switching — 20+ chains, switch endpoints, network doctor\n• Hardware — Ledger (WebHID) and Trezor Connect alongside seed and private-key accounts\n• Signer tools — Signings history, Approvals (ERC-20 / NFT / Permit2), LiFi swaps, multisend, gas top-up, optional Inspect\n• Normal or Burner Mode — confirm every request by default, or mark a software account as a disposable auto-signer with risk gates\n\nPrivacy\nNo analytics. No tracking server. No user accounts. Your encrypted vault stays in Chrome storage on this device. Network calls happen only when you use RPCs, swaps, explorers, or hardware. Policy: https://1337wallet.io/privacy\n\nSelf-custody\n1337 is a tool, not a bank. You hold the keys. We do not guarantee, insure, or recover funds. Terms: https://1337wallet.io/terms\n\nWorks with MetaMask-compatible dapps (EIP-6963, optional window.ethereum).\n\nInstall: https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl\nDiscord: https://discord.gg/ZgADAzAKFd\nSite: https://1337wallet.io/"
   }
 }

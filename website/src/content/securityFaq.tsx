@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { FaqGroup } from '@/components/FaqList';
+import { SITE } from '@/lib/site';
 
 const linkClass = 'text-text underline-offset-4 hover:underline';
 
@@ -32,7 +33,13 @@ export const SECURITY_COMPARISON = [
     topic: 'Can a company server spend?',
     metamask: 'No. Self-custody.',
     rabby: 'No. Self-custody.',
-    us: 'No. There is no 1337 server.',
+    us: 'No. There is no tracking server that can spend.',
+  },
+  {
+    topic: 'If you lose keys or get phished',
+    metamask: 'They cannot recover or reimburse funds.',
+    rabby: 'They cannot recover or reimburse funds.',
+    us: 'Same. Tool only — you are responsible for the keys.',
   },
   {
     topic: 'Analytics about your wallet',
@@ -87,6 +94,23 @@ export const SECURITY_FAQ: FaqGroup[] = [
               Burner Mode (auto-sign ordinary requests) is opt-in and still pauses on high-risk
               actions by default. Keep it for throwaway keys. Leave Normal mode on for anything you
               care about.
+            </p>
+          </>
+        ),
+      },
+      {
+        q: 'If I lose funds, will 1337 reimburse me?',
+        a: (
+          <>
+            <p>
+              No. 1337 is a self-custody tool. We do not hold your keys, cannot reverse chain
+              transactions, and do not insure or reimburse lost, stolen, or mis-sent assets. That is
+              the same limit as MetaMask and Rabby: if the seed is gone or you approved a drain,
+              nobody at the wallet company can get the funds back. Read{' '}
+              <Link href="/terms" className={linkClass}>
+                terms of use
+              </Link>{' '}
+              before you put value on a software key.
             </p>
           </>
         ),
@@ -181,11 +205,11 @@ export const SECURITY_FAQ: FaqGroup[] = [
           <>
             <p>
               Defaults and extras. MetaMask and Rabby optimize for a huge consumer audience. 1337
-              optimizes for people who already read transactions: multi-RPC, Inspect, approvals
-              revoke, LiFi swaps, multisend, side panel, optional Burner Mode on a disposable key.
+              optimizes for power users: easy RPC switching, Inspect, approvals revoke, LiFi swaps,
+              multisend, side panel, optional Burner Mode on a disposable key.
             </p>
             <p className="mt-3">
-              Privacy is a real split: 1337 has no analytics and no 1337 server. Supply-chain
+              Privacy is a real split: 1337 has no analytics and no tracking server. Supply-chain
               hardening is in MetaMask’s family (LavaMoat compartments on the sensitive bundles).
               Auto-lock is available but off by default — turn it on if the machine is shared.
             </p>
@@ -238,7 +262,7 @@ export const SECURITY_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              No. There is no 1337 backend, no hosted wallet, and no recovery email. Network calls
+              No. There is no tracking server, no hosted wallet, and no recovery email. Network calls
               happen when you use an RPC, open Swap (LI.FI), fetch history with <em>your</em>{' '}
               explorer key, or talk to a hardware SDK. Same pattern as a local MetaMask/Rabby
               install — the chain sees broadcasts, a company named 1337 does not get a copy of the
@@ -447,9 +471,11 @@ export const SECURITY_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Same question as MetaMask and Rabby: you trust an install path. Prefer a build you
-              (or someone you trust) produced from this repo, or the official store listing once it
-              is published. Do not sideload a zip from Discord.
+              Same question as MetaMask and Rabby: you trust an install path. Use the official{' '}
+              <Link href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Chrome Web Store listing
+              </Link>
+              . Do not sideload a zip from Discord or anywhere else.
             </p>
             <p className="mt-3">
               The extension pages use a strict script policy (scripts shipped with the extension
@@ -477,13 +503,20 @@ export const SECURITY_FAQ: FaqGroup[] = [
         ),
       },
       {
-        q: 'Is 1337 open to inspect?',
+        q: 'Where should I install from?',
         a: (
           <>
             <p>
-              The product is built to be inspected: local vault, no hidden 1337 account system.
-              Treat it like you treat Rabby’s GitHub — read what you care about, or run a burner
-              until you have. “Inspect before you trust” is the footer line for a reason.
+              Only the official{' '}
+              <Link href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Chrome Web Store listing
+              </Link>
+              . Questions and reports go to{' '}
+              <Link href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Discord
+              </Link>
+              . Start with a burner account until you are comfortable, the same way you would try
+              any new browser wallet.
             </p>
           </>
         ),

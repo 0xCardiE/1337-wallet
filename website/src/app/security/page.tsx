@@ -33,7 +33,7 @@ export default function SecurityPage() {
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
             1337 is a self-custody Chrome extension. Software keys stay encrypted on your machine.
-            Hardware keys never leave Ledger or Trezor. There is no 1337 server that could spend.
+            Hardware keys never leave Ledger or Trezor. There is no tracking server that could spend.
             If you do not trust a new wallet, use a burner for small amounts and hardware for the
             rest — the same split careful people already use in MetaMask and Rabby.
           </p>
@@ -86,10 +86,12 @@ export default function SecurityPage() {
             Product FAQ
           </Link>
           <a
-            href={`mailto:${SITE.contactEmail}?subject=1337%20Wallet%20security%20question`}
+            href={SITE.discordUrl}
             className="btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            Ask a security question
+            Ask on Discord
           </a>
         </div>
       </div>

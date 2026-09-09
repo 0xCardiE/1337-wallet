@@ -4,7 +4,13 @@ import {
   createInitialWallet,
   importInitialWallet,
 } from '../lib/walletManager';
-import { PRODUCT_ONBOARDING_LEAD } from '../lib/productManifest';
+import {
+  PRODUCT_ONBOARDING_LEAD,
+  PRODUCT_ONBOARDING_TERMS_CHECKBOX,
+  PRODUCT_ONBOARDING_TERMS_LEAD,
+  PRODUCT_PRIVACY_URL,
+  PRODUCT_TERMS_URL,
+} from '../lib/productManifest';
 import { ScreenHeader } from './ScreenHeader';
 import { Segment1337 } from './Select1337';
 
@@ -21,11 +27,13 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
   const [importSecret, setImportSecret] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
   const [backupMnemonic, setBackupMnemonic] = useState<string | null>(null);
   const [backupKey, setBackupKey] = useState<`0x${string}` | null>(null);
 
   function validatePassword(): string | null {
+    if (!acceptedTerms) return 'Accept the terms of use before continuing.';
     if (password.length < 8) return 'Use a password of at least 8 characters.';
     if (password !== password2) return 'Passwords do not match.';
     return null;
@@ -205,11 +213,37 @@ export function Onboarding({ onReady }: { onReady: () => void }) {
 
         {err ? <p className="error">{err}</p> : null}
 
+        <p className="muted" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.45 }}>
+          {PRODUCT_ONBOARDING_TERMS_LEAD}
+        </p>
+        <div className="w1337-settings-gate-row" style={{ marginTop: 8 }}>
+          <input
+            id="onboarding-terms"
+            className="w1337-settings-gate-row__box"
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={e => setAcceptedTerms(e.target.checked)}
+            data-testid="onboarding-terms"
+          />
+          <label htmlFor="onboarding-terms" className="w1337-settings-gate-row__copy">
+            <span>{PRODUCT_ONBOARDING_TERMS_CHECKBOX}</span>
+            <span className="muted">
+              <a href={PRODUCT_TERMS_URL} target="_blank" rel="noreferrer">
+                Terms of use
+              </a>
+              {' · '}
+              <a href={PRODUCT_PRIVACY_URL} target="_blank" rel="noreferrer">
+                Privacy
+              </a>
+            </span>
+          </label>
+        </div>
+
         <button
           type="button"
           className="primary"
           style={{ width: '100%', marginTop: 12 }}
-          disabled={busy}
+          disabled={busy || !acceptedTerms}
           data-testid="onboarding-submit"
           onClick={() => void (mode === 'create' ? handleCreate() : handleImport())}
         >

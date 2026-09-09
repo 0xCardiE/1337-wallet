@@ -11,6 +11,8 @@ test.describe('onboarding', () => {
     await expect(page.getByRole('tab', { name: 'Create' })).toBeVisible();
     await page.getByTestId('onboarding-password').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-password-confirm').fill(E2E_PASSWORD);
+    await expect(page.getByTestId('onboarding-submit')).toBeDisabled();
+    await page.getByTestId('onboarding-terms').check();
     await page.getByTestId('onboarding-submit').click();
     await expect(page.getByRole('heading', { name: /Back up your seed phrase/i })).toBeVisible();
     await expect(page.locator('.mono')).toContainText(/\w+ \w+ \w+/);
@@ -27,6 +29,7 @@ test.describe('onboarding', () => {
     await page.getByTestId('onboarding-password').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-password-confirm').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-secret').fill(E2E_MNEMONIC);
+    await page.getByTestId('onboarding-terms').check();
     await page.getByTestId('onboarding-submit').click();
     await expect(page.getByTestId('wallet-tab-assets')).toBeVisible();
     await expect(page.locator('body')).toContainText(/0xf39F|E2E|2266/i);
@@ -42,6 +45,7 @@ test.describe('onboarding', () => {
     await page.getByTestId('onboarding-password').fill(E2E_PASSWORD);
     await page.getByTestId('onboarding-password-confirm').fill('different-password');
     await page.getByTestId('onboarding-secret').fill(E2E_PK);
+    await page.getByTestId('onboarding-terms').check();
     await page.getByTestId('onboarding-submit').click();
     await expect(page.locator('.error')).toContainText(/do not match/i);
 

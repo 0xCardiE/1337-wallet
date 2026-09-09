@@ -81,7 +81,7 @@ export function FeatureGrid() {
           <a href="https://www.ambire.com/" className="text-text underline-offset-4 hover:underline">
             Ambire
           </a>
-          , but tuned for developers who read calldata before they sign.
+          , but tuned for developers who want the details before they sign.
         </p>
       </div>
 

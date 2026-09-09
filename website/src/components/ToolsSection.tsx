@@ -7,7 +7,7 @@ export function ToolsSection() {
         <div className="max-w-2xl">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">Tools</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-            Signer tools, not a lab
+            Signer tools
           </h2>
           <p className="mt-4 text-muted">
             Signings, approvals, swaps, ENS, multisend, and gas — things you do in a wallet. Hide

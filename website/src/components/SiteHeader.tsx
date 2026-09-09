@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ChromeDownload } from '@/components/Outbound';
 import { NAV_LINKS, SITE } from '@/lib/site';
 
 export function SiteHeader() {
@@ -23,9 +24,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <Link href={SITE.chromeStoreUrl} className="btn-primary text-sm">
-          Download for Chrome
-        </Link>
+        <ChromeDownload className="btn-primary text-sm" />
       </div>
     </header>
   );

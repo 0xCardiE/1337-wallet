@@ -9,7 +9,7 @@ export function SiteFooter() {
         <div>
           <p className="text-lg font-semibold">{SITE.name}</p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">{SITE.tagline}</p>
-          <p className="mt-4 text-xs text-muted">No analytics. No 1337 server.</p>
+          <p className="mt-4 text-xs text-muted">No analytics. No tracking server.</p>
         </div>
 
         <div>
@@ -37,6 +37,11 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-medium text-text">Trust</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
+            <li>
+              <Link href="/terms" className="hover:text-text">
+                Terms of use
+              </Link>
+            </li>
             <li>
               <Link href="/privacy" className="hover:text-text">
                 Privacy policy
@@ -74,13 +79,23 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <a href={SITE.githubUrl} className="hover:text-text">
-                GitHub
+              <a
+                href={SITE.chromeStoreUrl}
+                className="hover:text-text"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chrome Web Store
               </a>
             </li>
             <li>
-              <a href={`mailto:${SITE.contactEmail}`} className="hover:text-text">
-                {SITE.contactEmail}
+              <a
+                href={SITE.discordUrl}
+                className="hover:text-text"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Discord
               </a>
             </li>
           </ul>
@@ -91,7 +106,8 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
           <BuiltOnEthereumBadge />
           <p className="text-center text-xs text-muted">
-            © {new Date().getFullYear()} {SITE.name}. Self-custody. Inspect before you trust.
+            © {new Date().getFullYear()} {SITE.name}. Self-custody tool — you hold the keys; we do
+            not guarantee funds.
           </p>
         </div>
       </div>

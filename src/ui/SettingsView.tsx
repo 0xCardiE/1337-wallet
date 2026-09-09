@@ -21,7 +21,11 @@ import { describeError } from '../lib/utils';
 import {
   PRODUCT_SETTINGS_PRIVACY_HEADING,
   PRODUCT_SETTINGS_PRIVACY_LEAD,
+  PRODUCT_SETTINGS_CUSTODY_HEADING,
+  PRODUCT_SETTINGS_CUSTODY_LEAD,
   PRODUCT_MANIFEST,
+  PRODUCT_PRIVACY_URL,
+  PRODUCT_TERMS_URL,
 } from '../lib/productManifest';
 import {
   effectiveEnabledTools,
@@ -356,6 +360,27 @@ export function SettingsView({
               lineHeight: 1.45,
             }}
           >
+            <strong style={{ color: 'var(--text)' }}>{PRODUCT_SETTINGS_CUSTODY_HEADING}</strong>
+            <p className="muted" style={{ margin: '8px 0 0', fontSize: 11, lineHeight: 1.45 }}>
+              {PRODUCT_SETTINGS_CUSTODY_LEAD}{' '}
+              <a href={PRODUCT_TERMS_URL} target="_blank" rel="noreferrer">
+                Terms of use
+              </a>
+              .
+            </p>
+          </div>
+
+          <div
+            className="muted"
+            style={{
+              marginTop: 10,
+              padding: 10,
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              fontSize: 11,
+              lineHeight: 1.45,
+            }}
+          >
             <strong style={{ color: 'var(--text)' }}>{PRODUCT_SETTINGS_PRIVACY_HEADING}</strong>
             <p className="muted" style={{ margin: '8px 0 0', fontSize: 11, lineHeight: 1.45 }}>
               {PRODUCT_SETTINGS_PRIVACY_LEAD}
@@ -367,9 +392,11 @@ export function SettingsView({
               <li>{PRODUCT_MANIFEST.privacy.networkWhenYouUseFeatures[0]}</li>
             </ul>
             <p className="muted" style={{ margin: '8px 0 0', fontSize: 10, lineHeight: 1.4 }}>
-              No analytics SDK. No 1337 user accounts. See{' '}
-              <code className="mono">brand/product.manifest.json</code> for full positioning and
-              privacy claims.
+              No analytics SDK. No 1337 user accounts.{' '}
+              <a href={PRODUCT_PRIVACY_URL} target="_blank" rel="noreferrer">
+                Privacy policy
+              </a>
+              .
             </p>
           </div>
 

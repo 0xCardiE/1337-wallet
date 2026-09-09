@@ -39,6 +39,7 @@ export async function importWalletViaOnboarding(
   await page.getByTestId('onboarding-password').fill(password);
   await page.getByTestId('onboarding-password-confirm').fill(password);
   await page.getByTestId('onboarding-secret').fill(opts?.mnemonic ?? E2E_MNEMONIC);
+  await page.getByTestId('onboarding-terms').check();
   await page.getByTestId('onboarding-submit').click();
   await expect(page.getByTestId('wallet-tab-assets')).toBeVisible({ timeout: 20_000 });
 }

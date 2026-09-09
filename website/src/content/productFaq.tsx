@@ -15,9 +15,9 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               Developers, security researchers, and advanced users who want a serious signer —
-              readable confirms, RPC control, hardware — not a consumer toy and not a Foundry lab in
-              the toolbar. If you already live in MetaMask or Rabby and wish the wallet assumed you
-              can read a transaction, you are the audience.
+              readable confirms, easy RPC switching, and hardware — without a consumer toy UI. If
+              you already live in MetaMask or Rabby and wish the wallet assumed you can read a
+              transaction, you are the audience.
             </p>
           </>
         ),
@@ -41,8 +41,8 @@ export const PRODUCT_FAQ: FaqGroup[] = [
             <p>
               No. 1337 is a wallet you sign with: understand the request, judge the risk, sign or
               reject. Inspect, History, and the confirm sheet cover “what is this address / token /
-              tx?” There is no ABI lab, storage inspector, or cast-style workbench. Use Foundry and
-              explorers for that.
+              tx?” There is no ABI playground, storage inspector, or cast-style workbench. Use
+              Foundry and explorers for that.
             </p>
           </>
         ),
@@ -79,9 +79,12 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Chrome, Developer mode → Load unpacked from a <code>dist/</code> build, or the Chrome
-              Web Store listing when it is published. After install it opens in the side panel by
-              default; switch to popup in Settings if you prefer MetaMask-style chrome.
+              Install from the{' '}
+              <a href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Chrome Web Store
+              </a>
+              . After install it opens in the side panel by default; switch to popup in Settings if
+              you prefer MetaMask-style chrome.
             </p>
           </>
         ),
@@ -124,8 +127,8 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               Twenty-plus popular EVM chains ship with curated public RPCs. Switch the endpoint per
-              chain, add your own URL, and run the network doctor when something looks off. You are
-              not stuck on a single vendor RPC the way many consumer wallets feel.
+              chain in one click, add a custom URL if you want, and run the network doctor when
+              something looks off.
             </p>
           </>
         ),
@@ -198,7 +201,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               Paste a list of addresses and batch native or ERC-20 through Disperse.app — the
               familiar no-fee batch contract, including on hardware accounts. If a chain has no
               Disperse yet but has CreateX, the first user can deploy that same Disperse for
-              everyone. It is a send tool, not a CREATE2 playground.
+              everyone. It is a send tool.
             </p>
           </>
         ),
@@ -210,7 +213,7 @@ export const PRODUCT_FAQ: FaqGroup[] = [
             <p>
               Your own Etherscan-compatible API key in Settings. Rows deep-link to the explorer.
               Public RPCs cannot list “all txs for this address,” so we do not pretend otherwise.
-              No 1337 history server.
+              There is no 1337 history backend.
             </p>
           </>
         ),
@@ -233,11 +236,29 @@ export const PRODUCT_FAQ: FaqGroup[] = [
     title: 'Privacy and support',
     items: [
       {
+        q: 'Do you guarantee my funds?',
+        a: (
+          <>
+            <p>
+              No. 1337 is a self-custody tool, not a bank. You hold the keys. We cannot recover a
+              lost seed, reverse a send, or reimburse stolen or mis-sent assets. Software is
+              provided as-is; simulation and danger flags help you judge a request, they do not
+              insure the outcome. Same class of waiver as MetaMask and other non-custodial wallets.
+              Full text:{' '}
+              <Link href="/terms" className={linkClass}>
+                /terms
+              </Link>
+              .
+            </p>
+          </>
+        ),
+      },
+      {
         q: 'Does it track me?',
         a: (
           <>
             <p>
-              No analytics, no telemetry, no 1337 backend. Vault and settings stay in Chrome
+              No analytics, no telemetry, no tracking server. Vault and settings stay in Chrome
               extension storage on your machine. That is stricter than typical MetaMask/Rabby
               product analytics. Third parties you choose (RPC, LI.FI, explorer, Trezor Connect)
               still see what those features need. Full policy:{' '}
@@ -280,11 +301,11 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Email{' '}
-              <a href={`mailto:${SITE.contactEmail}`} className={linkClass}>
-                {SITE.contactEmail}
-              </a>
-              . Dapp and AI integration lives on{' '}
+              Join{' '}
+              <a href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Discord
+              </a>{' '}
+              to chat or report an issue. Dapp and AI integration lives on{' '}
               <Link href="/integrate" className={linkClass}>
                 /integrate
               </Link>

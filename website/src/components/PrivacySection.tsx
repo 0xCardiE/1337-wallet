@@ -7,10 +7,16 @@ export function PrivacySection() {
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
               Privacy
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight">No analytics. No 1337 server.</h2>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+              No analytics. No tracking server.
+            </h2>
             <p className="mt-4 max-w-xl text-muted">
               Vault, settings, and session data stay in Chrome extension storage on your machine.
               Network calls happen only when you use RPCs, swaps, explorer history, or hardware SDKs.{' '}
+              <a href="/terms" className="text-text underline-offset-4 hover:underline">
+                Terms of use
+              </a>
+              {' · '}
               <a href="/privacy" className="text-text underline-offset-4 hover:underline">
                 Privacy policy
               </a>
@@ -28,7 +34,7 @@ export function PrivacySection() {
               Your explorer API key, your history
             </li>
             <li className="rounded-xl border border-border/80 px-4 py-3">
-              Open build — inspect before you trust
+              No backend that can see your vault
             </li>
           </ul>
         </div>

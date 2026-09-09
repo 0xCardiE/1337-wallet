@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ChromeDownload } from '@/components/Outbound';
 import { SITE } from '@/lib/site';
 
 export function Hero() {
@@ -18,9 +19,7 @@ export function Hero() {
         </div>
 
         <div id="download" className="flex flex-wrap items-center gap-4 scroll-mt-24">
-          <Link href={SITE.chromeStoreUrl} className="btn-primary">
-            Download for Chrome
-          </Link>
+          <ChromeDownload />
           <Link href="/integrate" className="btn-secondary">
             Integrate for dapps &amp; AIs
           </Link>
@@ -30,15 +29,13 @@ export function Hero() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            'Your RPC on every chain',
-            'Full decode on every confirm',
-            'No analytics, no server',
-          ].map(item => (
-            <div key={item} className="card-surface px-4 py-3 text-sm text-muted">
-              {item}
-            </div>
-          ))}
+          {['Easy RPC switching', 'Full decode on every confirm', 'No analytics, no tracking'].map(
+            item => (
+              <div key={item} className="card-surface px-4 py-3 text-sm text-muted">
+                {item}
+              </div>
+            ),
+          )}
         </div>
       </div>
     </section>

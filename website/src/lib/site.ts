@@ -4,11 +4,12 @@ export const SITE = {
   origin: 'https://1337wallet.io',
   tagline: 'A professional EVM signer for developers, hackers, and advanced users.',
   description:
-    'Dense confirms, your RPCs, approvals, swaps, ENS, multisend. Built for people who already read the request. No analytics. No 1337 server. Works with every MetaMask dapp.',
-  chromeStoreUrl: '#download',
-  contactEmail: 'hello@1337wallet.io',
-  githubUrl: 'https://github.com/0xCardiE/1337-wallet',
+    'Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No tracking server. Works with every MetaMask dapp.',
+  chromeStoreUrl:
+    'https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl',
+  discordUrl: 'https://discord.gg/ZgADAzAKFd',
   privacyPath: '/privacy',
+  termsPath: '/terms',
 } as const;
 
 export const STORE_SCREENSHOTS = [
@@ -19,23 +20,33 @@ export const STORE_SCREENSHOTS = [
   },
   {
     src: '/screenshots/assets.jpg',
-    caption: 'Assets, your RPC, and network doctor on each chain',
-    alt: '1337 Wallet Assets tab on Ethereum with RPC picker and network doctor',
+    caption: 'Balances on each chain — switch RPC when you need to',
+    alt: '1337 Wallet Assets tab on Ethereum showing ETH, USDC, and other token balances',
   },
   {
     src: '/screenshots/confirm.jpg',
-    caption: 'Readable confirm before you sign — origin, message, reject or confirm',
-    alt: '1337 Wallet confirm sheet for a personal_sign request from example.com',
+    caption: 'Readable confirm before you sign — origin, amount, reject or confirm',
+    alt: '1337 Wallet confirm sheet for sending ETH from a dapp',
   },
   {
-    src: '/screenshots/tools.jpg',
-    caption: 'Signer tools: Signings, Approvals, Swap, ENS, Multisend, Gas',
-    alt: '1337 Wallet Tools tab showing Signings history',
+    src: '/screenshots/signings.jpg',
+    caption: 'Signings — SIWE, permits, and typed data this wallet signed',
+    alt: '1337 Wallet Signings tool with a list of recent message and permit signatures',
+  },
+  {
+    src: '/screenshots/approvals.jpg',
+    caption: 'Approvals — review and revoke ERC-20, NFT, and Permit2 allowances',
+    alt: '1337 Wallet Approvals tool listing token and NFT allowances with revoke',
+  },
+  {
+    src: '/screenshots/swap.jpg',
+    caption: 'Swap via LI.FI — pick a pair, get a quote, sign in-wallet',
+    alt: '1337 Wallet Swap tool showing an ETH to USDC quote',
   },
   {
     src: '/screenshots/multisend.jpg',
     caption: 'Multisend via Disperse.app — one transaction, leftover ETH refunded',
-    alt: '1337 Wallet Multisend tool with recipient list',
+    alt: '1337 Wallet Multisend tool with a filled recipient list',
   },
 ] as const;
 
@@ -54,9 +65,9 @@ export const FOOTER_EXTRA_LINKS = [
 
 export const CORE_FEATURES = [
   {
-    title: 'Popular RPCs, your way',
+    title: 'Easy RPC switching',
     description:
-      '20+ EVM chains ship with curated public RPC endpoints. Switch per chain, add custom URLs, and run the network doctor when something looks off.',
+      '20+ EVM chains ship with curated public endpoints. Switch per chain in one click, add a custom URL if you want, and run the network doctor when something looks off.',
     icon: 'rpc',
   },
   {
@@ -136,11 +147,15 @@ export const PROVIDER = {
 export const FAQ = [
   {
     q: 'Who is 1337 Wallet for?',
-    a: 'Developers, security researchers, and advanced users who want a serious signer — readable confirms, RPC control, hardware — not a consumer toy and not a Foundry lab in the toolbar.',
+    a: 'Developers, security researchers, and advanced users who want a serious signer — readable confirms, easy RPC switching, and hardware — without a consumer toy UI.',
   },
   {
     q: 'Does it track me?',
-    a: 'No analytics, no telemetry, no 1337 backend. Vault and settings stay in Chrome extension storage on your machine.',
+    a: 'No analytics, no telemetry, no tracking server. Vault and settings stay in Chrome extension storage on your machine.',
+  },
+  {
+    q: 'Do you guarantee my funds?',
+    a: 'No. 1337 is a self-custody tool. You hold the keys. We cannot recover a lost seed or reimburse lost funds. Terms of use are on this site.',
   },
   {
     q: 'Can I use it with existing dapps?',

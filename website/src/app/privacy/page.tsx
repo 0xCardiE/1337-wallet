@@ -33,12 +33,22 @@ export default function PrivacyPage() {
         <p>
           {SITE.name} is a self-custody Chrome extension. This policy describes what the extension
           stores on your device and when it talks to the network. There is no 1337 account, no
-          1337 analytics SDK, and no 1337 backend that receives your vault.
+          analytics SDK, and no tracking server that receives your vault. Responsibility for keys
+          and funds is in the{' '}
+          <Link href="/terms" className="text-text underline-offset-4 hover:underline">
+            terms of use
+          </Link>
+          .
         </p>
         <p>
           Contact:{' '}
-          <a href={`mailto:${SITE.contactEmail}`} className="text-text underline-offset-4 hover:underline">
-            {SITE.contactEmail}
+          <a
+            href={SITE.discordUrl}
+            className="text-text underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Discord
           </a>
           .
         </p>
@@ -99,6 +109,10 @@ export default function PrivacyPage() {
         </p>
 
         <p className="mt-10">
+          <Link href="/terms" className="text-text underline-offset-4 hover:underline">
+            Terms of use
+          </Link>
+          {' · '}
           <Link href="/security" className="text-text underline-offset-4 hover:underline">
             Security FAQ
           </Link>

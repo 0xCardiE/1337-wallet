@@ -1,4 +1,5 @@
-import { FAQ, SITE } from '@/lib/site';
+import { DiscordJoin } from '@/components/Outbound';
+import { FAQ } from '@/lib/site';
 
 export function ContactSection() {
   return (
@@ -26,12 +27,7 @@ export function ContactSection() {
             </a>{' '}
             cover most of it — including MetaMask and Rabby comparisons.
           </p>
-          <a
-            href={`mailto:${SITE.contactEmail}?subject=1337%20Wallet%20question`}
-            className="btn-primary mt-8"
-          >
-            Email {SITE.contactEmail}
-          </a>
+          <DiscordJoin className="btn-primary mt-8">Join Discord — chat and report</DiscordJoin>
         </div>
 
         <div className="space-y-4">

@@ -1,7 +1,7 @@
-export const PRIVACY_UPDATED = '7 September 2026';
+export const PRIVACY_UPDATED = '9 September 2026';
 
 export const PRIVACY_SUMMARY =
-  '1337 Wallet does not run analytics, does not phone home to a 1337 server, and does not create user profiles. Your vault, settings, and session live in Chrome extension storage on your machine.';
+  '1337 Wallet does not run analytics, does not phone home to a tracking server, and does not create user profiles. Your vault, settings, and session live in Chrome extension storage on your machine.';
 
 export const PRIVACY_STORED = [
   'Encrypted vault (seed / private keys) in chrome.storage.local',
@@ -11,7 +11,7 @@ export const PRIVACY_STORED = [
 
 export const PRIVACY_NETWORK = [
   'Public RPC endpoints you choose (balances, sends, dapp reads)',
-  'LI.FI API when you open Swap or fetch routes (integrator id only; no 1337 server)',
+  'LI.FI API when you open Swap or fetch routes (integrator id only; no 1337 backend)',
   'Optional Etherscan-compatible API key you paste in Settings (sent to the explorer provider for tx history)',
   'Optional The Graph API key for ENS portfolio listing',
   'Ledger / Trezor device SDKs and Trezor Connect (connect.trezor.io) when you use hardware accounts',

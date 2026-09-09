@@ -173,8 +173,13 @@ const address = await signer.getAddress();`}
         <Link href="/" className="btn-secondary">
           ← Back to home
         </Link>
-        <a href={`mailto:${SITE.contactEmail}?subject=1337%20integration%20help`} className="btn-primary">
-          Integration support
+        <a
+          href={SITE.discordUrl}
+          className="btn-primary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Integration support on Discord
         </a>
       </div>
     </div>

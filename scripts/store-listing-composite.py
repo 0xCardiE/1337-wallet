@@ -56,7 +56,7 @@ def promo_marquee(skull: Path, word: Path, dest: Path) -> None:
     canvas.paste(s, (80, (560 - s.height) // 2))
     canvas.paste(w, (520, 160))
     draw = ImageDraw.Draw(canvas)
-    draw.text((524, 360), 'Self-custody signer  ·  no analytics  ·  no 1337 server', fill=MUTED)
+    draw.text((524, 360), 'Self-custody signer  ·  no analytics  ·  no tracking server', fill=MUTED)
     draw.rectangle((0, 0, 8, 560), fill=ACCENT)
     save_jpg(canvas, dest)
 
