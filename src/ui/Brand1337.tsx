@@ -12,6 +12,8 @@ export function Brand1337({
   wordmarkWidth?: number;
   className?: string;
 }) {
+  const wordmarkHeight = Math.round(wordmarkWidth * (6 / 28));
+
   return (
     <div className={`w1337-brand${className ? ` ${className}` : ''}`}>
       <img
@@ -20,6 +22,7 @@ export function Brand1337({
         className="w1337-brand__skull"
         width={skullSize}
         height={skullSize}
+        style={{ width: skullSize, height: skullSize }}
         decoding="async"
         draggable={false}
       />
@@ -28,7 +31,8 @@ export function Brand1337({
         alt="1337"
         className="w1337-brand__wordmark"
         width={wordmarkWidth}
-        height={Math.round(wordmarkWidth * (6 / 28))}
+        height={wordmarkHeight}
+        style={{ width: wordmarkWidth, height: wordmarkHeight }}
         decoding="async"
         draggable={false}
       />

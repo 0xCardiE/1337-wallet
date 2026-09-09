@@ -40,8 +40,8 @@ type SendProgress = {
 
 function shortAddress(addr: string): string {
   const a = addr.trim();
-  if (a.length <= 21) return a;
-  return `${a.slice(0, 10)}…${a.slice(-10)}`;
+  if (a.length <= 13) return a;
+  return `${a.slice(0, 6)}…${a.slice(-6)}`;
 }
 
 function shortHash(hash: string): string {
