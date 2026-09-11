@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "1337 Wallet",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
   "icons": {
     "16": "icons/icon-16.png",

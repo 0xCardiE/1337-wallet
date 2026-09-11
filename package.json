@@ -1,6 +1,6 @@
 {
   "name": "1337-wallet",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
   "private": true,
   "type": "module",
@@ -25,6 +25,7 @@
     "icons": "python3 scripts/generate-brand-marks.py && node scripts/generate-extension-icons.mjs",
     "store:assets": "node scripts/generate-store-listing-assets.mjs",
     "store:frames": "node scripts/generate-store-listing-assets.mjs --frames-only",
+    "store:site-shots": "node scripts/generate-store-listing-assets.mjs --site-shots",
     "update-chain-dex-ranks": "node scripts/fetch-defillama-chain-dex-volume.mjs",
     "wallet-research": "npm run dev --prefix wallet-research",
     "wallet-research:x-login": "npm run x:login --prefix wallet-research",

@@ -24,6 +24,21 @@ const py = path.join(root, 'scripts/store-listing-composite.py');
 const mocksHtml = path.join(root, 'scripts/marketing-wallet-mocks.html');
 const framesHtml = path.join(root, 'scripts/marketing-frames.html');
 const framesOnly = process.argv.includes('--frames-only');
+const siteShotsOnly = process.argv.includes('--site-shots');
+
+/** Website UI crops → Chrome Web Store 1280×800 JPEGs. Upload 01–05 (max 5). */
+const SITE_STORE_SHOTS = [
+  ['features/confirm-summary.png', 'screenshot-01-confirm-1280x800.jpg'],
+  ['features/assets.png', 'screenshot-02-assets-1280x800.jpg'],
+  ['features/rpc.png', 'screenshot-03-rpc-1280x800.jpg'],
+  ['features/swap.png', 'screenshot-04-swap-1280x800.jpg'],
+  ['features/confirm-hardware.png', 'screenshot-05-hardware-1280x800.jpg'],
+  ['features/approvals.png', 'screenshot-06-approvals-1280x800.jpg'],
+  ['features/history.png', 'screenshot-07-history-1280x800.jpg'],
+  ['features/multisend.png', 'screenshot-08-multisend-1280x800.jpg'],
+  ['features/ens-manage.png', 'screenshot-09-ens-1280x800.jpg'],
+  ['features/doctor.png', 'screenshot-10-doctor-1280x800.jpg'],
+];
 
 const STORE_FRAMES = [
   {
@@ -333,7 +348,7 @@ async function renderListingFrames() {
         console.warn(`skip ${frame.raw}: no UI source`);
         continue;
       }
-      const dest = path.join(outDir, frame.store);
+      const dest = path.join(siteShots, frame.site);
       await renderFrame(
         page,
         dest,
@@ -348,7 +363,6 @@ async function renderListingFrames() {
         },
         { width: 1280, height: 800 },
       );
-      copyFileSync(dest, path.join(siteShots, frame.site));
     }
 
     for (const frame of SITE_EXTRA_FRAMES) {
@@ -380,11 +394,30 @@ async function renderListingFrames() {
   }
 }
 
+function frameWebsiteStoreShots() {
+  mkdirSync(outDir, { recursive: true });
+  for (const [rel, destName] of SITE_STORE_SHOTS) {
+    const src = path.join(siteShots, rel);
+    if (!existsSync(src)) {
+      console.warn(`skip ${rel}: missing`);
+      continue;
+    }
+    const dest = path.join(outDir, destName);
+    runPy(['frame-ui', src, dest]);
+    console.log('wrote', dest);
+  }
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   mkdirSync(sourceDir, { recursive: true });
   const iconSrc = path.join(icons, 'icon-128.png');
   runPy(['icon', iconSrc, path.join(outDir, 'store-icon-128.png')]);
+
+  if (siteShotsOnly) {
+    frameWebsiteStoreShots();
+    return;
+  }
 
   if (!framesOnly) {
     const rawDir = mkdtempSync(path.join(tmpdir(), '1337-cws-'));
@@ -401,6 +434,7 @@ async function main() {
   }
 
   await renderListingFrames();
+  frameWebsiteStoreShots();
   console.log(`wrote Chrome Web Store images in ${outDir}`);
 }
 

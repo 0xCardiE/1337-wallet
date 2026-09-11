@@ -172,6 +172,20 @@ def frame_screenshot(src: Path, dest: Path) -> None:
     save_jpg(canvas, dest)
 
 
+def frame_ui(src: Path, dest: Path) -> None:
+    """Website UI crop → 1280×800 JPEG, no alpha, no billboard."""
+    canvas = Image.new('RGB', (1280, 800), BG)
+    shot = Image.open(src).convert('RGBA')
+    flat = Image.new('RGB', shot.size, BG)
+    flat.paste(shot, mask=shot.split()[-1])
+    pad = 72
+    fitted = fit(flat, (1280 - pad * 2, 800 - pad * 2))
+    x = (1280 - fitted.width) // 2
+    y = (800 - fitted.height) // 2
+    canvas.paste(fitted, (x, y))
+    save_jpg(canvas, dest)
+
+
 def main() -> None:
     cmd = sys.argv[1]
     if cmd == 'icon':
@@ -184,6 +198,8 @@ def main() -> None:
         frame_screenshot(Path(sys.argv[2]), Path(sys.argv[3]))
     elif cmd == 'extract-ui':
         extract_ui(Path(sys.argv[2]), Path(sys.argv[3]))
+    elif cmd == 'frame-ui':
+        frame_ui(Path(sys.argv[2]), Path(sys.argv[3]))
     else:
         raise SystemExit(f'unknown command {cmd}')
 
