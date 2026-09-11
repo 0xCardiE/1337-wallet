@@ -24,15 +24,14 @@ jobs:
       - name: Build static site
         run: npm run build
         working-directory: website
-      - name: Deploy to 1337wallet.io
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.WEBSITE_DEPLOY_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy
-          chmod 600 ~/.ssh/deploy
-          ssh-keyscan -H 95.216.6.96 >> ~/.ssh/known_hosts
-          rsync -az --delete \
-            -e "ssh -i ~/.ssh/deploy -o BatchMode=yes -o IdentitiesOnly=yes" \
-            website/out/ root@95.216.6.96:/var/www/1337-wallet/website/out/
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.WEBSITE_DEPLOY_KEY }}
+      - name: Trust server host key
+        run: ssh-keyscan -t ed25519,ecdsa,rsa 95.216.6.96 >> ~/.ssh/known_hosts
+      - name: Rsync to 1337wallet.io
+        run: >
+          rsync -az --delete
+          -e "ssh -o BatchMode=yes -o IdentitiesOnly=yes"
+          website/out/
+          root@95.216.6.96:/var/www/1337-wallet/website/out/
