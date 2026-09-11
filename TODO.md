@@ -148,6 +148,20 @@ Product, UX, infra, and platform work that is not a security control.
 | [ ] | P3 | Embedded Benzin-style explorer | Ambire | Medium | Standalone decode app + in-wallet preview; depends on humanizer investment |
 | [ ] | P3 | Shared logic submodule (`ambire-common` pattern) | Ambire | High | Only if mobile or multiple apps share vault/signing logic |
 
+### First-run (wallet + website)
+
+People who already sign with MetaMask, Rabby, or hardware. Goal is **use 1337 as the daily signer** and, after they have felt a confirm, a Chrome Web Store review. Not education, not a paywall, not a consumer conversion quiz.
+
+Assume they know seeds, gas, and dapps. Show *our* confirm sheet. Do not add mascot tours, “what is a wallet,” funding onramps, or 10-minute sunk-cost screens.
+
+| Done | P | Item | Source | Effort | Notes |
+|------|---|------|--------|--------|-------|
+| [ ] | P1 | Landing: name the signer problem | 1337 | Low | Hero should say why you’d switch (readable confirm, local simulate, danger flags), not only “for hackers.” They already have a wallet. `website/` Hero + `SITE.description` |
+| [ ] | P1 | Canned confirm as the aha | 1337 | Medium | Unlimited approve vs a send, with the real human line + simulate/gas treatment. Website mock and/or first minute in the extension. Import can skip and go straight in. Do not wrap it as a lesson for first-time buyers |
+| [ ] | P1 | Empty Assets is a next job | 1337 | Low | After create, “No tokens with balance on this network” is a dead end. Offer: connect a dapp they already use, they have funds on another seed (stay / import), attach Ledger/Trezor. No buy-crypto, no hand-holding |
+| [ ] | P2 | Store review after first live confirm | 1337 | Low | Prompt Chrome Web Store review only after a successful real confirm (dapp or in-wallet send). Never on install or seed backup. Local flag in extension storage; no 1337 server |
+| [ ] | P2 | Optional Normal-mode acknowledgment | 1337 | Low | One click: they will see the human summary before signing. Not a safety lecture, not a personality quiz, not a rewrite of the terms checkbox. Import path can skip |
+
 ### Smart accounts (after EIP-7702)
 
 EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilities` already answers Uniswap/wagmi probes with **empty** per-chain objects — do not advertise the capabilities below until `wallet_sendCalls` exists. Advertising `atomic.status: "unsupported"` still implies sequential `wallet_sendCalls` and would be a lie.
@@ -187,6 +201,10 @@ EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilitie
 | Feature | Built-in Rabby swap/bridge | Rabby | LiFi already covers swaps |
 | Feature | Ambire Gas Tank / relayer infra | Ambire | Custodial-ish UX + server dependency |
 | Feature | Global MetaMask-only impersonation | Rabby | Prefer per-site override over hiding 1337 everywhere |
+| Feature | Consumer onboarding quiz / self-persuasion survey | Conversion playbooks | Audience is sophisticated; they will bounce. Terms checkbox is custody, not a personality test |
+| Feature | Long sunk-cost onboarding (10–15 min) | Conversion playbooks | Vault setup stays short. Investment is their seed and first confirm, not quiz length |
+| Feature | Review prompt at install or backup | Conversion playbooks | Ask after a live confirm, if at all |
+| Feature | First-time-buyer education in the extension | Consumer wallets | FAQ already: not onboarding for someone buying crypto. No seed-explainers, onramps, or “welcome to web3” |
 
 ---
 
@@ -219,6 +237,7 @@ EOA path stays one `eth_sendTransaction` + confirm sheet. `wallet_getCapabilitie
 
 | Date | Change |
 |------|--------|
+| 2026-09-11 | First-run / stickiness backlog (canned confirm, empty-Assets next job, review after live confirm). Consumer quiz onboarding explicitly not planned |
 | 2026-09-07 | Chrome Web Store zip: `npm run package:store` writes gitignored `release/*.zip` |
 | 2026-09-03 | Tools: Signings (local message/typed-data history) is the default tab; Inspect is opt-in |
 | 2026-09-02 | Smart-account follow-ups: EIP-5792 atomic batch / paymaster / session keys wait on 7702; discovery (`wallet_getCapabilities`) already ships empty |

@@ -4,7 +4,7 @@ Next.js landing page and integration docs for **1337 Wallet**.
 
 ## Pages
 
-- `/` — landing (screenshots, privacy, contact/FAQ)
+- `/` — landing (feature screenshots, privacy, contact/FAQ)
 - `/privacy` — privacy policy (Chrome Web Store privacy-policy URL)
 - `/terms` — terms of use (self-custody tool; no fund guarantee)
 - `/security` — security FAQ (MetaMask / Rabby comparisons, hardware, burner keys)
@@ -40,5 +40,7 @@ npm run website:build
 - Copy & links: `src/lib/site.ts`
 - Chrome Web Store URL: `SITE.chromeStoreUrl`
 - Discord: `SITE.discordUrl`
-- Screenshots: `npm run store:assets` from the repo root copies store cards into `public/screenshots/`. `npm run store:frames` re-renders the billboard frames from `brand/screenshot-sources/`
-- How-it-works gallery: `src/components/VideoSection.tsx`
+- Feature tour copy: `src/lib/site.ts` (`PRODUCT_FEATURES`)
+- Live UI captures for the landing gallery: `public/screenshots/features/` (not overwritten by store frames)
+- Chrome Web Store billboards: `npm run store:assets` from the repo root copies framed cards into `public/screenshots/`. `npm run store:frames` re-renders those from `brand/screenshot-sources/`
+- Feature gallery: `src/components/VideoSection.tsx`

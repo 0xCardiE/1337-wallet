@@ -19,6 +19,9 @@ export function Hero() {
 
         <div id="download" className="flex flex-wrap items-center gap-4 scroll-mt-24">
           <ChromeDownload />
+          <a href="#features" className="btn-secondary">
+            See the features
+          </a>
         </div>
       </div>
     </section>
