@@ -24,14 +24,22 @@ jobs:
       - name: Build static site
         run: npm run build
         working-directory: website
-      - uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: ${{ secrets.WEBSITE_DEPLOY_KEY }}
-      - name: Trust server host key
-        run: ssh-keyscan -t ed25519,ecdsa,rsa 95.216.6.96 >> ~/.ssh/known_hosts
       - name: Rsync to 1337wallet.io
-        run: >
-          rsync -az --delete
-          -e "ssh -o BatchMode=yes -o IdentitiesOnly=yes"
-          website/out/
-          root@95.216.6.96:/var/www/1337-wallet/website/out/
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.WEBSITE_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -t ed25519 95.216.6.96 >> ~/.ssh/known_hosts
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/1337wallet_deploy
+          ssh_opts="ssh -i $HOME/.ssh/1337wallet_deploy -o IdentitiesOnly=yes -o BatchMode=yes -o PreferredAuthentications=publickey -o ConnectTimeout=15"
+          for i in 1 2 3 4 5; do
+            if rsync -az --delete -e "$ssh_opts" website/out/ root@95.216.6.96:/var/www/1337-wallet/website/out/; then
+              exit 0
+            fi
+            echo "rsync attempt $i failed; retrying..."
+            sleep $((i * 4))
+          done
+          exit 1
