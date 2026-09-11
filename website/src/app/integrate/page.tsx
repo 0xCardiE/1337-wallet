@@ -143,7 +143,7 @@ const address = await signer.getAddress();`}
         <ul>
           <li>Detect 1337: <code>ethereum.is1337 === true</code></li>
           <li>EIP-6963: match <code>detail.info.rdns === '${PROVIDER.rdns}'</code></li>
-          <li>Not installed: link to <Link href="/#download">Download for Chrome</Link></li>
+          <li>Not installed: link to <Link href="/#download">Install</Link> (Chrome, Brave, Opera, Arc — same store listing)</li>
         </ul>
 
         <h2>Supported methods</h2>

@@ -81,8 +81,9 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <a href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Chrome Web Store
               </a>
-              . After install it opens in the side panel by default. Switch to popup in Settings if
-              you prefer MetaMask-style chrome.
+              . Chrome, Brave, Opera, and Arc all use that same listing. After install it opens in
+              the side panel by default. Switch to popup in Settings if you prefer MetaMask-style
+              chrome.
             </p>
           </>
         ),
@@ -284,8 +285,12 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         a: (
           <>
             <p>
-              Yes today. A Chrome MV3 extension (side panel + popup). Chromium forks that run MV3
-              extensions may work. We develop against Chrome.
+              It is a Chrome MV3 extension (side panel + popup). Chrome, Brave, Opera, and Arc
+              install from the same{' '}
+              <a href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Chrome Web Store
+              </a>{' '}
+              listing. We develop against Chrome. Firefox is not listed.
             </p>
           </>
         ),

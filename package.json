@@ -26,6 +26,7 @@
     "store:assets": "node scripts/generate-store-listing-assets.mjs",
     "store:frames": "node scripts/generate-store-listing-assets.mjs --frames-only",
     "store:site-shots": "node scripts/generate-store-listing-assets.mjs --site-shots",
+    "store:billboards": "node scripts/generate-store-listing-assets.mjs --billboards",
     "update-chain-dex-ranks": "node scripts/fetch-defillama-chain-dex-volume.mjs",
     "wallet-research": "npm run dev --prefix wallet-research",
     "wallet-research:x-login": "npm run x:login --prefix wallet-research",

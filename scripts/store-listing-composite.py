@@ -200,6 +200,12 @@ def main() -> None:
         extract_ui(Path(sys.argv[2]), Path(sys.argv[3]))
     elif cmd == 'frame-ui':
         frame_ui(Path(sys.argv[2]), Path(sys.argv[3]))
+    elif cmd == 'resize-jpg':
+        src, dest, width, height = Path(sys.argv[2]), Path(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
+        im = Image.open(src).convert('RGB')
+        if im.size != (width, height):
+            im = im.resize((width, height), Image.Resampling.LANCZOS)
+        save_jpg(im, dest)
     else:
         raise SystemExit(f'unknown command {cmd}')
 

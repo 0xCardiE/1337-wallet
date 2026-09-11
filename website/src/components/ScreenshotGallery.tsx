@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Kicker } from '@/components/Kicker';
-import { ChromeDownload } from '@/components/Outbound';
 import { TerminalFrame, frameTitleFromSrc } from '@/components/TerminalFrame';
 import { FEATURE_SHOTS, PRODUCT_FEATURES, type FeatureShot } from '@/lib/site';
 
@@ -157,11 +156,6 @@ export function ScreenshotGallery() {
             </article>
           );
         })}
-      </div>
-
-      <div className="mt-16 flex flex-wrap items-center gap-4 border-t border-border/60 pt-10">
-        <p className="text-sm text-muted">Install, then try this on a dapp you already use.</p>
-        <ChromeDownload className="btn-primary text-sm" />
       </div>
 
       {shot ? (

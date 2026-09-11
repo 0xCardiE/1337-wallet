@@ -2,7 +2,7 @@ import { Kicker } from '@/components/Kicker';
 
 export function PrivacySection() {
   return (
-    <section className="border-y border-border/60">
+    <section id="privacy" className="border-y border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20">
         <div className="card-surface grid gap-8 p-8 md:grid-cols-[1.2fr_1fr] md:p-10">
           <div>

@@ -293,6 +293,15 @@ export const FEATURE_SHOTS = PRODUCT_FEATURES.flatMap(feature =>
   feature.shots.map(shot => ({ ...shot, featureTitle: feature.title })),
 );
 
+export const SUPPORTED_BROWSERS = [
+  { id: 'chrome', name: 'Chrome' },
+  { id: 'brave', name: 'Brave' },
+  { id: 'opera', name: 'Opera' },
+  { id: 'arc', name: 'Arc' },
+] as const;
+
+export type SupportedBrowserId = (typeof SUPPORTED_BROWSERS)[number]['id'];
+
 export const NAV_LINKS = [
   { href: '/#features', label: 'Features' },
   { href: '/faq', label: 'FAQ' },
@@ -302,6 +311,7 @@ export const NAV_LINKS = [
 
 export const FOOTER_EXTRA_LINKS = [
   { href: '/#features', label: 'Features' },
+  { href: '/#download', label: 'Install' },
   { href: '/#contact', label: 'Contact' },
 ] as const;
 

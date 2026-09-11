@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Chrome Web Store listing images → brand/chrome-web-store/
- * Icon + promo tiles from brand PNGs; screenshots from a live unpacked dist/
- * plus populated marketing mocks (LavaMoat blocks evaluate inside the extension).
  *
- * Billboard frames (headline + glowing UI) are rendered from
- * scripts/marketing-frames.html. `node scripts/generate-store-listing-assets.mjs --frames-only`
- * re-frames existing UI sources without launching the extension.
+ * Upload set (max 5 screenshots + promos): `npm run store:billboards`
+ * renders scripts/store-listing-billboards.html (website 3D device).
+ *
+ * Icon + website gallery frames still come from brand PNGs / marketing-frames.html.
+ * `npm run store:frames` re-frames existing UI sources without launching the extension.
  */
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
@@ -25,8 +25,22 @@ const mocksHtml = path.join(root, 'scripts/marketing-wallet-mocks.html');
 const framesHtml = path.join(root, 'scripts/marketing-frames.html');
 const framesOnly = process.argv.includes('--frames-only');
 const siteShotsOnly = process.argv.includes('--site-shots');
+const billboardsOnly = process.argv.includes('--billboards');
+const billboardsHtml = path.join(root, 'scripts/store-listing-billboards.html');
 
-/** Website UI crops → Chrome Web Store 1280×800 JPEGs. Upload 01–05 (max 5). */
+/** Chrome Web Store upload set: 5 screenshots + promo tiles. */
+const STORE_BILLBOARDS = [
+  { view: 'hero', dest: 'screenshot-01-hero-1280x800.jpg', w: 1280, h: 800 },
+  { view: 'confirm', dest: 'screenshot-02-confirm-1280x800.jpg', w: 1280, h: 800 },
+  { view: 'rpc', dest: 'screenshot-03-rpc-1280x800.jpg', w: 1280, h: 800 },
+  { view: 'approvals', dest: 'screenshot-04-approvals-1280x800.jpg', w: 1280, h: 800 },
+  { view: 'swap', dest: 'screenshot-05-swap-1280x800.jpg', w: 1280, h: 800 },
+  { view: 'marquee', dest: 'promo-marquee-1400x560.jpg', w: 1400, h: 560 },
+  { view: 'small', dest: 'promo-small-440x280.jpg', w: 440, h: 280 },
+  { view: 'large', dest: 'promo-large-920x680.jpg', w: 920, h: 680 },
+];
+
+/** Flat UI crops kept as extras. Chrome listing upload set is STORE_BILLBOARDS. */
 const SITE_STORE_SHOTS = [
   ['features/confirm-summary.png', 'screenshot-01-confirm-1280x800.jpg'],
   ['features/assets.png', 'screenshot-02-assets-1280x800.jpg'],
@@ -408,14 +422,58 @@ function frameWebsiteStoreShots() {
   }
 }
 
+async function renderStoreBillboards() {
+  mkdirSync(outDir, { recursive: true });
+  const html = pathToFileURL(billboardsHtml).href;
+  const browser = await chromium.launch({ channel: 'chromium' });
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+      deviceScaleFactor: 2,
+    });
+    for (const board of STORE_BILLBOARDS) {
+      await page.setViewportSize({ width: board.w, height: board.h });
+      await page.goto(`${html}?view=${board.view}`, { waitUntil: 'networkidle', timeout: 60_000 });
+      await page.evaluate(async () => {
+        await document.fonts.ready.catch(() => {});
+        await Promise.all(
+          [...document.images].map(img =>
+            img.complete
+              ? Promise.resolve()
+              : new Promise(resolve => {
+                  img.addEventListener('load', resolve, { once: true });
+                  img.addEventListener('error', resolve, { once: true });
+                }),
+          ),
+        );
+      });
+      await page.waitForTimeout(200);
+      const tmp = path.join(outDir, `.tmp-${board.view}.png`);
+      await page.screenshot({ path: tmp, type: 'png', animations: 'disabled' });
+      const dest = path.join(outDir, board.dest);
+      runPy(['resize-jpg', tmp, dest, String(board.w), String(board.h)]);
+      rmSync(tmp, { force: true });
+      console.log('wrote', dest);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   mkdirSync(sourceDir, { recursive: true });
   const iconSrc = path.join(icons, 'icon-128.png');
   runPy(['icon', iconSrc, path.join(outDir, 'store-icon-128.png')]);
 
+  if (billboardsOnly) {
+    await renderStoreBillboards();
+    return;
+  }
+
   if (siteShotsOnly) {
     frameWebsiteStoreShots();
+    await renderStoreBillboards();
     return;
   }
 
@@ -435,6 +493,7 @@ async function main() {
 
   await renderListingFrames();
   frameWebsiteStoreShots();
+  await renderStoreBillboards();
   console.log(`wrote Chrome Web Store images in ${outDir}`);
 }
 

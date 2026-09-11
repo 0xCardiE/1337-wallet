@@ -1,10 +1,8 @@
-import Image from 'next/image';
+import { BrowserChips } from '@/components/BrowserInstall';
 import { Colophon } from '@/components/Colophon';
+import { HeroDevice } from '@/components/HeroDevice';
 import { ChromeDownload } from '@/components/Outbound';
-import { TerminalFrame } from '@/components/TerminalFrame';
-import { PRODUCT_FEATURES, SITE } from '@/lib/site';
-
-const HERO_SHOT = PRODUCT_FEATURES[0].shots[0];
+import { SITE } from '@/lib/site';
 
 export function Hero() {
   return (
@@ -15,7 +13,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
         <div>
           <p className="status-line">
             <span className="status-dot" aria-hidden />
@@ -31,30 +29,16 @@ export function Hero() {
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">{SITE.description}</p>
 
-          <div id="download" className="mt-8 flex flex-wrap items-center gap-3 scroll-mt-24">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <ChromeDownload />
             <a href="#features" className="btn-secondary">
               See the features
             </a>
           </div>
+          <BrowserChips />
         </div>
 
-        <div className="hero-product mx-auto w-full max-w-[28rem] lg:mx-0 lg:max-w-none">
-          <a href="#confirm" className="block" aria-label={HERO_SHOT.alt}>
-            <TerminalFrame title="confirm.sheet">
-              <Image
-                src={`${HERO_SHOT.src}?v=5`}
-                alt=""
-                width={HERO_SHOT.width}
-                height={HERO_SHOT.height}
-                unoptimized
-                priority
-                sizes="(min-width: 1024px) 480px, 90vw"
-                className="h-auto w-full"
-              />
-            </TerminalFrame>
-          </a>
-        </div>
+        <HeroDevice />
       </div>
 
       <Colophon className="relative" />

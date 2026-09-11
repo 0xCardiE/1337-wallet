@@ -1,0 +1,101 @@
+Chrome Web Store listing — 1337 Wallet 2.2.2
+https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl
+
+Regen images: npm run store:billboards
+Upload in this order. Chrome allows 5 screenshots.
+
+Screenshots (1280×800 JPEG)
+  1. screenshot-01-hero-1280x800.jpg
+  2. screenshot-02-confirm-1280x800.jpg
+  3. screenshot-03-rpc-1280x800.jpg
+  4. screenshot-04-approvals-1280x800.jpg
+  5. screenshot-05-swap-1280x800.jpg
+
+Promo tiles
+  Small  440×280  promo-small-440x280.jpg
+  Marquee 1400×560  promo-marquee-1400x560.jpg
+  Large  920×680  promo-large-920x680.jpg  (optional)
+
+Icon
+  store-icon-128.png
+
+Short description (132 chars, must match public/manifest.json)
+
+An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.
+
+--- Detailed description (paste into the listing) ---
+
+An EVM wallet for hackers. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No tracking server. Works with every MetaMask dapp.
+
+📌 THE BASICS
+- Self-custody EOA wallet on 20+ EVM chains, same address everywhere
+- Works with Uniswap and every MetaMask dapp (window.ethereum drop-in + EIP-6963)
+- Seed phrase, imported private keys, Ledger (WebHID), and Trezor Connect
+- Side panel by default so the dapp and the signer sit side by side — or switch to a popup
+- Encrypted vault in Chrome storage on this device. No 1337 account. No 1337 server
+
+📖 READABLE CONFIRMS
+- Plain-language summary before you sign
+- Local simulation: pass / fail / revert / gas against the current chain
+- Contract danger flags, verified-proxy hints, and decoded calldata
+- Human line first, developer details underneath
+- Hardware still confirms on the device
+
+🔌 YOUR RPC, YOUR CALL
+- Switch public endpoints per chain in one click, or paste a custom URL
+- Network doctor probes chainId and marks healthy vs down
+- Failover uses the healthy ones
+- 1337 does not run an RPC of its own
+
+🛠️ TOOLS
+- Approvals — ERC-20, NFT setApprovalForAll, and Permit2. Scan and revoke
+- Swap — LI.FI routes, then you sign. No extra 1337 fee
+- Multisend — Disperse.app batch. No fee from the contract; leftover native is refunded
+- ENS — register, renew, content hash, records
+- Gas station — top up native on another chain when you are stuck
+- Signings — local history of SIWE, permits, and typed data
+- Inspect — paste an address, token, ENS name, or tx hash (opt-in in Settings)
+
+⚡ NORMAL OR BURNER MODE
+- Normal (default): confirm every dapp request
+- Burner Mode: auto-sign ordinary requests on a disposable local key
+- Risk gates still pause unlimited approvals, unknown contracts, high-value sends, permits, and SIWE mismatches unless you ungate them
+- Hardware always confirms on the device
+
+🔒 PRIVATE BY DESIGN
+- No analytics. No tracking. No telemetry. No user accounts
+- Vault, settings, and session stay in Chrome extension storage on this machine
+- Network calls happen only when you use RPCs, swaps, explorers, or hardware
+- History uses the explorer API key you paste in Settings — there is no 1337 history backend
+https://1337wallet.io/privacy
+
+⚠️ SELF-CUSTODY
+You hold the keys. We do not guarantee, insure, or recover funds. Simulation and danger flags help you judge a request. They do not insure the outcome.
+https://1337wallet.io/terms
+
+---
+FAQ
+
+Q: Can I use my existing wallet with 1337?
+A: Yes. Import a seed phrase or private key, or connect Ledger / Trezor. HD accounts use the same path as MetaMask (m/44'/60'/0'/0/n).
+
+Q: Does it work with Uniswap and other dapps?
+A: Yes. Enable MetaMask drop-in for sites that only look for MetaMask, or connect as 1337 via EIP-6963.
+
+Q: How is this different from MetaMask or Rabby?
+A: Same job — connect, send, sign — with denser signer tools: per-chain RPC picker and network doctor, readable confirms with local simulate, approval revoke, LI.FI swaps, multisend, ENS, side panel, and optional Burner Mode. No analytics. No 1337 server.
+
+Q: Do you track me?
+A: No. No analytics SDK, no tracking server, no user database. Third parties you choose (RPC, LI.FI, explorer, Trezor Connect) still see what those features need.
+
+Q: What is Burner Mode?
+A: A per-wallet option that auto-signs ordinary dapp requests on a local key you treat as disposable. Risky actions still pause unless you ungate them. Hardware never auto-signs.
+
+Q: Is it a Foundry or Etherscan replacement?
+A: No. 1337 is a wallet you sign with. Inspect, History, and the confirm sheet cover “what is this address / token / tx?” Use Foundry and explorers for the lab work.
+
+---
+Site: https://1337wallet.io/
+Discord: https://discord.gg/ZgADAzAKFd
+Privacy: https://1337wallet.io/privacy
+Terms: https://1337wallet.io/terms
