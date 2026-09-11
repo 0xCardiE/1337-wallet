@@ -84,9 +84,9 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
       {
         src: '/screenshots/features/testnets.png',
         width: 508,
-        height: 560,
+        height: 562,
         caption: 'Sepolia, Base Sepolia, Arbitrum Sepolia, Amoy: same picker as mainnet.',
-        alt: 'Testnets chain picker open on Sepolia with Base Sepolia, Arbitrum Sepolia, and other testnets listed',
+        alt: 'Testnets chain picker open on Sepolia with Robinhood Testnet, Base Sepolia, and other testnets listed',
       },
     ],
   },
@@ -99,8 +99,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
     shots: [
       {
         src: '/screenshots/features/networks-rank.png',
-        width: 494,
-        height: 674,
+        width: 504,
+        height: 685,
         caption: 'Chain list. This order is the chain dropdown on Assets. Active stays marked.',
         alt: 'Networks list with reorder handles, Ethereum active, and chains ordered Ethereum, Robinhood Chain, Base, HyperEVM',
       },
@@ -138,8 +138,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
     shots: [
       {
         src: '/screenshots/features/approvals.png',
-        width: 493,
-        height: 389,
+        width: 533,
+        height: 429,
         caption: 'Token, spender, last transaction, remaining allowance.',
         alt: 'Approvals tool listing token allowances with Revoke buttons and spender addresses',
       },
@@ -177,8 +177,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
       },
       {
         src: '/screenshots/features/ens-manage.png',
-        width: 479,
-        height: 589,
+        width: 507,
+        height: 605,
         caption: 'Names you own, expiry, IPFS or bzz content hash, URL text record, extend one year.',
         alt: 'ENS tool showing swarmt3.eth with content hash, URL text record, and Extend 1 year',
       },
@@ -194,7 +194,7 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
       {
         src: '/screenshots/features/multisend.png',
         width: 499,
-        height: 563,
+        height: 587,
         caption: 'Recipients, amount per address, optional ERC-20. Uses Disperse.app.',
         alt: 'Multisend tool using Disperse.app with three recipient addresses and amount per recipient',
       },
@@ -280,8 +280,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
     shots: [
       {
         src: '/screenshots/features/burner.png',
-        width: 494,
-        height: 652,
+        width: 522,
+        height: 676,
         caption: 'Gates for unlimited approvals, unknown calls, high-value sends, permits, and domain mismatches. Fully ungate is optional.',
         alt: 'Burner Mode settings with gates for unlimited approvals, unknown calls, high-value sends, permits, and domain mismatches',
       },

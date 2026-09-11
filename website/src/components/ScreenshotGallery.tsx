@@ -125,7 +125,7 @@ export function ScreenshotGallery() {
                               }
                             >
                               <Image
-                                src={`${item.src}?v=5`}
+                                src={`${item.src}?v=8`}
                                 alt={item.alt}
                                 width={item.width}
                                 height={item.height}
@@ -176,7 +176,7 @@ export function ScreenshotGallery() {
             <div className="relative max-h-[78vh] w-full max-w-3xl overflow-auto">
               <TerminalFrame title={frameTitleFromSrc(shot.src)}>
                 <Image
-                  src={`${shot.src}?v=5`}
+                  src={`${shot.src}?v=8`}
                   alt={shot.alt}
                   width={shot.width}
                   height={shot.height}
