@@ -7,7 +7,7 @@ import {
 import {
   allChains,
   chainById,
-  chainsByKind,
+  chainsOrdered,
   type ChainDefinition,
   type ChainKind,
 } from '../lib/chainCatalog';
@@ -29,13 +29,13 @@ import { Select1337, Segment1337, type Select1337Group } from './Select1337';
 
 type NetFilter = ChainKind;
 
-function chainGroups(kind: NetFilter): Select1337Group[] {
+function chainGroups(kind: NetFilter, order?: number[]): Select1337Group[] {
   const label = kind === 'mainnet' ? 'Mainnets' : 'Testnets';
-  return [{ label, options: chainsByKind(kind).map(chainToOption) }];
+  return [{ label, options: chainsOrdered(kind, order).map(chainToOption) }];
 }
 
-function defaultChainForKind(kind: NetFilter): number {
-  return chainsByKind(kind)[0]?.chainId ?? 1;
+function defaultChainForKind(kind: NetFilter, order?: number[]): number {
+  return chainsOrdered(kind, order)[0]?.chainId ?? 1;
 }
 
 function shortRpcLabel(url: string): string {
@@ -116,8 +116,8 @@ export function NetworkSelector({ settings, onSaved }: Props) {
   }, [activeChainId, allUrls.join('|')]);
 
   const chainGroupsMemo = useMemo(
-    () => chainGroups(netFilter),
-    [netFilter, settings.customChains],
+    () => chainGroups(netFilter, settings.chainOrder),
+    [netFilter, settings.customChains, settings.chainOrder],
   );
 
   const rpcGroups = useMemo<Select1337Group[]>(
@@ -188,7 +188,7 @@ export function NetworkSelector({ settings, onSaved }: Props) {
   async function onFilterChange(next: NetFilter) {
     if (next === netFilter || busy) return;
     setOpenMenu(null);
-    await onChainChange(defaultChainForKind(next));
+    await onChainChange(defaultChainForKind(next, settings.chainOrder));
   }
 
   const activeInCatalog = allChains().some(c => c.chainId === activeChainId);

@@ -158,7 +158,7 @@ export function SettingsView({
               <div>
                 <strong>Networks &amp; RPCs</strong>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: 12 }}>
-                  Add custom chains and manage RPC endpoints.
+                  Add custom chains, reorder the list, and manage RPC endpoints.
                 </p>
               </div>
               <button type="button" className="ghost" onClick={onOpenNetworks}>

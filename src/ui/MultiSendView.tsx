@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getAddress, isAddress, parseUnits } from 'viem';
 import {
   getActiveAccountMeta,
@@ -6,6 +6,7 @@ import {
   getUnlockedAccount,
 } from '../lib/accountSession';
 import { isHardwareAccount, shortAddress } from '../lib/accounts';
+import { chainLogoUri } from '../lib/chainLogo';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import { chainById } from '../lib/chainCatalog';
 import { parseAddressList } from '../lib/backgroundSign';
@@ -18,7 +19,36 @@ import {
   type DisperseResolution,
 } from '../lib/disperse';
 import { shouldConfirmInWalletSend } from '../lib/txConfirmMode';
+import { fetchErc20Meta } from '../lib/txRisk';
 import { describeError } from '../lib/utils';
+import {
+  fmtTokenAmount,
+  hydrateAssetBalanceCache,
+  isNativeWalletToken,
+  loadWalletBalancesForChain,
+  peekMainBalances,
+  peekOtherBalances,
+  tokenUsdNumber,
+  type WalletBalEntry,
+} from '../lib/walletBalances';
+import { Select1337, type Select1337Group } from './Select1337';
+
+const NATIVE_PICK = 'native';
+const CUSTOM_PICK = 'custom';
+
+function mergeHeldTokens(rows: WalletBalEntry[]): WalletBalEntry[] {
+  const byAddr = new Map<string, WalletBalEntry>();
+  for (const row of rows) byAddr.set(row.address.toLowerCase(), row);
+  return [...byAddr.values()];
+}
+
+function hasPositiveBalance(row: WalletBalEntry): boolean {
+  try {
+    return BigInt(row.amount || '0') > 0n;
+  } catch {
+    return false;
+  }
+}
 
 export function MultiSendView({ settings }: { settings: AppSettings }) {
   const pk = getSessionPrivateKey();
@@ -33,7 +63,12 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
 
   const [addressesRaw, setAddressesRaw] = useState('');
   const [amountStr, setAmountStr] = useState('');
-  const [tokenAddr, setTokenAddr] = useState('');
+  const [tokenPick, setTokenPick] = useState(NATIVE_PICK);
+  const [customTokenAddr, setCustomTokenAddr] = useState('');
+  const [heldTokens, setHeldTokens] = useState<WalletBalEntry[]>([]);
+  const [tokensBusy, setTokensBusy] = useState(false);
+  const [customMeta, setCustomMeta] = useState<{ decimals: number; symbol?: string } | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
@@ -42,8 +77,11 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     recipients: `0x${string}`[];
     amount: bigint;
     token: `0x${string}` | null;
+    symbol: string;
   } | null>(null);
   const [pendingDeploy, setPendingDeploy] = useState(false);
+
+  const addr = unlocked ? getAddress(unlocked.address) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +97,65 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
 
   useEffect(() => {
     setPending(null);
-  }, [addressesRaw, amountStr, tokenAddr, chainId]);
+  }, [addressesRaw, amountStr, tokenPick, customTokenAddr, chainId]);
+
+  useEffect(() => {
+    setTokenPick(NATIVE_PICK);
+    setCustomTokenAddr('');
+    setCustomMeta(null);
+    setOpenMenu(null);
+  }, [chainId]);
+
+  useEffect(() => {
+    if (!addr) {
+      setHeldTokens([]);
+      setTokensBusy(false);
+      return;
+    }
+    let cancelled = false;
+    setTokensBusy(true);
+    void (async () => {
+      await hydrateAssetBalanceCache();
+      if (cancelled) return;
+      const cached = mergeHeldTokens([
+        ...peekMainBalances(chainId, addr),
+        ...(peekOtherBalances(chainId, addr)?.rows ?? []),
+      ]);
+      if (cached.length) setHeldTokens(cached);
+      const { rows } = await loadWalletBalancesForChain(addr, chainId);
+      if (cancelled) return;
+      const next = rows.filter(row => isNativeWalletToken(row) || hasPositiveBalance(row));
+      if (next.length) setHeldTokens(mergeHeldTokens(next));
+    })()
+      .catch(() => {
+        /* keep cached rows */
+      })
+      .finally(() => {
+        if (!cancelled) setTokensBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [addr, chainId]);
+
+  useEffect(() => {
+    if (tokenPick !== CUSTOM_PICK) {
+      setCustomMeta(null);
+      return;
+    }
+    const raw = customTokenAddr.trim();
+    if (!isAddress(raw)) {
+      setCustomMeta(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchErc20Meta(chainId, getAddress(raw)).then(meta => {
+      if (!cancelled) setCustomMeta(meta);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenPick, customTokenAddr, chainId]);
 
   async function refreshProbe() {
     const next = await resolveDisperse(chainId, { refresh: true });
@@ -93,21 +189,133 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     setLog([`Disperse ${recipients.length} recipients → ${hash}`]);
   }
 
-  function parseForm(): {
+  const nativeSymbol = chain?.nativeCurrency.symbol ?? 'ETH';
+  const nativeRow = useMemo(
+    () => heldTokens.find(isNativeWalletToken) ?? null,
+    [heldTokens],
+  );
+  const erc20Rows = useMemo(
+    () =>
+      heldTokens
+        .filter(t => !isNativeWalletToken(t) && hasPositiveBalance(t))
+        .sort((a, b) => {
+          const usd = tokenUsdNumber(b) - tokenUsdNumber(a);
+          if (usd !== 0) return usd;
+          return a.symbol.localeCompare(b.symbol);
+        }),
+    [heldTokens],
+  );
+  const selectedHeld = useMemo(() => {
+    if (tokenPick === NATIVE_PICK || tokenPick === CUSTOM_PICK) return null;
+    const key = tokenPick.toLowerCase();
+    return erc20Rows.find(t => t.address.toLowerCase() === key) ?? null;
+  }, [erc20Rows, tokenPick]);
+  const tokenGroups = useMemo((): Select1337Group[] => {
+    const nativeLogo = nativeRow?.logoURI ?? (chain ? chainLogoUri(chain) : undefined);
+    const nativeSub =
+      nativeRow && hasPositiveBalance(nativeRow)
+        ? `${fmtTokenAmount(nativeRow)} available`
+        : tokensBusy
+          ? 'Loading…'
+          : undefined;
+    return [
+      {
+        label: 'Token',
+        options: [
+          {
+            value: NATIVE_PICK,
+            label: nativeSymbol,
+            sublabel: nativeSub,
+            logoURI: nativeLogo,
+          },
+          ...erc20Rows.map(t => ({
+            value: t.address.toLowerCase(),
+            label: t.symbol,
+            sublabel: `${fmtTokenAmount(t)} available`,
+            logoURI: t.logoURI,
+          })),
+          {
+            value: CUSTOM_PICK,
+            label: 'Other token…',
+            sublabel: 'Paste contract address',
+          },
+        ],
+      },
+    ];
+  }, [chain, erc20Rows, nativeRow, nativeSymbol, tokensBusy]);
+
+  const tokenTrigger = (() => {
+    if (tokenPick === CUSTOM_PICK) {
+      const raw = customTokenAddr.trim();
+      return {
+        label: customMeta?.symbol ?? 'Other token',
+        sublabel: isAddress(raw) ? shortAddress(getAddress(raw)) : 'Paste contract address',
+        logoURI: undefined as string | undefined,
+      };
+    }
+    if (tokenPick === NATIVE_PICK) {
+      return {
+        label: nativeSymbol,
+        sublabel:
+          nativeRow && hasPositiveBalance(nativeRow)
+            ? `${fmtTokenAmount(nativeRow)} available`
+            : tokensBusy
+              ? 'Loading…'
+              : undefined,
+        logoURI: nativeRow?.logoURI ?? (chain ? chainLogoUri(chain) : undefined),
+      };
+    }
+    if (selectedHeld) {
+      return {
+        label: selectedHeld.symbol,
+        sublabel: `${fmtTokenAmount(selectedHeld)} available`,
+        logoURI: selectedHeld.logoURI,
+      };
+    }
+    return { label: 'Select token', sublabel: undefined, logoURI: undefined };
+  })();
+  const sendingErc20 = tokenPick !== NATIVE_PICK;
+
+  async function parseForm(): Promise<{
     recipients: `0x${string}`[];
     amount: bigint;
     token: `0x${string}` | null;
-  } {
+    symbol: string;
+  }> {
     const recipients = parseAddressList(addressesRaw);
+    if (tokenPick === CUSTOM_PICK) {
+      const raw = customTokenAddr.trim();
+      if (!raw || !isAddress(raw)) throw new Error('Invalid token address');
+      const token = getAddress(raw);
+      const meta = customMeta ?? (await fetchErc20Meta(chainId, token));
+      const amount = parseUnits(amountStr.trim() || '0', meta.decimals);
+      if (amount <= 0n) throw new Error('Enter a positive amount per recipient.');
+      return {
+        recipients,
+        amount,
+        token,
+        symbol: meta.symbol ?? 'tokens',
+      };
+    }
+    if (tokenPick !== NATIVE_PICK) {
+      if (!isAddress(tokenPick)) throw new Error('Invalid token address');
+      const row =
+        selectedHeld ??
+        heldTokens.find(t => t.address.toLowerCase() === tokenPick.toLowerCase());
+      const decimals = row?.decimals ?? 18;
+      const amount = parseUnits(amountStr.trim() || '0', decimals);
+      if (amount <= 0n) throw new Error('Enter a positive amount per recipient.');
+      return {
+        recipients,
+        amount,
+        token: getAddress(tokenPick),
+        symbol: row?.symbol ?? 'tokens',
+      };
+    }
     const decimals = chain?.nativeCurrency.decimals ?? 18;
     const amount = parseUnits(amountStr.trim() || '0', decimals);
     if (amount <= 0n) throw new Error('Enter a positive amount per recipient.');
-    const rawToken = tokenAddr.trim();
-    if (rawToken) {
-      if (!isAddress(rawToken)) throw new Error('Invalid token address');
-      return { recipients, amount, token: getAddress(rawToken) };
-    }
-    return { recipients, amount, token: null };
+    return { recipients, amount, token: null, symbol: nativeSymbol };
   }
 
   async function startOrSend() {
@@ -130,9 +338,9 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
       return;
     }
 
-    let parsed: ReturnType<typeof parseForm>;
+    let parsed: Awaited<ReturnType<typeof parseForm>>;
     try {
-      parsed = parseForm();
+      parsed = await parseForm();
     } catch (e) {
       setErr(describeError(e));
       return;
@@ -221,7 +429,6 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
     .split(/[\n,;]+/)
     .map(s => s.trim())
     .filter(Boolean).length;
-  const nativeSymbol = chain?.nativeCurrency.symbol ?? 'ETH';
   const formLocked = busy || pending != null || pendingDeploy;
   const disperseOn = Boolean(probe?.address);
 
@@ -240,7 +447,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
         <p className="w1337-ms-note w1337-ms-note--ok">
           Using Disperse.app ({shortAddress(probe.address)}
           {probe.source === 'create2' ? ', via CreateX' : ''}).
-          {tokenAddr.trim() ? ' ERC-20 needs an approve first, then the batch.' : ''}
+          {sendingErc20 ? ' ERC-20 needs an approve first, then the batch.' : ''}
         </p>
       ) : probe?.canDeploy ? (
         <p className="w1337-ms-note w1337-ms-note--warn">
@@ -272,31 +479,57 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
         {previewCount} address{previewCount === 1 ? '' : 'es'} detected
       </p>
 
-      <label htmlFor="ms-amt">Amount per recipient</label>
+      <div className="w1337-ms-token">
+        <Select1337
+          id="ms-token"
+          label="Token"
+          openMenu={openMenu}
+          setOpenMenu={setOpenMenu}
+          value={tokenPick}
+          triggerLabel={tokenTrigger.label}
+          triggerSublabel={tokenTrigger.sublabel}
+          triggerLogoURI={tokenTrigger.logoURI}
+          groups={tokenGroups}
+          disabled={formLocked}
+          onPick={setTokenPick}
+        />
+        {tokenPick === CUSTOM_PICK ? (
+          <>
+            <label htmlFor="ms-token-addr">Token contract</label>
+            <input
+              id="ms-token-addr"
+              value={customTokenAddr}
+              onChange={e => setCustomTokenAddr(e.target.value)}
+              placeholder="0x…"
+              disabled={formLocked}
+            />
+            {customTokenAddr.trim() && !isAddress(customTokenAddr.trim()) ? (
+              <p className="error" style={{ fontSize: 12 }}>
+                Invalid token address
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+
+      <label htmlFor="ms-amt">
+        Amount per recipient
+        {tokenTrigger.label !== 'Other token' && tokenTrigger.label !== 'Select token'
+          ? ` (${tokenTrigger.label})`
+          : ''}
+      </label>
       <input
         id="ms-amt"
         value={amountStr}
         onChange={e => setAmountStr(e.target.value)}
-        placeholder="0.01"
+        placeholder={
+          tokenPick === CUSTOM_PICK && !customMeta?.symbol
+            ? '0.01'
+            : `0.01 ${tokenTrigger.label}`
+        }
         inputMode="decimal"
         disabled={formLocked}
       />
-
-      <label htmlFor="ms-token" style={{ marginTop: 12 }}>
-        ERC-20 token (leave empty for native)
-      </label>
-      <input
-        id="ms-token"
-        value={tokenAddr}
-        onChange={e => setTokenAddr(e.target.value)}
-        placeholder="0x… or empty for ETH/native"
-        disabled={formLocked}
-      />
-      {tokenAddr.trim() && !isAddress(tokenAddr.trim()) ? (
-        <p className="error" style={{ fontSize: 12 }}>
-          Invalid token address
-        </p>
-      ) : null}
 
       {err ? <p className="error">{err}</p> : null}
 
@@ -331,7 +564,7 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
       ) : pending ? (
         <div className="w1337-ms-confirm">
           <p className="muted" style={{ margin: 0, fontSize: 12 }}>
-            Send {amountStr} {pending.token ? 'tokens' : nativeSymbol} to {pending.recipients.length}{' '}
+            Send {amountStr} {pending.symbol} to {pending.recipients.length}{' '}
             addresses via Disperse.app
             {unlocked?.address ? ` from ${shortAddress(unlocked.address)}` : ''}.
           </p>
@@ -376,7 +609,8 @@ export function MultiSendView({ settings }: { settings: AppSettings }) {
             !canSend ||
             !disperseOn ||
             !addressesRaw.trim() ||
-            !amountStr.trim()
+            !amountStr.trim() ||
+            (tokenPick === CUSTOM_PICK && !isAddress(customTokenAddr.trim()))
           }
           onClick={() => void startOrSend()}
         >

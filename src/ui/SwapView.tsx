@@ -24,7 +24,6 @@ import { ScreenHeader } from './ScreenHeader';
 import { LiFiIcon } from './LiFiIcon';
 import { TokenWithBadge } from './TokenWithBadge';
 import { DefiYieldPanel } from './DefiYieldPanel';
-import { HardwareSignHint } from './HardwareSignHint';
 import { RefreshIconButton } from './RefreshIconButton';
 
 type WalletTab = 'swap' | 'defi' | 'history';
@@ -1464,7 +1463,7 @@ export function SwapView({
                 ) : (
                   <button
                     type="button"
-                    className="primary"
+                    className={quote ? 'ghost' : 'primary'}
                     disabled={quoteBusy || balancesBusy}
                     onClick={() => void requestQuote()}
                   >
@@ -1563,7 +1562,6 @@ export function SwapView({
                           : 'Swap'}
                     </button>
                   )}
-                  <HardwareSignHint show={hw} />
                 </div>
               )}
               {execLog && (

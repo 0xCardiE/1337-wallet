@@ -170,6 +170,26 @@ export function recordRpcFailure(
  * Sort known URLs: sticky healthy first, then healthy/slow by latency,
  * unknown, then demoted.
  */
+/**
+ * Keep the given order except: sticky healthy first, demoted/unhealthy last.
+ * Used when the user ranked RPCs themselves.
+ */
+export function sortUrlsStableDemoteUnhealthy(chainId: number, urls: string[]): string[] {
+  const now = Date.now();
+  const sticky = stickyUrlByChain.get(chainId);
+  const good: string[] = [];
+  const bad: string[] = [];
+  for (const url of urls) {
+    const e = ensureEntry(chainId, url);
+    if (isDemoted(e, now) || e.status === 'unhealthy') bad.push(url);
+    else good.push(url);
+  }
+  if (sticky && good.includes(sticky)) {
+    return [sticky, ...good.filter(u => u !== sticky), ...bad];
+  }
+  return [...good, ...bad];
+}
+
 export function sortUrlsByHealth(chainId: number, urls: string[]): string[] {
   const now = Date.now();
   const sticky = stickyUrlByChain.get(chainId);

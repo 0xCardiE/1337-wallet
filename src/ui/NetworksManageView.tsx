@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   effectiveActiveChainId,
   patchSettings,
   type AppSettings,
 } from '../lib/storageState';
 import {
-  allChains,
   chainById,
+  chainsOrdered,
   getCustomChains,
   isCuratedChain,
   type ChainDefinition,
@@ -14,11 +14,14 @@ import {
 } from '../lib/chainCatalog';
 import { chainLogoUri } from '../lib/chainLogo';
 import { notifyConnectedTabsChainChanged } from '../lib/chainSyncBridge';
-import { allRpcOptionsFor } from '../lib/chainRpcRegistry';
+import { rpcListForManage, rpcOrderFor } from '../lib/chainRpcRegistry';
+import { applyOrder, mergeKindOrder, moveToFront } from '../lib/listOrder';
 import { describeError } from '../lib/utils';
 import { LiFiIcon } from './LiFiIcon';
+import { ReorderHandle } from './ReorderHandle';
 import { ScreenHeader } from './ScreenHeader';
 import { SimpleSelect1337 } from './Select1337';
+import { usePointerReorder } from './usePointerReorder';
 
 type Panel = 'list' | 'detail' | 'add';
 
@@ -67,23 +70,94 @@ export function NetworksManageView({
   const [addKind, setAddKind] = useState<ChainKind>('mainnet');
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  const chains = useMemo(() => {
-    const filtered = allChains().filter(c => c.kind === filter);
-    return [...filtered].sort((a, b) => {
-      if (a.chainId === activeChainId) return -1;
-      if (b.chainId === activeChainId) return 1;
-      return a.name.localeCompare(b.name);
-    });
-  }, [filter, activeChainId, settings.customChains]);
+  const chains = useMemo(
+    () => chainsOrdered(filter, settings.chainOrder),
+    [filter, settings.chainOrder, settings.customChains],
+  );
+  const chainIds = useMemo(() => chains.map(c => c.chainId), [chains]);
 
   const selected = selectedId != null ? chainById(selectedId) : undefined;
-  const rpcOptions = selectedId != null ? allRpcOptionsFor(selectedId, 20) : [];
+  const rpcOptions = useMemo(
+    () => (selectedId != null ? rpcListForManage(selectedId, 20) : []),
+    [
+      selectedId,
+      settings.preferredRpcByChain,
+      settings.customRpcByChain,
+      settings.rpcOrderByChain,
+      settings.customChains,
+    ],
+  );
   const preferredRpc =
     selectedId != null
       ? settings.preferredRpcByChain?.[String(selectedId)]
       : undefined;
   const userRpcs =
     selectedId != null ? settings.customRpcByChain?.[String(selectedId)] ?? [] : [];
+
+  const commitChainOrder = useCallback(
+    (nextIds: number[]) => {
+      const otherKind: ChainKind = filter === 'mainnet' ? 'testnet' : 'mainnet';
+      const others = chainsOrdered(otherKind, settings.chainOrder).map(c => c.chainId);
+      const chainOrder = mergeKindOrder(
+        settings.chainOrder,
+        nextIds,
+        others,
+        filter === 'mainnet',
+      );
+      void (async () => {
+        setBusy(true);
+        setErr(null);
+        try {
+          await patchSettings({ chainOrder });
+          onSaved();
+        } catch (e) {
+          setErr(describeError(e));
+        } finally {
+          setBusy(false);
+        }
+      })();
+    },
+    [filter, onSaved, settings.chainOrder],
+  );
+
+  const commitRpcOrder = useCallback(
+    (next: string[]) => {
+      if (selectedId == null || !next.length) return;
+      const key = String(selectedId);
+      void (async () => {
+        setBusy(true);
+        setErr(null);
+        try {
+          await patchSettings({
+            rpcOrderByChain: {
+              ...(settings.rpcOrderByChain ?? {}),
+              [key]: next,
+            },
+            preferredRpcByChain: {
+              ...(settings.preferredRpcByChain ?? {}),
+              [key]: next[0]!,
+            },
+          });
+          onSaved();
+        } catch (e) {
+          setErr(describeError(e));
+        } finally {
+          setBusy(false);
+        }
+      })();
+    },
+    [onSaved, selectedId, settings.preferredRpcByChain, settings.rpcOrderByChain],
+  );
+
+  const chainReorder = usePointerReorder(chainIds, commitChainOrder);
+  const rpcReorder = usePointerReorder(rpcOptions, commitRpcOrder);
+  const shownChains = useMemo(
+    () =>
+      chainReorder.shown
+        .map(id => chainById(id))
+        .filter((c): c is ChainDefinition => !!c),
+    [chainReorder.shown],
+  );
 
   function openDetail(id: number) {
     setSelectedId(id);
@@ -126,11 +200,24 @@ export function NetworksManageView({
     setBusy(true);
     setErr(null);
     try {
+      const key = String(chainId);
+      const existingOrder = rpcOrderFor(chainId);
+      const nextOrder = existingOrder?.length
+        ? moveToFront(applyOrder(rpcListForManage(chainId, 20), existingOrder), url.trim())
+        : undefined;
       await patchSettings({
         preferredRpcByChain: {
           ...(settings.preferredRpcByChain ?? {}),
-          [String(chainId)]: url.trim(),
+          [key]: url.trim(),
         },
+        ...(nextOrder
+          ? {
+              rpcOrderByChain: {
+                ...(settings.rpcOrderByChain ?? {}),
+                [key]: nextOrder,
+              },
+            }
+          : {}),
       });
       onSaved();
       setMsg('Preferred RPC updated');
@@ -161,6 +248,10 @@ export function NetworksManageView({
       const key = String(chainId);
       const list = [...(settings.customRpcByChain?.[key] ?? [])];
       if (!list.includes(url)) list.push(url);
+      const existingOrder = settings.rpcOrderByChain?.[key];
+      const ranked = existingOrder?.length
+        ? moveToFront(applyOrder([...rpcListForManage(chainId, 20), url], existingOrder), url)
+        : undefined;
       await patchSettings({
         customRpcByChain: {
           ...(settings.customRpcByChain ?? {}),
@@ -170,6 +261,14 @@ export function NetworksManageView({
           ...(settings.preferredRpcByChain ?? {}),
           [key]: url,
         },
+        ...(ranked
+          ? {
+              rpcOrderByChain: {
+                ...(settings.rpcOrderByChain ?? {}),
+                [key]: ranked,
+              },
+            }
+          : {}),
       });
       setRpcDraft('');
       onSaved();
@@ -193,7 +292,13 @@ export function NetworksManageView({
       const customRpcByChain = { ...(settings.customRpcByChain ?? {}) };
       if (list.length) customRpcByChain[key] = list;
       else delete customRpcByChain[key];
-      await patchSettings({ customRpcByChain, preferredRpcByChain: preferred });
+      const rpcOrderByChain = { ...(settings.rpcOrderByChain ?? {}) };
+      if (rpcOrderByChain[key]?.length) {
+        const next = rpcOrderByChain[key]!.filter(u => u !== url);
+        if (next.length) rpcOrderByChain[key] = next;
+        else delete rpcOrderByChain[key];
+      }
+      await patchSettings({ customRpcByChain, preferredRpcByChain: preferred, rpcOrderByChain });
       onSaved();
       setMsg('RPC removed');
     } catch (e) {
@@ -212,12 +317,17 @@ export function NetworksManageView({
       const customChains = getCustomChains().filter(c => c.chainId !== chainId);
       const preferred = { ...(settings.preferredRpcByChain ?? {}) };
       const customRpc = { ...(settings.customRpcByChain ?? {}) };
+      const rpcOrderByChain = { ...(settings.rpcOrderByChain ?? {}) };
       delete preferred[String(chainId)];
       delete customRpc[String(chainId)];
+      delete rpcOrderByChain[String(chainId)];
+      const chainOrder = (settings.chainOrder ?? []).filter(id => id !== chainId);
       const patch: AppSettings = {
         customChains,
         preferredRpcByChain: preferred,
         customRpcByChain: customRpc,
+        rpcOrderByChain,
+        ...(chainOrder.length ? { chainOrder } : { chainOrder: undefined }),
       };
       if (effectiveActiveChainId(settings) === chainId) {
         patch.activeChainId = 1;
@@ -281,12 +391,15 @@ export function NetworksManageView({
         rpcUrls: [rpc],
         blockExplorerUrls: explorer ? [explorer.replace(/\/$/, '')] : [],
       };
+      const existingOrder = settings.chainOrder;
+      const ranked = existingOrder?.length ? [...existingOrder, cid] : undefined;
       await patchSettings({
         customChains: [...getCustomChains(), def],
         preferredRpcByChain: {
           ...(settings.preferredRpcByChain ?? {}),
           [String(cid)]: rpc,
         },
+        ...(ranked ? { chainOrder: ranked } : {}),
       });
       onSaved();
       setPanel('list');
@@ -322,7 +435,7 @@ export function NetworksManageView({
         {panel === 'list' ? (
           <>
             <p className="muted w1337-networks__lead">
-              Manage chains and RPC endpoints. Active network stays on the Assets tab.
+              Manage chains and RPC endpoints. Drag to put the ones you use at the top.
             </p>
 
             <div className="w1337-networks__toolbar">
@@ -352,12 +465,36 @@ export function NetworksManageView({
               </button>
             </div>
 
-            <ul className="w1337-networks__list">
-              {chains.map(c => {
+            <ul
+              className={
+                chainReorder.dragging
+                  ? 'w1337-networks__list w1337-networks__list--dragging'
+                  : 'w1337-networks__list'
+              }
+              ref={chainReorder.listRef}
+            >
+              {shownChains.map((c, i) => {
                 const active = c.chainId === activeChainId;
                 const custom = !isCuratedChain(c.chainId);
                 return (
-                  <li key={c.chainId}>
+                  <li
+                    key={c.chainId}
+                    className={
+                      active
+                        ? 'w1337-networks__item w1337-networks__item--active'
+                        : 'w1337-networks__item'
+                    }
+                    data-reorder-row
+                  >
+                    <ReorderHandle
+                      label={`Reorder ${c.name}`}
+                      disabled={busy}
+                      onPointerDown={e => chainReorder.start(i, e)}
+                      onPointerMove={chainReorder.move}
+                      onPointerUp={chainReorder.end}
+                      onPointerCancel={chainReorder.end}
+                      onNudge={delta => chainReorder.moveByKeyboard(i, delta)}
+                    />
                     <button
                       type="button"
                       className={
@@ -434,12 +571,42 @@ export function NetworksManageView({
             )}
 
             <h3 className="w1337-networks__section-title">RPC endpoints</h3>
-            <ul className="w1337-networks__rpc-list">
-              {rpcOptions.map(url => {
-                const isPreferred = preferredRpc ? preferredRpc === url : url === rpcOptions[0];
+            <p className="muted w1337-networks__rpc-hint">
+              Drag to rank. Top of the list is preferred.
+            </p>
+            <ul
+              className={
+                rpcReorder.dragging
+                  ? 'w1337-networks__rpc-list w1337-networks__list--dragging'
+                  : 'w1337-networks__rpc-list'
+              }
+              ref={rpcReorder.listRef}
+            >
+              {rpcReorder.shown.map((url, i) => {
+                const rankedPreferred = rpcReorder.dragging
+                  ? rpcReorder.shown[0]
+                  : (preferredRpc ?? rpcReorder.shown[0]);
+                const isPreferred = rankedPreferred === url;
                 const isUser = userRpcs.includes(url);
                 return (
-                  <li key={url} className="w1337-networks__rpc-row">
+                  <li
+                    key={url}
+                    className={
+                      isPreferred
+                        ? 'w1337-networks__rpc-row w1337-networks__rpc-row--on'
+                        : 'w1337-networks__rpc-row'
+                    }
+                    data-reorder-row
+                  >
+                    <ReorderHandle
+                      label={`Reorder ${shortRpcLabel(url)}`}
+                      disabled={busy}
+                      onPointerDown={e => rpcReorder.start(i, e)}
+                      onPointerMove={rpcReorder.move}
+                      onPointerUp={rpcReorder.end}
+                      onPointerCancel={rpcReorder.end}
+                      onNudge={delta => rpcReorder.moveByKeyboard(i, delta)}
+                    />
                     <button
                       type="button"
                       className={

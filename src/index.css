@@ -1815,7 +1815,8 @@ button.w1337-chip:hover:not(:disabled) {
   margin-top: 18px;
 }
 
-.w1337-actions .primary {
+.w1337-actions .primary,
+.w1337-actions .ghost {
   width: 100%;
   border-radius: var(--radius-pill);
   padding: 13px 18px;
@@ -5129,6 +5130,14 @@ button.w1337-token-fold__head:hover:not(:disabled) {
   gap: 10px;
 }
 
+.w1337-ms-token {
+  margin: 12px 0 10px;
+}
+
+.w1337-ms-token .w1337-dd {
+  margin-bottom: 8px;
+}
+
 /* Tools sub-tabs */
 .w1337-tools-tabs {
   display: flex;
@@ -6740,12 +6749,6 @@ button.w1337-quick-send-inline__send--busy {
   width: 100%;
 }
 
-.w1337-hw-sign-hint {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 .w1337-settings-gates {
   margin-top: 10px;
   padding: 12px 14px 14px;
@@ -7092,42 +7095,109 @@ button.w1337-networks__chip--on:hover:not(:disabled) {
   gap: 6px;
 }
 
+.w1337-networks__list--dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+.w1337-networks__item {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.w1337-networks__item:hover {
+  border-color: color-mix(in srgb, var(--acc) 35%, var(--border));
+  background: var(--accent-soft);
+}
+
+.w1337-networks__item--active {
+  border-color: color-mix(in srgb, var(--acc) 45%, var(--border));
+  background: var(--accent-soft);
+}
+
+.w1337-networks__item--active:hover {
+  border-color: color-mix(in srgb, var(--acc) 45%, var(--border));
+  background: var(--accent-soft);
+}
+
+.w1337-networks__item--dragging {
+  border-color: color-mix(in srgb, var(--acc) 55%, var(--border));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+button.w1337-networks__grip {
+  flex: 0 0 auto;
+  width: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+  box-shadow: none;
+  opacity: 0.45;
+}
+
+button.w1337-networks__grip:hover:not(:disabled) {
+  opacity: 1;
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+button.w1337-networks__grip:active:not(:disabled) {
+  cursor: grabbing;
+  box-shadow: none;
+}
+
+button.w1337-networks__grip:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 button.w1337-networks__row {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  width: auto;
   text-align: left;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 4px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  border: none;
+  background: transparent;
   color: var(--text);
   cursor: pointer;
   font: inherit;
   font-weight: inherit;
   letter-spacing: normal;
   box-shadow: none;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease;
 }
 
 button.w1337-networks__row:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--acc) 35%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
   color: var(--text);
   box-shadow: none;
 }
 
 button.w1337-networks__row--active {
-  border-color: color-mix(in srgb, var(--acc) 45%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
 }
 
 button.w1337-networks__row--active:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--acc) 45%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
   color: var(--text);
   box-shadow: none;
 }
@@ -7208,6 +7278,12 @@ button.w1337-networks__row--active:hover:not(:disabled) {
   letter-spacing: 0.04em;
 }
 
+.w1337-networks__rpc-hint {
+  margin: -4px 0 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .w1337-networks__rpc-list {
   list-style: none;
   margin: 0 0 12px;
@@ -7220,7 +7296,28 @@ button.w1337-networks__row--active:hover:not(:disabled) {
 .w1337-networks__rpc-row {
   display: flex;
   align-items: stretch;
-  gap: 6px;
+  gap: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.w1337-networks__rpc-row:hover {
+  border-color: color-mix(in srgb, var(--acc) 35%, var(--border));
+  background: var(--accent-soft);
+}
+
+.w1337-networks__rpc-row--on {
+  border-color: color-mix(in srgb, var(--acc) 50%, var(--border));
+  background: var(--accent-soft);
+}
+
+.w1337-networks__rpc-row--on:hover {
+  border-color: color-mix(in srgb, var(--acc) 50%, var(--border));
+  background: var(--accent-soft);
 }
 
 button.w1337-networks__rpc-pick {
@@ -7230,10 +7327,10 @@ button.w1337-networks__rpc-pick {
   justify-content: space-between;
   gap: 8px;
   text-align: left;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 4px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  border: none;
+  background: transparent;
   color: var(--text);
   cursor: pointer;
   font: inherit;
@@ -7241,26 +7338,20 @@ button.w1337-networks__rpc-pick {
   letter-spacing: normal;
   box-shadow: none;
   min-width: 0;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease;
 }
 
 button.w1337-networks__rpc-pick:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--acc) 35%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
   color: var(--text);
   box-shadow: none;
 }
 
 button.w1337-networks__rpc-pick--on {
-  border-color: color-mix(in srgb, var(--acc) 50%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
 }
 
 button.w1337-networks__rpc-pick--on:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--acc) 50%, var(--border));
-  background: var(--accent-soft);
+  background: transparent;
   color: var(--text);
   box-shadow: none;
 }
@@ -7280,5 +7371,16 @@ button.w1337-networks__rpc-pick--on:hover:not(:disabled) {
   padding: 0;
   font-size: 18px;
   line-height: 1;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+button.ghost.w1337-networks__rpc-remove:hover:not(:disabled) {
+  background: transparent;
+  border: none;
+  color: var(--danger, #f87171);
+  box-shadow: none;
 }
 

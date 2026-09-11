@@ -8,7 +8,7 @@ import {
   type ChainDefinition,
   type ChainKind,
 } from './chainCatalog';
-import { setPreferredRpcMap, setCustomRpcMap, setCustomChainRpcCatalog } from './chainRpcRegistry';
+import { setPreferredRpcMap, setCustomRpcMap, setCustomChainRpcCatalog, setRpcOrderMap } from './chainRpcRegistry';
 import {
   normalizeAccounts,
   resolveActiveAccountId,
@@ -52,6 +52,10 @@ export interface AppSettings {
   preferredRpcByChain?: Record<string, string>;
   /** Custom RPC URLs appended per chain id. */
   customRpcByChain?: Record<string, string[]>;
+  /** User ranking of chain ids (Networks list + Assets picker). Missing = catalog fame order. */
+  chainOrder?: number[];
+  /** User ranking of RPC URLs per chain id. Missing = preferred + catalog merge. */
+  rpcOrderByChain?: Record<string, string[]>;
   /** User-added chains (not in the curated catalog). */
   customChains?: ChainDefinition[];
   /** When true, inject as window.ethereum (MetaMask drop-in). When false, use window.wallet1337. */
@@ -184,9 +188,44 @@ function normalizeCustomChains(
   return out.length ? out : undefined;
 }
 
+function normalizeChainOrder(raw: number[] | undefined): number[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: number[] = [];
+  const seen = new Set<number>();
+  for (const v of raw) {
+    const n = typeof v === 'number' ? v : Number(v);
+    if (!Number.isInteger(n) || n <= 0 || seen.has(n)) continue;
+    seen.add(n);
+    out.push(n);
+  }
+  return out.length ? out : undefined;
+}
+
+function normalizeRpcOrderMap(
+  raw: Record<string, string[]> | undefined,
+): Record<string, string[]> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const out: Record<string, string[]> = {};
+  for (const [k, list] of Object.entries(raw)) {
+    if (!Array.isArray(list)) continue;
+    const urls: string[] = [];
+    const seen = new Set<string>();
+    for (const u of list) {
+      if (typeof u !== 'string' || !u.trim()) continue;
+      const t = u.trim();
+      if (seen.has(t)) continue;
+      seen.add(t);
+      urls.push(t);
+    }
+    if (urls.length) out[k] = urls;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function applyRpcPreferences(settings: AppSettings): void {
   const preferred: Record<number, string> = {};
   const custom: Record<number, string[]> = {};
+  const rpcOrder: Record<number, string[]> = {};
   for (const [k, v] of Object.entries(settings.preferredRpcByChain ?? {})) {
     const id = Number(k);
     if (Number.isFinite(id) && v) preferred[id] = v;
@@ -195,11 +234,16 @@ function applyRpcPreferences(settings: AppSettings): void {
     const id = Number(k);
     if (Number.isFinite(id) && list?.length) custom[id] = list;
   }
+  for (const [k, list] of Object.entries(settings.rpcOrderByChain ?? {})) {
+    const id = Number(k);
+    if (Number.isFinite(id) && list?.length) rpcOrder[id] = list;
+  }
   const customChains = settings.customChains ?? [];
   setCustomChains(customChains);
   setCustomChainRpcCatalog(customChains);
   setPreferredRpcMap(preferred);
   setCustomRpcMap(custom);
+  setRpcOrderMap(rpcOrder);
 }
 
 export async function loadPersisted(): Promise<PersistedState> {
@@ -232,6 +276,8 @@ export async function loadPersisted(): Promise<PersistedState> {
           activeChainId: normalizeChainId(row.settings?.activeChainId),
           preferredRpcByChain: normalizePreferredRpcMap(row.settings?.preferredRpcByChain),
           customRpcByChain: normalizeCustomRpcMap(row.settings?.customRpcByChain),
+          chainOrder: normalizeChainOrder(row.settings?.chainOrder),
+          rpcOrderByChain: normalizeRpcOrderMap(row.settings?.rpcOrderByChain),
           customChains: normalizeCustomChains(row.settings?.customChains),
           replaceMetaMask: row.settings?.replaceMetaMask !== false,
           dappCompatByOrigin: normalizeDappCompatByOrigin(row.settings?.dappCompatByOrigin),
@@ -331,6 +377,12 @@ export async function patchSettings(patch: AppSettings): Promise<void> {
   }
   if (patch.dappCompatByOrigin !== undefined) {
     merged.dappCompatByOrigin = normalizeDappCompatByOrigin(patch.dappCompatByOrigin);
+  }
+  if (patch.chainOrder !== undefined) {
+    merged.chainOrder = normalizeChainOrder(patch.chainOrder);
+  }
+  if (patch.rpcOrderByChain !== undefined) {
+    merged.rpcOrderByChain = normalizeRpcOrderMap(patch.rpcOrderByChain);
   }
   applyRpcPreferences(merged);
   await savePersisted({

@@ -25,7 +25,6 @@ import {
 import { appendSwapToHistory } from '../lib/swapHistory';
 import { transactionExplorerUrl } from '../lib/explorerUrls';
 import { Select1337, type Select1337Group } from './Select1337';
-import { HardwareSignHint } from './HardwareSignHint';
 
 type BalEntry = {
   address: string;
@@ -439,9 +438,6 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
         placeholder={`Amount in ${nativeSym}`}
         inputMode="decimal"
       />
-      <p className="muted" style={{ fontSize: 11, margin: '4px 0 0' }}>
-        Destination chain native token — e.g. ETH on Ethereum, POL on Polygon, not a generic gas estimate.
-      </p>
 
       <Select1337
         id="gas-source-chain"
@@ -534,6 +530,7 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
       <div className="w1337-gas-actions">
         <button
           type="button"
+          className={quote ? 'ghost' : 'primary'}
           disabled={quoteBusy || execBusy || !sourceToken || !destNative}
           onClick={() => void requestQuote()}
         >
@@ -550,7 +547,6 @@ export function GasStationView({ settings }: { settings: AppSettings }) {
           {execBusy ? (hw ? 'Confirm on device…' : 'Topping up…') : 'Top up gas'}
         </button>
       </div>
-      <HardwareSignHint show={hw} />
     </div>
   );
 }

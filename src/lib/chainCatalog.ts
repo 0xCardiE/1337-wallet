@@ -1,3 +1,5 @@
+import { applyOrder } from './listOrder';
+
 /** Pre-seeded EVM chains with public RPCs (chainlist.org-style endpoints). */
 export type ChainKind = 'mainnet' | 'testnet';
 
@@ -673,8 +675,36 @@ const TESTNET_CHAINS: ChainDefinition[] = [
   },
 ];
 
+/**
+ * Default Networks list: well-known chains first, then the rest of the catalog
+ * in existing relative order. Users can drag to override (`chainOrder` in settings).
+ */
+export const DEFAULT_MAINNET_ORDER = [
+  1, 8453, 4663, 999, 56, 43114, 42161, 137, 143, 4326, 100,
+] as const;
+
+/** Testnets aligned with {@link DEFAULT_MAINNET_ORDER} (no HyperEVM/Avalanche/Gnosis testnet). */
+export const DEFAULT_TESTNET_ORDER = [
+  11155111, 84532, 46630, 97, 421614, 80002, 10143, 6342,
+] as const;
+
+function withSpotlightOrder(
+  chains: ChainDefinition[],
+  spotlight: readonly number[],
+): ChainDefinition[] {
+  const rank = new Map(spotlight.map((id, i) => [id, i]));
+  return [...chains].sort((a, b) => {
+    const ra = rank.get(a.chainId) ?? spotlight.length;
+    const rb = rank.get(b.chainId) ?? spotlight.length;
+    return ra - rb;
+  });
+}
+
 /** Curated spotlight chains — mainnets first, then popular testnets. */
-export const CHAIN_CATALOG: ChainDefinition[] = [...MAINNET_CHAINS, ...TESTNET_CHAINS];
+export const CHAIN_CATALOG: ChainDefinition[] = [
+  ...withSpotlightOrder(MAINNET_CHAINS, DEFAULT_MAINNET_ORDER),
+  ...withSpotlightOrder(TESTNET_CHAINS, DEFAULT_TESTNET_ORDER),
+];
 
 const byId = new Map<number, ChainDefinition>();
 for (const c of CHAIN_CATALOG) byId.set(c.chainId, c);
@@ -699,6 +729,19 @@ export function getCustomChains(): ChainDefinition[] {
 export function allChains(): ChainDefinition[] {
   if (customChainsById.size === 0) return CHAIN_CATALOG;
   return [...CHAIN_CATALOG, ...getCustomChains()];
+}
+
+/** Catalog + custom chains, ranked by user `chainOrder` (unknown ids ignored, new chains last). */
+export function chainsOrdered(kind?: ChainKind, order?: number[]): ChainDefinition[] {
+  const list = chainsByKind(kind);
+  if (!order?.length) return list;
+  const byChainId = new Map(list.map(c => [c.chainId, c]));
+  return applyOrder(
+    list.map(c => c.chainId),
+    order,
+  )
+    .map(id => byChainId.get(id))
+    .filter((c): c is ChainDefinition => !!c);
 }
 
 export function chainById(chainId: number): ChainDefinition | undefined {
