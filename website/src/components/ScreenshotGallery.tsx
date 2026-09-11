@@ -76,9 +76,11 @@ export function ScreenshotGallery() {
 
                 <div
                   className={
-                    multi
+                    feature.shots.length >= 3
                       ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3'
-                      : 'flex justify-center lg:justify-end'
+                      : feature.shots.length === 2
+                        ? 'grid gap-5 sm:grid-cols-2'
+                        : 'flex justify-center lg:justify-end'
                   }
                 >
                   {feature.shots.map(item => (

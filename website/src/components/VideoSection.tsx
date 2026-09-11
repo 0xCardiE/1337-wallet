@@ -11,7 +11,7 @@ export function VideoSection() {
           The signer, in the actual UI
         </h2>
         <p className="mt-4 text-muted">
-          Confirm, RPC, revoke, swap, batch, top up gas. These are live captures — click any of
+          Confirm, RPC, ENS, Passport, drag-rank chains. These are live captures — click any of
           them to enlarge. Install the extension and try the same screens on a dapp you already
           use.
         </p>
