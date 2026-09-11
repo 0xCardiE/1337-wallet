@@ -91,7 +91,7 @@ function storeProps(name: string) {
 export function BrowserChips() {
   return (
     <ul className="browser-chips">
-      {SUPPORTED_BROWSERS.map(browser => (
+      {SUPPORTED_BROWSERS.filter(browser => browser.id !== 'chrome').map(browser => (
         <li key={browser.id}>
           <a className="browser-chip" {...storeProps(browser.name)}>
             <BrowserIcon id={browser.id} className="browser-chip__icon" />

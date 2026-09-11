@@ -29,13 +29,10 @@ export function Hero() {
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">{SITE.description}</p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8">
             <ChromeDownload />
-            <a href="#features" className="btn-secondary">
-              See the features
-            </a>
+            <BrowserChips />
           </div>
-          <BrowserChips />
         </div>
 
         <HeroDevice />
