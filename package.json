@@ -33,7 +33,8 @@
     "wallet-research:search": "npm run search --prefix wallet-research",
     "wallet-research:export": "npm run export --prefix wallet-research",
     "website": "npm run dev --prefix website",
-    "website:build": "npm run build --prefix website"
+    "website:build": "npm run build --prefix website",
+    "website:deploy": "bash scripts/deploy-website.sh"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

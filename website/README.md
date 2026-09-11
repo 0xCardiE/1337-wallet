@@ -35,6 +35,22 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run website:build
 ```
 
+Static files land in `website/out/` (`output: "export"`). nginx on 1337wallet.io serves that folder.
+
+## Deploy
+
+Production is `https://1337wallet.io` — nginx root `/var/www/1337-wallet/website/out`.
+
+Pushes to `main` that touch `website/` run `.github/workflows/website.yml`: build on GitHub Actions, then rsync `out/` to the server. Use **Actions → Deploy website → Run workflow** for a manual deploy.
+
+From this machine (SSH key already on the server):
+
+```bash
+npm run website:deploy
+```
+
+Do not put SSH passwords or private keys in the repo. The Actions key is GitHub secret `WEBSITE_DEPLOY_KEY`.
+
 ## Customize
 
 - Copy & links: `src/lib/site.ts`
