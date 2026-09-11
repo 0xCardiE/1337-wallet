@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { BuiltOnEthereumBadge } from '@/components/BuiltOnEthereumBadge';
-import { FOOTER_EXTRA_LINKS, NAV_LINKS, SITE } from '@/lib/site';
+import { FOOTER_EXTRA_LINKS, SITE } from '@/lib/site';
 
 export function SiteFooter() {
   return (
@@ -25,13 +25,6 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-medium text-text">Site</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
-            {NAV_LINKS.filter(link => link.href !== '/faq').map(link => (
-              <li key={link.href}>
-                <Link href={link.href} className="hover:text-text">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
             {FOOTER_EXTRA_LINKS.map(link => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-text">
@@ -56,16 +49,6 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/security" className="hover:text-text">
-                Security
-              </Link>
-            </li>
-            <li>
-              <Link href="/faq" className="hover:text-text">
-                FAQ
-              </Link>
-            </li>
-            <li>
               <Link href="/security#hardware" className="hover:text-text">
                 Hardware wallets
               </Link>
@@ -77,24 +60,9 @@ export function SiteFooter() {
           <p className="text-sm font-medium text-text">Builders</p>
           <ul className="mt-3 space-y-2 text-sm text-muted">
             <li>
-              <Link href="/integrate" className="hover:text-text">
-                Integration guide
-              </Link>
-            </li>
-            <li>
               <Link href="/rpc" className="hover:text-text">
                 RPC methods
               </Link>
-            </li>
-            <li>
-              <a
-                href={SITE.chromeStoreUrl}
-                className="hover:text-text"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Chrome Web Store
-              </a>
             </li>
             <li>
               <a

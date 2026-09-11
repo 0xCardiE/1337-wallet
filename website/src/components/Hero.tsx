@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ChromeDownload } from '@/components/Outbound';
 import { SITE } from '@/lib/site';
 
@@ -20,22 +19,6 @@ export function Hero() {
 
         <div id="download" className="flex flex-wrap items-center gap-4 scroll-mt-24">
           <ChromeDownload />
-          <Link href="/integrate" className="btn-secondary">
-            Integrate
-          </Link>
-          <Link href="/security" className="text-sm text-muted underline-offset-4 hover:text-text hover:underline">
-            Security
-          </Link>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {['Easy RPC switching', 'Full decode on every confirm', 'No analytics, no tracking'].map(
-            item => (
-              <div key={item} className="card-surface px-4 py-3 text-sm text-muted">
-                {item}
-              </div>
-            ),
-          )}
         </div>
       </div>
     </section>

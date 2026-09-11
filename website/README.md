@@ -4,7 +4,7 @@ Next.js landing page and integration docs for **1337 Wallet**.
 
 ## Pages
 
-- `/` — landing (features, tools, screenshots, privacy, contact/FAQ)
+- `/` — landing (screenshots, privacy, contact/FAQ)
 - `/privacy` — privacy policy (Chrome Web Store privacy-policy URL)
 - `/terms` — terms of use (self-custody tool; no fund guarantee)
 - `/security` — security FAQ (MetaMask / Rabby comparisons, hardware, burner keys)

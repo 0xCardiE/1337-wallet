@@ -81,88 +81,14 @@ export const STORE_SCREENSHOTS = [
 ] as const;
 
 export const NAV_LINKS = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#tools', label: 'Tools' },
   { href: '/faq', label: 'FAQ' },
   { href: '/integrate', label: 'Integrate' },
+  { href: '/security', label: 'Security' },
 ] as const;
 
 export const FOOTER_EXTRA_LINKS = [
   { href: '/#how-it-works', label: 'How it works' },
   { href: '/#contact', label: 'Contact' },
-] as const;
-
-export const CORE_FEATURES = [
-  {
-    title: 'Easy RPC switching',
-    description:
-      '20+ EVM chains ship with curated public endpoints. Switch per chain in one click, add a custom URL if you want, and run the network doctor when something looks off.',
-    icon: 'rpc',
-  },
-  {
-    title: 'Inline send',
-    description:
-      'Send native or ERC-20 tokens without leaving the home screen. Quick amounts, address paste, and confirmation in one flow.',
-    icon: 'send',
-  },
-  {
-    title: 'ENS built in',
-    description:
-      'Resolve names on send, manage your portfolio, and work with DNS-style domains from the Tools tab.',
-    icon: 'ens',
-  },
-  {
-    title: 'Human Passport',
-    description:
-      'See Gitcoin Passport scores inline when you interact with addresses. Useful context for sybil resistance and trust.',
-    icon: 'passport',
-  },
-  {
-    title: 'Readable before you sign',
-    description:
-      'Human summary, local simulation (pass / fail / revert), and contract danger flags. Then the decoded details if you want them.',
-    icon: 'tx',
-  },
-  {
-    title: 'History via Etherscan',
-    description:
-      'Pull transaction history through your own explorer API key. Every row opens straight to the matching Etherscan page.',
-    icon: 'history',
-  },
-] as const;
-
-export const TOOLS = [
-  {
-    id: 'signings',
-    title: 'Signings',
-    description:
-      'Local history of messages and typed data this wallet signed. SIWE, permits, EIP-712. Device only.',
-  },
-  {
-    id: 'approvals',
-    title: 'Approvals',
-    description: 'Review and revoke ERC-20, NFT, and Permit2 allowances from the wallet.',
-  },
-  {
-    id: 'swap',
-    title: 'Swap',
-    description: 'Multichain swaps via LI.FI with no extra fees. Routes, slippage, and execution in-wallet.',
-  },
-  {
-    id: 'ens',
-    title: 'ENS & DNS',
-    description: 'Register, renew, and manage .eth names and related DNS records.',
-  },
-  {
-    id: 'multisend',
-    title: 'Multisend',
-    description: 'Paste a list of addresses and batch-send native or ERC-20 in one go.',
-  },
-  {
-    id: 'gas',
-    title: 'Gas station',
-    description: 'Top up gas across chains when you are running low on the network you need.',
-  },
 ] as const;
 
 export const PROVIDER = {
