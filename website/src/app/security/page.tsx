@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
+import { Kicker } from '@/components/Kicker';
 import { DiscordJoin } from '@/components/Outbound';
 import { SECURITY_COMPARISON, SECURITY_FAQ } from '@/content/securityFaq';
 
@@ -15,9 +16,7 @@ export default function SecurityPage() {
     <div>
       <section className="grid-glow border-b border-border/60">
         <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-            Security
-          </p>
+          <Kicker>Security</Kicker>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
             Same custody class as MetaMask and Rabby
           </h1>
@@ -36,7 +35,7 @@ export default function SecurityPage() {
           Workflow and privacy differ. Who can move funds does not.
         </p>
 
-        <div className="mt-8 overflow-x-auto rounded-2xl border border-border/80">
+        <div className="mt-8 overflow-x-auto rounded-[6px] border border-border/80">
           <table className="w-full min-w-[52rem] text-left text-sm">
             <thead className="bg-bg-elevated text-text">
               <tr>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CodeBlock } from '@/components/CodeBlock';
+import { Kicker } from '@/components/Kicker';
 import { PROVIDER, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -13,9 +14,7 @@ export default function IntegratePage() {
   return (
     <div className="mx-auto max-w-4xl px-5 py-16 md:py-20">
       <div className="max-w-3xl">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-          For builders
-        </p>
+        <Kicker>For builders</Kicker>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
           Integrate {SITE.name}
         </h1>

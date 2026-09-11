@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
+import { Kicker } from '@/components/Kicker';
 import { DiscordJoin } from '@/components/Outbound';
 import { PRODUCT_FAQ } from '@/content/productFaq';
 
@@ -15,7 +16,7 @@ export default function FaqPage() {
     <div>
       <section className="grid-glow border-b border-border/60">
         <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">FAQ</p>
+          <Kicker>FAQ</Kicker>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
             Questions about the product
           </h1>

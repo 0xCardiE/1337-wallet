@@ -1,12 +1,11 @@
+import { Kicker } from '@/components/Kicker';
 import { ScreenshotGallery } from '@/components/ScreenshotGallery';
 
 export function VideoSection() {
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 py-20">
       <div className="max-w-3xl">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-          Features
-        </p>
+        <Kicker>Features</Kicker>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
           What you get
         </h2>

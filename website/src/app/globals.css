@@ -2,15 +2,17 @@
 
 :root {
   --bg: #050806;
-  --bg-card: rgba(20, 20, 22, 0.92);
-  --bg-elevated: rgba(26, 26, 30, 0.95);
-  --border: rgba(42, 42, 48, 0.85);
+  --bg-card: rgba(12, 16, 13, 0.92);
+  --bg-elevated: rgba(18, 24, 20, 0.95);
+  --border: rgba(34, 197, 94, 0.16);
   --text: #f4f4f5;
   --text-muted: #9ca3af;
   --accent: #22c55e;
   --accent-deep: #4ade80;
   --accent-soft: rgba(34, 197, 94, 0.14);
   --accent-glow: rgba(34, 197, 94, 0.22);
+  --radius-btn: 4px;
+  --radius-card: 6px;
 }
 
 @theme inline {
@@ -44,18 +46,152 @@ body {
 
 .grid-glow {
   background-image:
-    radial-gradient(circle at 20% 20%, var(--accent-glow) 0%, transparent 42%),
-    radial-gradient(circle at 80% 0%, rgba(34, 197, 94, 0.08) 0%, transparent 35%),
-    linear-gradient(rgba(34, 197, 94, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 197, 94, 0.04) 1px, transparent 1px);
-  background-size: auto, auto, 48px 48px, 48px 48px;
+    radial-gradient(circle at 18% 12%, rgba(34, 197, 94, 0.1) 0%, transparent 40%),
+    linear-gradient(rgba(34, 197, 94, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.045) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 55% 50% at 78% 48%, rgba(34, 197, 94, 0.2) 0%, transparent 70%),
+    radial-gradient(circle at 16% 18%, rgba(34, 197, 94, 0.12) 0%, transparent 42%),
+    linear-gradient(rgba(34, 197, 94, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.07) 1px, transparent 1px);
+  background-size: auto, auto, 24px 24px, 24px 24px;
+}
+
+.hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(0, 0, 0, 0.22) 3px,
+    rgba(0, 0, 0, 0.22) 4px
+  );
+  opacity: 0.28;
+}
+
+.hero-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 52%;
+  overflow: hidden;
+  perspective: 420px;
+  perspective-origin: 50% 100%;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.45) 18%,
+    #000 48%,
+    rgba(0, 0, 0, 0.85) 82%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.45) 18%,
+    #000 48%,
+    rgba(0, 0, 0, 0.85) 82%,
+    transparent 100%
+  );
+}
+
+.hero-floor-grid {
+  position: absolute;
+  left: -22%;
+  width: 144%;
+  bottom: -8%;
+  height: 165%;
+  background-image:
+    linear-gradient(rgba(34, 197, 94, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.28) 1px, transparent 1px);
+  background-size: 36px 36px;
+  transform: rotateX(62deg);
+  transform-origin: 50% 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-floor {
+    height: 42%;
+    opacity: 0.65;
+  }
+}
+
+.hero-product {
+  position: relative;
+}
+
+.hero-product::before {
+  content: "";
+  position: absolute;
+  inset: 8% 4%;
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.32), transparent 72%);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.hero-product > * {
+  position: relative;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.kicker__index {
+  color: var(--accent);
+}
+
+.kicker__rule {
+  flex: 1;
+  height: 1px;
+  min-width: 2.5rem;
+  background: linear-gradient(to right, rgba(34, 197, 94, 0.45), transparent 90%);
+}
+
+.status-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 .card-surface {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  backdrop-filter: blur(12px);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(8px);
 }
 
 .btn-primary {
@@ -63,18 +199,17 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 9999px;
+  padding: 0.7rem 1.15rem;
+  border-radius: var(--radius-btn);
   background: var(--accent);
   color: #041108;
   font-weight: 600;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .btn-primary:hover {
   background: var(--accent-deep);
-  box-shadow: 0 0 24px var(--accent-glow);
-  transform: translateY(-1px);
+  box-shadow: 0 0 22px var(--accent-glow);
 }
 
 .btn-secondary {
@@ -82,18 +217,148 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
+  padding: 0.7rem 1.15rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid rgba(34, 197, 94, 0.35);
   background: rgba(255, 255, 255, 0.02);
   color: var(--text);
   font-weight: 500;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-secondary:hover {
-  border-color: rgba(34, 197, 94, 0.45);
-  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.12);
+}
+
+.terminal-frame {
+  overflow: hidden;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: var(--radius-card);
+  background: #050806;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.terminal-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 1.85rem;
+  padding: 0 0.7rem;
+  border-bottom: 1px solid rgba(34, 197, 94, 0.18);
+  background: rgba(10, 16, 12, 0.96);
+}
+
+.terminal-frame__dots {
+  display: flex;
+  gap: 5px;
+}
+
+.terminal-frame__dots i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3f3f46;
+}
+
+.terminal-frame__dots i:nth-child(1) {
+  background: #ef4444;
+}
+
+.terminal-frame__dots i:nth-child(2) {
+  background: #eab308;
+}
+
+.terminal-frame__dots i:nth-child(3) {
+  background: #22c55e;
+}
+
+.terminal-frame__title {
+  flex: 1;
+  overflow: hidden;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--accent-deep);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-frame__zoom {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.terminal-frame__body {
+  background: #000;
+}
+
+.colophon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  padding: 0 1.25rem 1.5rem;
+}
+
+.colophon-rule {
+  display: flex;
+  align-items: center;
+  width: min(36rem, 100%);
+  gap: 0.7rem;
+}
+
+.colophon-rule::before,
+.colophon-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(34, 197, 94, 0.28);
+}
+
+.colophon-diamond {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.colophon-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.barcode {
+  display: block;
+  width: 5.5rem;
+  height: 0.85rem;
+  color: var(--accent);
+}
+
+.site-header {
+  border-bottom: 1px solid rgba(34, 197, 94, 0.16);
+  background: rgba(5, 8, 6, 0.86);
+  backdrop-filter: blur(16px);
+}
+
+.site-header__accent {
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .prose-docs h2 {
@@ -125,7 +390,7 @@ body {
 .prose-docs code:not(pre code),
 .faq-answer code {
   padding: 0.15rem 0.4rem;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   background: rgba(34, 197, 94, 0.1);
   color: var(--accent-deep);
   font-size: 0.875em;

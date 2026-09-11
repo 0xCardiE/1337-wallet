@@ -1,12 +1,11 @@
+import { Kicker } from '@/components/Kicker';
 import { DiscordJoin } from '@/components/Outbound';
 
 export function ContactSection() {
   return (
     <section id="contact" className="mx-auto max-w-6xl px-5 py-20">
       <div className="max-w-2xl">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-          Contact
-        </p>
+        <Kicker>Contact</Kicker>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
           Questions, integrations, feature requests
         </h2>

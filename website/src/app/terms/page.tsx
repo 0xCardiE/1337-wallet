@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Kicker } from '@/components/Kicker';
 import { TERMS_SUMMARY, TERMS_UPDATED } from '@/content/terms';
 import { SITE } from '@/lib/site';
 
@@ -13,9 +14,7 @@ export default function TermsPage() {
     <div>
       <section className="grid-glow border-b border-border/60">
         <div className="mx-auto max-w-3xl px-5 py-16 md:py-20">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-            Terms
-          </p>
+          <Kicker>Terms</Kicker>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Terms of use</h1>
           <p className="mt-5 text-lg leading-relaxed text-muted">{TERMS_SUMMARY}</p>
           <p className="mt-4 text-sm text-muted">Last updated {TERMS_UPDATED}.</p>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Kicker } from '@/components/Kicker';
 import {
   PRIVACY_NETWORK,
   PRIVACY_NEVER,
@@ -19,9 +20,7 @@ export default function PrivacyPage() {
     <div>
       <section className="grid-glow border-b border-border/60">
         <div className="mx-auto max-w-3xl px-5 py-16 md:py-20">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
-            Privacy
-          </p>
+          <Kicker>Privacy</Kicker>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Privacy policy</h1>
           <p className="mt-5 text-lg leading-relaxed text-muted">{PRIVACY_SUMMARY}</p>
           <p className="mt-4 text-sm text-muted">Last updated {PRIVACY_UPDATED}.</p>

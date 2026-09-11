@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Kicker } from '@/components/Kicker';
 import { ChromeDownload } from '@/components/Outbound';
+import { TerminalFrame, frameTitleFromSrc } from '@/components/TerminalFrame';
 import { FEATURE_SHOTS, PRODUCT_FEATURES, type FeatureShot } from '@/lib/site';
 
 function similarPairHeightRatio(shots: readonly FeatureShot[]): number | null {
@@ -12,6 +14,10 @@ function similarPairHeightRatio(shots: readonly FeatureShot[]): number | null {
   const taller = Math.max(...ratios);
   if (taller / shorter > 1.18) return null;
   return shorter;
+}
+
+function featureIndexLabel(index: number): string {
+  return String(index + 1).padStart(2, '0');
 }
 
 export function ScreenshotGallery() {
@@ -74,14 +80,19 @@ export function ScreenshotGallery() {
                 }
               >
                 <div className={`${multi ? 'max-w-3xl' : 'max-w-xl'} ${flip ? 'lg:order-2' : ''}`}>
-                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-deep">
+                  <Kicker index={featureIndexLabel(featureIndex)} rule>
                     {feature.kicker}
-                  </p>
+                  </Kicker>
                   <h3 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">
                     {feature.title}
                   </h3>
                   <p className="mt-4 text-base leading-relaxed text-muted">{feature.hook}</p>
-                  <p className="mt-4 text-sm leading-relaxed text-accent-deep">{feature.tryIt}</p>
+                  <p className="mt-4 text-sm leading-relaxed text-accent-deep">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em]">
+                      try it →{' '}
+                    </span>
+                    {feature.tryIt}
+                  </p>
                 </div>
 
                 <div
@@ -94,7 +105,7 @@ export function ScreenshotGallery() {
                   }
                 >
                   {feature.shots.map(item => (
-                    <figure key={item.src} className="card-surface overflow-hidden">
+                    <figure key={item.src} className="min-w-0">
                       <button
                         type="button"
                         className="group relative block w-full cursor-zoom-in text-left"
@@ -104,40 +115,39 @@ export function ScreenshotGallery() {
                         }}
                         aria-label={`Enlarge screenshot: ${item.alt}`}
                       >
-                        <span className="relative block bg-black px-3 py-4 sm:px-4 sm:py-5">
-                          <span
-                            className="relative mx-auto block w-full max-w-[420px]"
-                            style={
-                              pairRatio
-                                ? { aspectRatio: `${1} / ${pairRatio}` }
-                                : undefined
-                            }
-                          >
-                            <Image
-                              src={`${item.src}?v=5`}
-                              alt={item.alt}
-                              width={item.width}
-                              height={item.height}
-                              unoptimized
-                              priority={featureIndex < 2}
-                              sizes={
-                                multi
-                                  ? '(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw'
-                                  : '(min-width: 1024px) 480px, 100vw'
-                              }
-                              className={
+                        <TerminalFrame title={frameTitleFromSrc(item.src)} zoomHint>
+                          <span className="relative block bg-black">
+                            <span
+                              className="relative mx-auto block w-full max-w-[420px]"
+                              style={
                                 pairRatio
-                                  ? 'absolute inset-0 h-full w-full object-cover object-top'
-                                  : 'h-auto w-full'
+                                  ? { aspectRatio: `${1} / ${pairRatio}` }
+                                  : undefined
                               }
-                            />
+                            >
+                              <Image
+                                src={`${item.src}?v=5`}
+                                alt={item.alt}
+                                width={item.width}
+                                height={item.height}
+                                unoptimized
+                                priority={featureIndex < 2}
+                                sizes={
+                                  multi
+                                    ? '(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw'
+                                    : '(min-width: 1024px) 480px, 100vw'
+                                }
+                                className={
+                                  pairRatio
+                                    ? 'absolute inset-0 h-full w-full object-cover object-top'
+                                    : 'h-auto w-full'
+                                }
+                              />
+                            </span>
                           </span>
-                        </span>
-                        <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-xs text-white opacity-90 backdrop-blur-sm group-hover:opacity-100">
-                          Enlarge
-                        </span>
+                        </TerminalFrame>
                       </button>
-                      <figcaption className="px-4 py-3 text-sm leading-relaxed text-muted">
+                      <figcaption className="mt-3 px-1 text-sm leading-relaxed text-muted">
                         {item.caption}
                       </figcaption>
                     </figure>
@@ -169,17 +179,19 @@ export function ScreenshotGallery() {
             <p id={titleId} className="sr-only">
               {shot.alt}
             </p>
-            <div className="relative max-h-[78vh] w-full max-w-3xl overflow-auto rounded-2xl border border-border bg-black">
-              <Image
-                src={`${shot.src}?v=5`}
-                alt={shot.alt}
-                width={shot.width}
-                height={shot.height}
-                unoptimized
-                sizes="(min-width: 768px) 768px, 94vw"
-                className="mx-auto h-auto w-full object-contain"
-                priority
-              />
+            <div className="relative max-h-[78vh] w-full max-w-3xl overflow-auto">
+              <TerminalFrame title={frameTitleFromSrc(shot.src)}>
+                <Image
+                  src={`${shot.src}?v=5`}
+                  alt={shot.alt}
+                  width={shot.width}
+                  height={shot.height}
+                  unoptimized
+                  sizes="(min-width: 768px) 768px, 94vw"
+                  className="mx-auto h-auto w-full object-contain"
+                  priority
+                />
+              </TerminalFrame>
             </div>
             <p className="mt-3 max-w-xl text-center text-sm text-zinc-300">{shot.caption}</p>
             <div className="mt-3 flex items-center gap-3">
