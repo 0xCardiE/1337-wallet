@@ -8,12 +8,11 @@ export function VideoSection() {
           Features
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-          The signer, in the actual UI
+          What you get
         </h2>
         <p className="mt-4 text-muted">
-          Confirm, RPC, ENS, Passport, drag-rank chains. These are live captures — click any of
-          them to enlarge. Install the extension and try the same screens on a dapp you already
-          use.
+          Confirm sheet, RPC switching, ENS, Human Passport, and the chain dropdown order. Click a
+          screenshot to enlarge, then install and try the same screens.
         </p>
       </div>
 

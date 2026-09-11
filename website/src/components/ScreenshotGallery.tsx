@@ -3,7 +3,16 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ChromeDownload } from '@/components/Outbound';
-import { FEATURE_SHOTS, PRODUCT_FEATURES } from '@/lib/site';
+import { FEATURE_SHOTS, PRODUCT_FEATURES, type FeatureShot } from '@/lib/site';
+
+function similarPairHeightRatio(shots: readonly FeatureShot[]): number | null {
+  if (shots.length !== 2) return null;
+  const ratios = shots.map(shot => shot.height / shot.width);
+  const shorter = Math.min(...ratios);
+  const taller = Math.max(...ratios);
+  if (taller / shorter > 1.18) return null;
+  return shorter;
+}
 
 export function ScreenshotGallery() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -55,6 +64,7 @@ export function ScreenshotGallery() {
         {PRODUCT_FEATURES.map((feature, featureIndex) => {
           const multi = feature.shots.length > 1;
           const flip = !multi && featureIndex % 2 === 1;
+          const pairRatio = similarPairHeightRatio(feature.shots);
 
           return (
             <article key={feature.id} id={feature.id} className="scroll-mt-28">
@@ -95,20 +105,33 @@ export function ScreenshotGallery() {
                         aria-label={`Enlarge screenshot: ${item.alt}`}
                       >
                         <span className="relative block bg-black px-3 py-4 sm:px-4 sm:py-5">
-                          <Image
-                            src={item.src}
-                            alt={item.alt}
-                            width={item.width}
-                            height={item.height}
-                            unoptimized
-                            priority={featureIndex < 2}
-                            sizes={
-                              multi
-                                ? '(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw'
-                                : '(min-width: 1024px) 480px, 100vw'
+                          <span
+                            className="relative mx-auto block w-full max-w-[420px]"
+                            style={
+                              pairRatio
+                                ? { aspectRatio: `${1} / ${pairRatio}` }
+                                : undefined
                             }
-                            className="mx-auto h-auto w-full max-w-[420px]"
-                          />
+                          >
+                            <Image
+                              src={`${item.src}?v=5`}
+                              alt={item.alt}
+                              width={item.width}
+                              height={item.height}
+                              unoptimized
+                              priority={featureIndex < 2}
+                              sizes={
+                                multi
+                                  ? '(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw'
+                                  : '(min-width: 1024px) 480px, 100vw'
+                              }
+                              className={
+                                pairRatio
+                                  ? 'absolute inset-0 h-full w-full object-cover object-top'
+                                  : 'h-auto w-full'
+                              }
+                            />
+                          </span>
                         </span>
                         <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-xs text-white opacity-90 backdrop-blur-sm group-hover:opacity-100">
                           Enlarge
@@ -127,7 +150,7 @@ export function ScreenshotGallery() {
       </div>
 
       <div className="mt-16 flex flex-wrap items-center gap-4 border-t border-border/60 pt-10">
-        <p className="text-sm text-muted">Install it and try the sheet on a real dapp.</p>
+        <p className="text-sm text-muted">Install, then try this on a dapp you already use.</p>
         <ChromeDownload className="btn-primary text-sm" />
       </div>
 
@@ -148,7 +171,7 @@ export function ScreenshotGallery() {
             </p>
             <div className="relative max-h-[78vh] w-full max-w-3xl overflow-auto rounded-2xl border border-border bg-black">
               <Image
-                src={shot.src}
+                src={`${shot.src}?v=5`}
                 alt={shot.alt}
                 width={shot.width}
                 height={shot.height}
