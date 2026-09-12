@@ -6,13 +6,18 @@ import { Kicker } from '@/components/Kicker';
 import { TerminalFrame, frameTitleFromSrc } from '@/components/TerminalFrame';
 import { FEATURE_SHOTS, PRODUCT_FEATURES, type FeatureShot } from '@/lib/site';
 
-function similarPairHeightRatio(shots: readonly FeatureShot[]): number | null {
-  if (shots.length !== 2) return null;
+function similarShotHeightMatch(
+  shots: readonly FeatureShot[],
+): { ratio: number; cover: boolean } | null {
+  if (shots.length < 2) return null;
   const ratios = shots.map(shot => shot.height / shot.width);
   const shorter = Math.min(...ratios);
   const taller = Math.max(...ratios);
   if (taller / shorter > 1.18) return null;
-  return shorter;
+  // Pairs crop to the shorter frame. Three-up rows keep every shot visible
+  // and pad the shorter ones to the tallest, so open dropdowns are not clipped.
+  if (shots.length >= 3) return { ratio: taller, cover: false };
+  return { ratio: shorter, cover: true };
 }
 
 function featureIndexLabel(index: number): string {
@@ -69,7 +74,7 @@ export function ScreenshotGallery() {
         {PRODUCT_FEATURES.map((feature, featureIndex) => {
           const multi = feature.shots.length > 1;
           const flip = !multi && featureIndex % 2 === 1;
-          const pairRatio = similarPairHeightRatio(feature.shots);
+          const heightMatch = similarShotHeightMatch(feature.shots);
 
           return (
             <article key={feature.id} id={feature.id} className="scroll-mt-28">
@@ -115,12 +120,16 @@ export function ScreenshotGallery() {
                         aria-label={`Enlarge screenshot: ${item.alt}`}
                       >
                         <TerminalFrame title={frameTitleFromSrc(item.src)} zoomHint>
-                          <span className="relative block bg-black">
+                          <span
+                            className={`relative block ${
+                              heightMatch && !heightMatch.cover ? 'bg-[#090c0a]' : 'bg-black'
+                            }`}
+                          >
                             <span
                               className="relative mx-auto block w-full max-w-[420px]"
                               style={
-                                pairRatio
-                                  ? { aspectRatio: `${1} / ${pairRatio}` }
+                                heightMatch
+                                  ? { aspectRatio: `${1} / ${heightMatch.ratio}` }
                                   : undefined
                               }
                             >
@@ -137,8 +146,10 @@ export function ScreenshotGallery() {
                                     : '(min-width: 1024px) 480px, 100vw'
                                 }
                                 className={
-                                  pairRatio
-                                    ? 'absolute inset-0 h-full w-full object-cover object-top'
+                                  heightMatch
+                                    ? `absolute inset-0 h-full w-full object-top ${
+                                        heightMatch.cover ? 'object-cover' : 'object-contain'
+                                      }`
                                     : 'h-auto w-full'
                                 }
                               />
