@@ -9,6 +9,7 @@ import {
   type TxRiskReport,
 } from './txRisk';
 import { CREATEX_ADDRESS, DISPERSE_CREATEX_CALLDATA } from './disperseCreate2';
+import { parseWatchAssetParams } from './watchAsset';
 
 function shortAddress(addr: string): string {
   if (addr.length < 12) return addr;
@@ -133,6 +134,18 @@ export function humanizePendingRequest(args: {
 
   if (request.method === 'personal_sign') {
     return { headline: 'Sign a message from this site' };
+  }
+
+  if (request.method === 'wallet_watchAsset') {
+    try {
+      const parsed = parseWatchAssetParams(request.params);
+      return {
+        headline: parsed.symbol ? `Add ${parsed.symbol} to Assets` : 'Add a token to Assets',
+        detail: parsed.address,
+      };
+    } catch {
+      return { headline: 'Add a token to Assets' };
+    }
   }
 
   if (request.method !== 'eth_sendTransaction') {

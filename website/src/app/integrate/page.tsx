@@ -148,8 +148,9 @@ const address = await signer.getAddress();`}
 
         <h2>Supported methods</h2>
         <p>
-          Connect, switch chain, send, <code>personal_sign</code>, and typed data (Permit2, EIP-2612,
-          Pendle orders). <code>wallet_getCapabilities</code> always returns empty per-chain objects
+          Connect, switch chain, <code>wallet_watchAsset</code> (ERC-20 add-token), send,{' '}
+          <code>personal_sign</code>, and typed data (Permit2, EIP-2612, Pendle orders).{' '}
+          <code>wallet_getCapabilities</code> always returns empty per-chain objects
           so Uniswap / wagmi fall back to <code>eth_sendTransaction</code>. Full table, including
           what we do not implement and what dapps use instead, is on{' '}
           <Link href="/rpc" className="text-text underline-offset-4 hover:underline">

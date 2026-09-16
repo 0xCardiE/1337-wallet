@@ -119,6 +119,39 @@ Issued At: 2026-01-01T00:00:00.000Z`;
     expect((await pending).code).toBe(4001);
   });
 
+  test('wallet_watchAsset confirms an ERC-20 onto Assets', async ({
+    context,
+    extensionId,
+  }) => {
+    const wallet = await openUnlockedWallet(context, extensionId);
+    const dapp = await openDappPage(context);
+    await providerRequest(dapp, 'eth_requestAccounts');
+
+    const payload = {
+      type: 'ERC20',
+      options: {
+        address: USDC,
+        symbol: 'USDC',
+        decimals: 6,
+      },
+    };
+
+    const rejected = providerRequestError(dapp, 'wallet_watchAsset', payload);
+    await expect(wallet.getByTestId('tx-reject')).toBeVisible();
+    await expect(wallet.locator('body')).toContainText(/add token|USDC/i);
+    await wallet.getByTestId('tx-reject').click();
+    expect((await rejected).code).toBe(4001);
+
+    const added = providerRequest(dapp, 'wallet_watchAsset', payload);
+    await expect(wallet.getByTestId('tx-approve')).toBeVisible();
+    await wallet.getByTestId('tx-approve').click();
+    expect(await added).toBe(true);
+
+    await expect(wallet.getByTestId('tx-approve')).toHaveCount(0);
+    await expect(wallet.getByTestId('wallet-tab-assets')).toBeVisible();
+    await expect(wallet.locator('body')).toContainText(/USDC/, { timeout: 15_000 });
+  });
+
   test('Burner Mode auto-signs an ordinary message', async ({
     context,
     extensionId,
@@ -135,5 +168,22 @@ Issued At: 2026-01-01T00:00:00.000Z`;
 
     await wallet.getByTestId('wallet-tab-tools').click();
     await expect(wallet.locator('body')).toContainText(/ordinary hello|sign a message/i);
+  });
+
+  test('Burner Mode still confirms wallet_watchAsset', async ({
+    context,
+    extensionId,
+  }) => {
+    const wallet = await openUnlockedWallet(context, extensionId, { instant: true });
+    const dapp = await openDappPage(context);
+    await providerRequest(dapp, 'eth_requestAccounts');
+
+    const pending = providerRequestError(dapp, 'wallet_watchAsset', {
+      type: 'ERC20',
+      options: { address: USDC, symbol: 'USDC', decimals: 6 },
+    });
+    await expect(wallet.getByTestId('tx-reject')).toBeVisible();
+    await wallet.getByTestId('tx-reject').click();
+    expect((await pending).code).toBe(4001);
   });
 });

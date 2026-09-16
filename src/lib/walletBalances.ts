@@ -783,6 +783,7 @@ export async function loadWalletBalancesForChain(
     explorerApiKey?: string;
     skipAddresses?: Iterable<string>;
     promoteAddresses?: Iterable<string>;
+    extraProbes?: OnChainBalanceProbe[];
     includeDustProbes?: boolean;
   },
 ): Promise<{ rows: WalletBalEntry[]; error: string | null }> {
@@ -823,10 +824,12 @@ export async function loadWalletBalancesForChain(
   }
 
   try {
-    const extra =
-      options?.refreshRpc && includeDustProbes
+    const extra = [
+      ...(options?.extraProbes ?? []),
+      ...(options?.refreshRpc && includeDustProbes
         ? await discoverHeldTokenProbes(chainId, holder, options.explorerApiKey)
-        : [];
+        : []),
+    ];
     const probes = await collectBalanceProbes({
       chainId,
       holder,

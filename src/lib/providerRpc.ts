@@ -27,6 +27,10 @@ import { reportDappSignSuccess, reportProviderRpcFailure } from './devErrorRepor
 import { isSignMethod, queueApprovalRequest } from './pendingApprovals';
 import { recordSuccessfulSigning } from './signingHistory';
 import { parseChainIdParam, providerError, toHexChainId } from '../provider/types';
+import {
+  alreadyWatchingAsset,
+  parseWatchAssetParams,
+} from './watchAsset';
 import type { ProviderRequest, ProviderResponse } from '../provider/types';
 import {
   eip5792Capabilities,
@@ -255,6 +259,26 @@ export async function handleProviderRpc(
       }
       await patchSettings({ activeChainId: next });
       return { id, ok: true, result: null, switchedChainId: next };
+    }
+
+    if (method === 'wallet_watchAsset') {
+      const parsed = parseWatchAssetParams(params);
+      if (await alreadyWatchingAsset(chainId, sessionAddr, parsed.address)) {
+        return { id, ok: true, result: true };
+      }
+      const approval = await queueApprovalRequest({
+        request: {
+          ...request,
+          params: Array.isArray(params) ? params : [params],
+        },
+        origin,
+        pageUrl: opts?.pageUrl,
+        tabId: opts?.tabId,
+        chainId,
+        onQueued: opts?.onApprovalQueued,
+        onExpired: opts?.onApprovalExpired,
+      });
+      return approval;
     }
 
     if (isSignMethod(method)) {

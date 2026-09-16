@@ -37,6 +37,7 @@ export const PROVIDER_RPC_METHODS = [
   'wallet_getCapabilities',
   'wallet_switchEthereumChain',
   'wallet_addEthereumChain',
+  'wallet_watchAsset',
   'eth_sendTransaction',
   'personal_sign',
   'eth_sign',

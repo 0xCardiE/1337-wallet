@@ -16,13 +16,14 @@ function looksLikeSpamToken(entry: WalletBalEntry): boolean {
  */
 export function isMainAssetRow(
   entry: WalletBalEntry,
-  opts: { hidden: Set<string>; touched: Set<string> },
+  opts: { hidden: Set<string>; touched: Set<string>; watched?: Set<string> },
 ): boolean {
   const addr = entry.address.toLowerCase();
   if (opts.hidden.has(addr)) return false;
   if (isNativeWalletToken(entry)) return true;
   if (tokenUsdNumber(entry) >= DUST_USD) return true;
   if (opts.touched.has(addr)) return true;
+  if (opts.watched?.has(addr)) return true;
   if (looksLikeSpamToken(entry)) return false;
   return false;
 }

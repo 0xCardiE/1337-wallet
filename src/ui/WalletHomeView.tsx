@@ -24,11 +24,18 @@ import {
   hideToken,
   loadHiddenTokens,
   loadTouchedTokenAddresses,
+  loadWatchedTokens,
   markTokensTouched,
+  subscribeAssetTokenPrefs,
   unhideToken,
   type HiddenTokenMeta,
+  type WatchedTokenMeta,
 } from '../lib/assetTokenPrefs';
 import { isMainAssetRow } from '../lib/tokenListFilter';
+import {
+  mergeWatchedBalanceRows,
+  watchedProbeOf,
+} from '../lib/watchAsset';
 import { effectiveActiveChainId, type AppSettings } from '../lib/storageState';
 import { LiFiIcon } from './LiFiIcon';
 import { QuickSendInline } from './QuickSendInline';
@@ -46,15 +53,20 @@ function splitRows(
   rows: WalletBalEntry[],
   hidden: HiddenTokenMeta[],
   touched: Set<string>,
+  watched: Set<string>,
 ): { main: WalletBalEntry[]; other: WalletBalEntry[] } {
   const skip = hiddenSetOf(hidden);
-  const ctx = { hidden: skip, touched };
+  const ctx = { hidden: skip, touched, watched };
   const main = rows.filter(r => isMainAssetRow(r, ctx));
   const mainAddrs = new Set(main.map(r => r.address.toLowerCase()));
   const other = rows.filter(
     r => !mainAddrs.has(r.address.toLowerCase()) && !skip.has(r.address.toLowerCase()),
   );
   return { main, other };
+}
+
+function watchedSetOf(watched: WatchedTokenMeta[]): Set<string> {
+  return new Set(watched.map(t => t.address.toLowerCase()));
 }
 
 export function WalletHomeView({
@@ -83,10 +95,11 @@ export function WalletHomeView({
       rows: WalletBalEntry[],
       hiddenRows: HiddenTokenMeta[],
       touched: Set<string>,
+      watched: Set<string>,
       opts?: { allowEmpty?: boolean },
     ) => {
       if (!addr) return;
-      const { main } = splitRows(rows, hiddenRows, touched);
+      const { main } = splitRows(rows, hiddenRows, touched, watched);
       if (main.length === 0 && opts?.allowEmpty === false) return;
       setMainRows(main);
       rememberMainBalances(chainId, addr, main);
@@ -95,9 +108,14 @@ export function WalletHomeView({
   );
 
   const promotePricedRows = useCallback(
-    (rows: WalletBalEntry[], hiddenRows: HiddenTokenMeta[], touched: Set<string>) => {
+    (
+      rows: WalletBalEntry[],
+      hiddenRows: HiddenTokenMeta[],
+      touched: Set<string>,
+      watched: Set<string>,
+    ) => {
       if (!addr) return;
-      const { main, other } = splitRows(rows, hiddenRows, touched);
+      const { main, other } = splitRows(rows, hiddenRows, touched, watched);
       setOtherRows(other);
       rememberOtherBalances(chainId, addr, other);
       if (main.length === 0) return;
@@ -134,22 +152,31 @@ export function WalletHomeView({
         .catch(() => {});
     }
     try {
-      const [hiddenRows, touchedAddrs] = await Promise.all([
+      const [hiddenRows, touchedAddrs, watchedRows] = await Promise.all([
         loadHiddenTokens(chainId, addr),
         loadTouchedTokenAddresses(chainId, addr),
+        loadWatchedTokens(chainId, addr),
       ]);
       if (gen !== loadGen.current) return;
       setHidden(hiddenRows);
+      const watchedAddrs = watchedSetOf(watchedRows);
 
       const { rows: next, error } = await loadWalletBalancesForChain(addr, chainId, {
         refreshRpc: true,
         explorerApiKey: settings.explorerApiKey,
         skipAddresses: hiddenSetOf(hiddenRows),
-        promoteAddresses: touchedAddrs,
+        promoteAddresses: new Set([...touchedAddrs, ...watchedAddrs]),
+        extraProbes: watchedRows.map(watchedProbeOf),
         includeDustProbes: false,
       });
       if (gen !== loadGen.current) return;
-      applyMain(next, hiddenRows, touchedAddrs, { allowEmpty: !error });
+      applyMain(
+        mergeWatchedBalanceRows(next, watchedRows, chainId),
+        hiddenRows,
+        touchedAddrs,
+        watchedAddrs,
+        { allowEmpty: !error },
+      );
       setErr(error);
     } catch (e) {
       if (gen !== loadGen.current) return;
@@ -167,16 +194,23 @@ export function WalletHomeView({
       const gen = loadGen.current;
       const cached = peekOtherBalances(chainId, addr);
       if (cached) setOtherRows(cached.rows);
-      const [hiddenRows, touchedAddrs] = await Promise.all([
+      const [hiddenRows, touchedAddrs, watchedRows] = await Promise.all([
         loadHiddenTokens(chainId, addr),
         loadTouchedTokenAddresses(chainId, addr),
+        loadWatchedTokens(chainId, addr),
       ]);
       if (gen !== loadGen.current) return;
       setHidden(hiddenRows);
+      const watchedAddrs = watchedSetOf(watchedRows);
       if (!force && cached && Date.now() - cached.at < OTHER_STALE_MS) {
         const priced = await enrichMissingUsdPrices(cached.rows);
         if (gen !== loadGen.current) return;
-        promotePricedRows([...peekMainBalances(chainId, addr), ...priced], hiddenRows, touchedAddrs);
+        promotePricedRows(
+          mergeWatchedBalanceRows([...peekMainBalances(chainId, addr), ...priced], watchedRows, chainId),
+          hiddenRows,
+          touchedAddrs,
+          watchedAddrs,
+        );
         return;
       }
       setOtherBusy(true);
@@ -185,14 +219,16 @@ export function WalletHomeView({
           refreshRpc: true,
           explorerApiKey: settings.explorerApiKey,
           skipAddresses: hiddenSetOf(hiddenRows),
-          promoteAddresses: touchedAddrs,
+          promoteAddresses: new Set([...touchedAddrs, ...watchedAddrs]),
+          extraProbes: watchedRows.map(watchedProbeOf),
           includeDustProbes: true,
         });
         if (gen !== loadGen.current) return;
-        const split = splitRows(next, hiddenRows, touchedAddrs);
+        const merged = mergeWatchedBalanceRows(next, watchedRows, chainId);
+        const split = splitRows(merged, hiddenRows, touchedAddrs, watchedAddrs);
         // Other must never replace Main wholesale — a partial dust snapshot used to blank Assets.
         if (!error || split.other.length > 0 || !peekOtherBalances(chainId, addr)) {
-          promotePricedRows(next, hiddenRows, touchedAddrs);
+          promotePricedRows(merged, hiddenRows, touchedAddrs, watchedAddrs);
         }
       } finally {
         if (gen === loadGen.current) setOtherBusy(false);
@@ -233,6 +269,13 @@ export function WalletHomeView({
     // Hydrate + fetch for this account/chain only — do not reset when refreshMain identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addr, chainId]);
+
+  useEffect(() => {
+    if (!addr) return;
+    return subscribeAssetTokenPrefs(() => {
+      void refreshMain(true);
+    });
+  }, [addr, chainId, refreshMain]);
 
   async function onHide(t: WalletBalEntry) {
     if (!addr) return;

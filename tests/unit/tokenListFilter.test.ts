@@ -88,4 +88,15 @@ describe('isMainAssetRow', () => {
       }),
     ).toBe(true);
   });
+
+  it('keeps a watched token on the main list', () => {
+    const addr = `0x${'55'.repeat(20)}`;
+    expect(
+      isMainAssetRow(entry({ address: addr, priceUSD: '0', amount: '0' }), {
+        hidden: new Set(),
+        touched: new Set(),
+        watched: new Set([addr]),
+      }),
+    ).toBe(true);
+  });
 });

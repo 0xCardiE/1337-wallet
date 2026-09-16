@@ -13,6 +13,7 @@ import type { ProviderRequest } from '../provider/types';
 import { classifyRequest, parseDomainChainId, type TxRiskReport } from './txRisk';
 import { siweCheckFailed } from './siwe';
 import type { TxAction } from './txAction';
+import { parseWatchAssetParams } from './watchAsset';
 
 export type ApprovalDetailField = {
   label: string;
@@ -558,6 +559,45 @@ export function buildApprovalDetailSections(
     return sections;
   }
 
+  if (method === 'wallet_watchAsset') {
+    try {
+      const parsed = parseWatchAssetParams(params);
+      return [
+        {
+          id: 'watch-asset',
+          title: 'Token',
+          defaultOpen: true,
+          fields: [
+            field('Type', parsed.type, { mono: true }),
+            field('Contract', parsed.address, { mono: true, copyable: true }),
+            ...(parsed.symbol ? [field('Symbol (from site)', parsed.symbol)] : []),
+            ...(parsed.decimals != null
+              ? [field('Decimals (from site)', String(parsed.decimals))]
+              : []),
+          ],
+        },
+        {
+          id: 'watch-raw',
+          title: 'Raw request',
+          fields: [
+            field('Params', JSON.stringify(params, null, 2), { mono: true, copyable: true }),
+          ],
+        },
+      ];
+    } catch {
+      return [
+        {
+          id: 'watch-raw',
+          title: 'Raw request',
+          defaultOpen: true,
+          fields: [
+            field('Params', JSON.stringify(params, null, 2), { mono: true, copyable: true }),
+          ],
+        },
+      ];
+    }
+  }
+
   return typedDataSections(params, method, chainId);
 }
 
@@ -708,6 +748,8 @@ export function approvalTitle(
       return 'Confirm transaction';
     case 'personal_sign':
       return 'Sign message';
+    case 'wallet_watchAsset':
+      return 'Add token';
     default:
       return 'Sign typed data';
   }

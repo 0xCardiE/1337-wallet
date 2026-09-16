@@ -13,7 +13,7 @@ export async function openDappPage(context: BrowserContext): Promise<Page> {
 export async function providerRequest(
   page: Page,
   method: string,
-  params?: unknown[],
+  params?: unknown,
 ): Promise<unknown> {
   return page.evaluate(
     async ({ method: m, params: p }) => {
@@ -29,7 +29,7 @@ export async function providerRequest(
 export async function providerRequestError(
   page: Page,
   method: string,
-  params?: unknown[],
+  params?: unknown,
 ): Promise<{ code?: number; message: string }> {
   return page.evaluate(
     async ({ method: m, params: p }) => {

@@ -72,6 +72,12 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
         weDo: 'Switch if the chain is already in Networks. Ignores dapp RPCs. Unknown chain → 4902 (add it yourself).',
         dappsUse: 'Same as switch for catalog chains. New networks are added in the wallet, not by the page.',
       },
+      {
+        method: 'wallet_watchAsset',
+        status: 'yes',
+        weDo: 'Confirm sheet. ERC-20 on the active chain. On-chain symbol/decimals when RPC works; NFT types stay 4200.',
+        dappsUse: '“Add token” after a swap or airdrop. Wagmi watchAsset / MetaMask EIP-747.',
+      },
     ],
   },
   {
@@ -144,12 +150,6 @@ export const RPC_METHOD_GROUPS: RpcMethodGroup[] = [
     nav: 'Not implemented',
     lead: 'We do not stub these as success unless the spec allows a quiet no.',
     rows: [
-      {
-        method: 'wallet_watchAsset',
-        status: 'no',
-        weDo: 'Not implemented. “Add token” from the dapp errors or is skipped.',
-        dappsUse: 'User adds the token in 1337, or the dapp just keeps going. Next method worth adding.',
-      },
       {
         method: 'web3_clientVersion / net_listening / eth_syncing / eth_coinbase',
         status: 'no',

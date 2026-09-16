@@ -14,6 +14,7 @@ describe('provider types', () => {
     expect(PROVIDER_RPC_METHODS).toContain('eth_sign');
     expect(PROVIDER_RPC_METHODS).toContain('wallet_revokePermissions');
     expect(PROVIDER_RPC_METHODS).toContain('wallet_getCapabilities');
+    expect(PROVIDER_RPC_METHODS).toContain('wallet_watchAsset');
   });
 
   it('parses and formats chain ids', () => {

@@ -25,6 +25,36 @@ describe('pendingApprovals', () => {
     expect(isSignMethod('eth_sign')).toBe(true);
     expect(isSignMethod('eth_requestAccounts')).toBe(false);
     expect(isSignMethod('wallet_switchEthereumChain')).toBe(false);
+    expect(isSignMethod('wallet_watchAsset')).toBe(false);
+  });
+
+  it('summarizes wallet_watchAsset for the confirm sheet', async () => {
+    const pending = queueApprovalRequest({
+      request: {
+        id: 'watch',
+        method: 'wallet_watchAsset',
+        params: [
+          {
+            type: 'ERC20',
+            options: {
+              address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+              symbol: 'USDC',
+              decimals: 6,
+            },
+          },
+        ],
+      },
+      origin: 'https://app.uniswap.org',
+      chainId: 1,
+    });
+    const [row] = listPendingApprovals();
+    expect(row.summary).toMatchObject({
+      kind: 'watchAsset',
+      title: 'Add token',
+    });
+    expect(row.summary.fields.some(f => f.value === 'USDC')).toBe(true);
+    rejectAllPendingApprovals('Test cleanup');
+    await expect(pending).resolves.toMatchObject({ ok: false });
   });
 
   it('recognizes the in-wallet origin', () => {

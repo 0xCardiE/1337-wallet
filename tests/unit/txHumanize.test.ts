@@ -91,6 +91,30 @@ Issued At: 2026-01-01T00:00:00.000Z`;
     });
     expect(line.headline).toBe('Deploy Disperse.app on this chain');
   });
+
+  it('explains wallet_watchAsset', () => {
+    const request = {
+      id: '1',
+      method: 'wallet_watchAsset' as const,
+      params: [
+        {
+          type: 'ERC20',
+          options: {
+            address: TOKEN,
+            symbol: 'USDC',
+            decimals: 6,
+          },
+        },
+      ],
+    };
+    const line = humanizePendingRequest({
+      request,
+      risk: { hits: [] },
+      chainId: 1,
+    });
+    expect(line.headline).toBe('Add USDC to Assets');
+    expect(line.detail).toMatch(/0xA0b8/i);
+  });
 });
 
 describe('humanizeHistoryRow', () => {

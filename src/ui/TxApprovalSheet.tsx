@@ -58,6 +58,7 @@ import {
   resolvePendingApproval,
 } from '../lib/approvalBridge';
 import { isInternalWalletOrigin, type PendingApproval } from '../lib/pendingApprovals';
+import { isWatchAssetMethod, parseWatchAssetParams } from '../lib/watchAsset';
 
 function formatPermitDeadline(deadline: bigint): string {
   const n = Number(deadline);
@@ -140,6 +141,95 @@ function TokenMetaLine({
     <span>
       {label} · <ExplorerAddr chainId={chainId} address={token} />
     </span>
+  );
+}
+
+function WatchAssetCard({
+  chainId,
+  pending,
+}: {
+  chainId: number;
+  pending: PendingApproval;
+}) {
+  const parsed = useMemo(() => {
+    try {
+      return parseWatchAssetParams(pending.request.params);
+    } catch {
+      return null;
+    }
+  }, [pending.request.params]);
+
+  const [onChain, setOnChain] = useState<TokenMeta | null>(null);
+  const [isContract, setIsContract] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!parsed) return;
+    let cancelled = false;
+    void fetchErc20Meta(chainId, parsed.address).then(meta => {
+      if (!cancelled) setOnChain(meta);
+    });
+    void chainJsonRpcCall<string>(chainId, 'eth_getCode', [parsed.address, 'latest'])
+      .then(code => {
+        if (!cancelled) setIsContract(Boolean(code && code !== '0x' && code !== '0x0'));
+      })
+      .catch(() => {
+        if (!cancelled) setIsContract(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [chainId, parsed]);
+
+  if (!parsed) return null;
+
+  const chainSymbol = onChain?.symbol;
+  const displaySymbol = chainSymbol || parsed.symbol || 'token';
+  const symbolMismatch = Boolean(
+    parsed.symbol && chainSymbol && parsed.symbol.toUpperCase() !== chainSymbol.toUpperCase(),
+  );
+  const decimalsMismatch = Boolean(
+    parsed.decimals != null && onChain && parsed.decimals !== onChain.decimals,
+  );
+  const warn = symbolMismatch || decimalsMismatch || isContract === false;
+
+  return (
+    <div className={`w1337-tx-approval__action${warn ? ' w1337-tx-approval__action--warn' : ''}`}>
+      <p className="w1337-tx-approval__action-kicker">Add token</p>
+      <h3 className="w1337-tx-approval__action-title">Show {displaySymbol} on Assets</h3>
+      {isContract === false ? (
+        <p className="w1337-tx-approval__action-warn">
+          This address has no contract code on the current chain.
+        </p>
+      ) : null}
+      {symbolMismatch ? (
+        <p className="w1337-tx-approval__action-warn">
+          The site called it {parsed.symbol}; the contract reports {chainSymbol}.
+        </p>
+      ) : null}
+      {decimalsMismatch ? (
+        <p className="w1337-tx-approval__action-warn">
+          The site said {parsed.decimals} decimals; the contract reports {onChain?.decimals}.
+        </p>
+      ) : null}
+      <dl className="w1337-tx-approval__action-dl">
+        <div>
+          <dt>Token</dt>
+          <dd>
+            <TokenMetaLine chainId={chainId} token={parsed.address} meta={onChain} />
+          </dd>
+        </div>
+        {onChain?.name ? (
+          <div>
+            <dt>Name</dt>
+            <dd>{onChain.name}</dd>
+          </div>
+        ) : null}
+        <div>
+          <dt>Decimals</dt>
+          <dd>{onChain?.decimals ?? parsed.decimals ?? '—'}</dd>
+        </div>
+      </dl>
+    </div>
   );
 }
 
@@ -1146,6 +1236,9 @@ function ApprovalContent({
             meta={tokenMeta}
           />
         ) : null}
+        {pending.request.method === 'wallet_watchAsset' ? (
+          <WatchAssetCard chainId={pending.chainId} pending={pending} />
+        ) : null}
         {risk.permit ? (
           <PermitCard chainId={pending.chainId} permit={risk.permit} meta={tokenMeta} />
         ) : null}
@@ -1169,7 +1262,9 @@ function ApprovalContent({
         ) : null}
 
         <p className="w1337-tx-approval__dev-note muted">
-          Technical details — gas, calldata, and raw params.
+          {pending.request.method === 'wallet_watchAsset'
+            ? 'Technical details — contract and the site’s suggested metadata.'
+            : 'Technical details — gas, calldata, and raw params.'}
         </p>
 
         <div className="w1337-tx-approval__sections">
@@ -1239,6 +1334,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
 
   useEffect(() => {
     if (!pending || !hwAccount || persistentSurface) return;
+    if (isWatchAssetMethod(pending.request.method)) return;
     void requestHardwareConfirmWindow();
   }, [pending?.id, hwAccount, persistentSurface]);
 
@@ -1264,8 +1360,11 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
     risk,
     resolveLikelyFunctionSignature(pending.request, null),
   );
+  const watchAsset = isWatchAssetMethod(pending.request.method);
   const title = approvalTitle(pending.request, risk, action);
-  const confirmLabel = risk.tokenApproval
+  const confirmLabel = watchAsset
+    ? 'Add token'
+    : risk.tokenApproval
     ? 'Approve'
     : risk.siwe
       ? 'Sign in'
@@ -1303,7 +1402,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
       return;
     }
 
-    if (hw) {
+    if (hw && !isWatchAssetMethod(pending.request.method)) {
       try {
         const result = await executeHardwareSignRequest({
           account: meta,
@@ -1373,7 +1472,7 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
         <div className="w1337-tx-approval__footer">
           {err ? <p className="error w1337-tx-approval__err">{err}</p> : null}
 
-          {hwAccount ? (
+          {hwAccount && !watchAsset ? (
             <p className="w1337-tx-approval__hw-banner" role="status">
               {busy
                 ? 'Confirm on the device. Keep this window open until it finishes.'
@@ -1408,13 +1507,15 @@ export function TxApprovalSheet({ settings }: { settings: AppSettings }) {
             <button
               type="button"
               className="w1337-tx-approval__approve"
-              disabled={busy || confirmBlocked || (hwAccount && !persistentSurface)}
+              disabled={
+                busy || confirmBlocked || (hwAccount && !persistentSurface && !watchAsset)
+              }
               data-testid="tx-approve"
               onClick={() => void onDecision(true)}
             >
               {busy
                 ? 'Confirming…'
-                : hwAccount
+                : hwAccount && !watchAsset
                   ? `Confirm on ${hwMeta?.kind === 'ledger' ? 'Ledger' : 'Trezor'}`
                   : confirmLabel}
             </button>

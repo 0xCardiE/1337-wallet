@@ -41,6 +41,7 @@ import type { ProviderRequest, ProviderResponse } from './provider/types';
 import { toHexChainId } from './provider/types';
 import { reportInternalFailure } from './lib/devErrorReport';
 import { recordSuccessfulSigning } from './lib/signingHistory';
+import { applyWatchAsset, isWatchAssetMethod, parseWatchAssetParams } from './lib/watchAsset';
 import { getAddress } from 'viem';
 import {
   applySessionPatch,
@@ -702,8 +703,11 @@ chrome.runtime.onMessage.addListener(
               pageUrl,
               onApprovalQueued: () => {
                 notifyPendingApprovalsChanged();
-                if (hw) void openHardwareConfirmUi(sender.tab?.id);
-                else void openWalletUi(sender.tab?.id);
+                if (hw && !isWatchAssetMethod(message.request.method)) {
+                  void openHardwareConfirmUi(sender.tab?.id);
+                } else {
+                  void openWalletUi(sender.tab?.id);
+                }
               },
               onApprovalExpired: notifyPendingApprovalsChanged,
               sessionAddress: hw
@@ -837,14 +841,55 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ ok: true });
             return;
           }
-          const pk = await sessionPrivateKey();
-          if (!pk) {
-            sendResponse({ ok: false, error: 'Unlock 1337 first' });
-            return;
-          }
           const entry = takePendingApproval(id);
           if (!entry) {
             sendResponse({ ok: false, error: 'Request expired or already handled' });
+            return;
+          }
+          if (isWatchAssetMethod(entry.request.method)) {
+            try {
+              const addr = await sessionAddress();
+              if (!addr) {
+                entry.resolve({
+                  id,
+                  ok: false,
+                  error: { code: 4100, message: '1337 is locked. Unlock the extension first.' },
+                });
+                sendResponse({ ok: false, error: 'Unlock 1337 first' });
+                notifyPendingApprovalsChanged();
+                return;
+              }
+              const parsed = parseWatchAssetParams(entry.request.params);
+              await applyWatchAsset({
+                chainId: entry.chainId,
+                wallet: addr,
+                request: parsed,
+              });
+              entry.resolve({ id, ok: true, result: true });
+              notifyPendingApprovalsChanged();
+              sendResponse({ ok: true });
+            } catch (e) {
+              const err = e as Error & { code?: number };
+              const msg = err.message ?? String(e);
+              entry.resolve({
+                id,
+                ok: false,
+                error: { code: err.code ?? 4001, message: msg },
+              });
+              sendResponse({ ok: false, error: msg });
+              notifyPendingApprovalsChanged();
+            }
+            return;
+          }
+          const pk = await sessionPrivateKey();
+          if (!pk) {
+            entry.resolve({
+              id,
+              ok: false,
+              error: { code: 4100, message: 'Unlock 1337 first' },
+            });
+            notifyPendingApprovalsChanged();
+            sendResponse({ ok: false, error: 'Unlock 1337 first' });
             return;
           }
           try {

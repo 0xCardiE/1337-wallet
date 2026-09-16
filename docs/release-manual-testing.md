@@ -64,7 +64,7 @@ On a **software** account, from a real page (not the E2E `example.com` stub):
 - [ ] **Unlimited approve** — Approve card, not a raw selector
 - [ ] **Unknown calldata** — Unknown card + selector
 - [ ] Local simulate line shows pass / revert / gas (or a clear RPC failure) — no fake balance diff
-- [ ] `eth_sign` from a console is rejected (4200)
+- [ ] **`wallet_watchAsset`** — Uniswap (or another AMM) “Add token”; confirm sheet shows on-chain symbol; Assets lists it after Add token; reject is 4001
 
 ---
 
@@ -150,6 +150,7 @@ Use small amounts. After each, check History + the site.
 - [ ] Snapshot / another SIWE login
 - [ ] A site that **requires** `window.ethereum.isMetaMask` — Settings → Connected sites → Announce as MetaMask; reload the tab; connect works; 1337 still signs
 - [ ] A site that should stay 1337-only — override “1337 only”; `is1337` visible in console
+- [ ] `wallet_watchAsset` — “Add token” confirm; ERC-20 appears on Assets; NFT type errors
 - [ ] `wallet_revokePermissions` or Connected sites → Disconnect; site loses accounts
 - [ ] Two tabs, two origins — permissions do not leak across sites
 

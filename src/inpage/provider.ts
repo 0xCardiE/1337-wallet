@@ -136,7 +136,7 @@ class Provider1337 {
     }
   }
 
-  async request(args: { method: string; params?: unknown[] }): Promise<unknown> {
+  async request(args: { method: string; params?: unknown }): Promise<unknown> {
     if (!args || typeof args.method !== 'string') {
       throw new ProviderRpcError(4000, 'Invalid request');
     }
@@ -144,7 +144,12 @@ class Provider1337 {
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : `1337-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const req: ProviderRequest = { id, method: args.method, params: args.params };
+    const params = Array.isArray(args.params)
+      ? args.params
+      : args.params != null
+        ? [args.params]
+        : undefined;
+    const req: ProviderRequest = { id, method: args.method, params };
     const result = await new Promise<unknown>((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
       window.postMessage(

@@ -63,4 +63,16 @@ test.describe('dapp provider', () => {
     expect(caps['0xa4b1']).toEqual({});
     expect(caps['0x1']).not.toHaveProperty('atomic');
   });
+
+  test('rejects NFT wallet_watchAsset with 4200', async ({ context, extensionId }) => {
+    await openUnlockedWallet(context, extensionId);
+    const dapp = await openDappPage(context);
+    await providerRequest(dapp, 'eth_requestAccounts');
+    const err = await providerRequestError(dapp, 'wallet_watchAsset', {
+      type: 'ERC721',
+      options: { address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' },
+    });
+    expect(err.code).toBe(4200);
+    expect(err.message).toMatch(/NFT|ERC-20/i);
+  });
 });

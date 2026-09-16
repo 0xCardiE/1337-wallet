@@ -2,6 +2,7 @@ import { formatEther } from 'viem';
 import type { ProviderRequest, ProviderResponse } from '../provider/types';
 import { providerError } from '../provider/types';
 import { bytesToHexMessage, parseTypedDataParam } from './backgroundSign';
+import { parseWatchAssetParams } from './watchAsset';
 
 /** Origin stamped on in-wallet hardware sends so the confirm sheet is not a dapp. */
 export const INTERNAL_WALLET_ORIGIN = '1337://wallet';
@@ -27,7 +28,7 @@ export function isSignMethod(method: string): boolean {
 }
 
 export type ApprovalSummary = {
-  kind: 'transaction' | 'message' | 'typedData';
+  kind: 'transaction' | 'message' | 'typedData' | 'watchAsset';
   method: string;
   origin?: string;
   hostname?: string;
@@ -136,6 +137,38 @@ export function buildApprovalSummary(
       title: 'Sign message',
       fields: [{ label: 'Message', value: formatMessagePreview(msgParam) }],
     };
+  }
+
+  if (method === 'wallet_watchAsset') {
+    try {
+      const parsed = parseWatchAssetParams(params);
+      const fields = [
+        { label: 'Token', value: parsed.address },
+        ...(parsed.symbol ? [{ label: 'Symbol', value: parsed.symbol }] : []),
+        ...(parsed.decimals != null
+          ? [{ label: 'Decimals', value: String(parsed.decimals) }]
+          : []),
+      ];
+      return {
+        kind: 'watchAsset',
+        method,
+        origin,
+        hostname,
+        pageUrl,
+        title: 'Add token',
+        fields,
+      };
+    } catch {
+      return {
+        kind: 'watchAsset',
+        method,
+        origin,
+        hostname,
+        pageUrl,
+        title: 'Add token',
+        fields: [{ label: 'Request', value: truncate(JSON.stringify(params)) }],
+      };
+    }
   }
 
   let typedRaw = params[1] ?? params[0];
