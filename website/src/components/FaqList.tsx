@@ -9,6 +9,7 @@ export type FaqGroup = {
   id: string;
   title: string;
   intro?: string;
+  extra?: ReactNode;
   items: FaqItem[];
 };
 
@@ -19,6 +20,7 @@ export function FaqList({ groups }: { groups: readonly FaqGroup[] }) {
         <section key={group.id} id={group.id} className="scroll-mt-28">
           <h2 className="text-2xl font-semibold tracking-tight">{group.title}</h2>
           {group.intro ? <p className="mt-2 max-w-3xl text-muted">{group.intro}</p> : null}
+          {group.extra ? <div className="mt-8">{group.extra}</div> : null}
           <div className="mt-6 space-y-3">
             {group.items.map(item => (
               <details key={item.q} className="card-surface group p-5">

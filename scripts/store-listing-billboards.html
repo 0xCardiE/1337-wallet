@@ -451,6 +451,100 @@
       .stage[data-view='small'] .hero-device { width: 248px; }
       .stage[data-view='small'] .hero-device-scene { padding: 0 0 8px 0; }
 
+      .domain {
+        display: none;
+        margin: 18px 0 0;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent-deep);
+      }
+
+      .stage.is-social {
+        width: 1200px;
+        height: 675px;
+      }
+      .stage[data-view='og'] {
+        width: 1200px;
+        height: 630px;
+      }
+      .stage.is-social .board {
+        padding: 40px 36px 48px 56px;
+      }
+      .stage[data-view='og'] .board {
+        padding: 32px 32px 40px 48px;
+      }
+      .stage.is-social h1 {
+        margin-top: 16px;
+        font-size: 44px;
+      }
+      .stage[data-view='og'] h1 {
+        margin-top: 14px;
+        font-size: 40px;
+      }
+      .stage.is-social .sub {
+        margin-top: 14px;
+        font-size: 16px;
+        max-width: 32rem;
+      }
+      .stage.is-social.is-hero .sub {
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .stage.is-social.is-hero .actions,
+      .stage[data-view='og'] .actions {
+        margin-top: 22px;
+      }
+      .stage.is-social.is-hero .hero-device,
+      .stage[data-view='og'] .hero-device {
+        width: 276px;
+      }
+      .stage.is-social.is-shot .board {
+        grid-template-columns: 0.88fr 1.12fr;
+      }
+      .stage.is-social.is-shot .hero-device {
+        width: 400px;
+        transform: rotateY(-16deg) rotateX(7deg) rotateZ(2deg);
+      }
+      .stage.is-social.is-shot .hero-device__screen img.shot {
+        width: 100%;
+        height: auto;
+        max-height: 520px;
+        object-fit: contain;
+        object-position: top center;
+      }
+      .stage.is-social.is-shot .domain,
+      .stage.is-social.is-title .domain {
+        display: block;
+      }
+      .stage.is-title .hero-device-scene { display: none !important; }
+      .stage.is-title .board {
+        grid-template-columns: 1fr;
+        align-items: center;
+        padding: 72px 80px 80px;
+      }
+      .stage.is-title .copy { max-width: 46rem; }
+      .stage.is-title h1 {
+        margin-top: 18px;
+        font-size: 64px;
+      }
+      .stage.is-title .sub {
+        margin-top: 18px;
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--text);
+        max-width: 34rem;
+      }
+      .stage.is-title .actions { margin-top: 28px; }
+      .stage.is-title .btn-secondary { display: none; }
+      .stage[data-view='x-send'] .hero-device__screen img.shot {
+        transform: scale(1.04);
+      }
+
       .is-hero .panel-shot,
       .is-shot .panel-hero { display: none !important; }
     </style>
@@ -482,6 +576,7 @@
             <span class="btn-primary">Download for Chrome</span>
             <span class="btn-secondary">See the features</span>
           </div>
+          <p class="domain" id="domain">1337wallet.io</p>
         </div>
 
         <div class="hero-device-scene">
@@ -642,6 +737,96 @@
           sub: '',
         },
         large: { mode: 'hero', headline: null, sub: null },
+        'x-hero': {
+          mode: 'hero',
+          headline: 'An EVM wallet for <span class="accent">hackers</span>.',
+          sub: 'Privacy and power.',
+          status: ['Privacy', 'Power', 'No server'],
+        },
+        og: {
+          mode: 'hero',
+          headline: 'An EVM wallet for <span class="accent">hackers</span>.',
+          sub: 'Privacy and power.',
+          status: ['Privacy', 'Power', 'No server'],
+        },
+        'x-confirm': {
+          mode: 'shot',
+          kicker: '01  ·  Confirm',
+          headline: 'Read the request.<br><span class="accent">Then sign.</span>',
+          sub: 'Human summary, local simulation, and contract flags before you spend.',
+          shot: '../website/public/screenshots/features/confirm-summary.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-rpc': {
+          mode: 'shot',
+          kicker: '02  ·  Networks',
+          headline: 'Your RPC.<br><span class="accent">Your call.</span>',
+          sub: 'Switch endpoints per chain. Doctor probes chainId when one looks dead.',
+          shot: '../website/public/screenshots/features/rpc.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-send': {
+          mode: 'shot',
+          kicker: '03  ·  Send',
+          headline: 'Send from Assets.<br><span class="accent">Stay in the list.</span>',
+          sub: 'Recipient and amount inline. Then the same confirm sheet.',
+          shot: '../brand/screenshot-sources/assets-send.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-swap': {
+          mode: 'shot',
+          kicker: '04  ·  Swap',
+          headline: 'Quote a swap.<br><span class="accent">Then sign.</span>',
+          sub: 'Routes from LI.FI. No extra 1337 fee. Hardware still confirms on the device.',
+          shot: '../website/public/screenshots/features/swap.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-ens': {
+          mode: 'shot',
+          kicker: '05  ·  ENS',
+          headline: 'Register a .eth.<br><span class="accent">Onchain.</span>',
+          sub: 'Commit, wait, register. Then set records and renew.',
+          shot: '../website/public/screenshots/features/ens-register.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-multisend': {
+          mode: 'shot',
+          kicker: '06  ·  Multisend',
+          headline: 'One transaction.<br><span class="accent">Many addresses.</span>',
+          sub: 'Disperse.app batch. No fee from the contract. Leftover native refunded.',
+          shot: '../website/public/screenshots/features/multisend.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-gas': {
+          mode: 'shot',
+          kicker: '07  ·  Gas',
+          headline: 'Stuck without gas?<br><span class="accent">Top up.</span>',
+          sub: 'Get ETH on Ethereum, pay with USDC on Base. Then sign the route.',
+          shot: '../website/public/screenshots/features/gas.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-burner': {
+          mode: 'shot',
+          kicker: '08  ·  Burner',
+          headline: 'Auto-sign on a<br><span class="accent">disposable key.</span>',
+          sub: 'Ordinary requests pass. Unlimited approvals, permits, and SIWE mismatches still pause.',
+          shot: '../website/public/screenshots/features/burner.png',
+          hideStatus: true,
+          hideActions: true,
+        },
+        'x-privacy': {
+          mode: 'title',
+          status: ['Privacy', 'Power', 'No server'],
+          headline: 'Privacy and <span class="accent">power</span>.',
+          sub: 'No analytics. No 1337 server. Vault stays on this machine.',
+        },
       };
 
       const view = new URLSearchParams(location.search).get('view') || 'hero';
@@ -650,11 +835,21 @@
       stage.dataset.view = view;
       stage.classList.toggle('is-hero', cfg.mode === 'hero');
       stage.classList.toggle('is-shot', cfg.mode === 'shot');
+      stage.classList.toggle('is-title', cfg.mode === 'title');
+      stage.classList.toggle('is-social', view.startsWith('x-') || view === 'og');
 
       if (cfg.kicker) {
         const kicker = document.getElementById('kicker');
         kicker.hidden = false;
         kicker.textContent = cfg.kicker;
+      }
+      if (cfg.status) {
+        document.getElementById('status').innerHTML = [
+          '<span class="status-dot"></span>',
+          ...cfg.status.flatMap((item, i) =>
+            i === 0 ? [`<span>${item}</span>`] : ['<span>·</span>', `<span>${item}</span>`],
+          ),
+        ].join('');
       }
       if (cfg.hideStatus) document.getElementById('status').classList.add('is-off');
       if (cfg.hideActions) document.getElementById('actions').classList.add('is-off');

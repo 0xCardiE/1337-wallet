@@ -70,8 +70,8 @@ export default function PrivacyPage() {
           policy we might relax later. See also the{' '}
           <Link href="/faq#privacy" className="text-text underline-offset-4 hover:underline">
             privacy FAQ
-          </Link>
-          .
+          </Link>{' '}
+          for a side-by-side with MetaMask and Rabby.
         </p>
 
         <h2>What stays on the user&apos;s machine</h2>

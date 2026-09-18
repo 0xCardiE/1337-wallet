@@ -205,8 +205,12 @@ export const SECURITY_FAQ: FaqGroup[] = [
             </p>
             <p className="mt-3">
               Privacy is a real split: 1337 is private by design. No analytics, no tracking server,
-              and no central entity that could watch you. Supply-chain
-              hardening is in MetaMask’s family (LavaMoat compartments on the sensitive bundles).
+              and no central entity that could watch you. Side-by-side vendor collection is on the{' '}
+              <Link href="/faq#privacy" className={linkClass}>
+                privacy FAQ
+              </Link>
+              . Supply-chain hardening is in MetaMask’s family (LavaMoat compartments on the
+              sensitive bundles).
               Auto-lock is available but off by default. Turn it on if the machine is shared.
             </p>
           </>

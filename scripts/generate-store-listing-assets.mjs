@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Chrome Web Store listing images → brand/chrome-web-store/
+ * X / OG share images → brand/social/ (`npm run social:assets`)
  *
  * Upload set (max 5 screenshots + promos): `npm run store:billboards`
  * renders scripts/store-listing-billboards.html (website 3D device).
@@ -26,7 +27,10 @@ const framesHtml = path.join(root, 'scripts/marketing-frames.html');
 const framesOnly = process.argv.includes('--frames-only');
 const siteShotsOnly = process.argv.includes('--site-shots');
 const billboardsOnly = process.argv.includes('--billboards');
+const socialOnly = process.argv.includes('--social');
 const billboardsHtml = path.join(root, 'scripts/store-listing-billboards.html');
+const socialDir = path.join(root, 'brand/social');
+const websitePublic = path.join(root, 'website/public');
 
 /** Chrome Web Store upload set: 5 screenshots + promo tiles. */
 const STORE_BILLBOARDS = [
@@ -38,6 +42,34 @@ const STORE_BILLBOARDS = [
   { view: 'marquee', dest: 'promo-marquee-1400x560.jpg', w: 1400, h: 560 },
   { view: 'small', dest: 'promo-small-440x280.jpg', w: 440, h: 280 },
   { view: 'large', dest: 'promo-large-920x680.jpg', w: 920, h: 680 },
+];
+
+/** X / Open Graph share set: 16:9 feature tour + OG card. */
+const SOCIAL_BILLBOARDS = [
+  { view: 'x-hero', dest: 'x-01-hero-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-confirm', dest: 'x-02-confirm-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-rpc', dest: 'x-03-rpc-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-send', dest: 'x-04-send-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-swap', dest: 'x-05-swap-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-ens', dest: 'x-06-ens-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-multisend', dest: 'x-07-multisend-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-gas', dest: 'x-08-gas-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-burner', dest: 'x-09-burner-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'x-privacy', dest: 'x-10-privacy-1200x675.jpg', w: 1200, h: 675 },
+  { view: 'og', dest: 'og-1200x630.jpg', w: 1200, h: 630 },
+];
+
+const SOCIAL_VIDEO_FRAMES = [
+  { dest: 'x-01-hero-1200x675.jpg', hold: 2.6 },
+  { dest: 'x-02-confirm-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-03-rpc-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-04-send-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-05-swap-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-06-ens-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-07-multisend-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-08-gas-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-09-burner-1200x675.jpg', hold: 2.15 },
+  { dest: 'x-10-privacy-1200x675.jpg', hold: 2.8 },
 ];
 
 /** Flat UI crops kept as extras. Chrome listing upload set is STORE_BILLBOARDS. */
@@ -422,16 +454,16 @@ function frameWebsiteStoreShots() {
   }
 }
 
-async function renderStoreBillboards() {
-  mkdirSync(outDir, { recursive: true });
+async function renderBillboardSet(boards, destDir) {
+  mkdirSync(destDir, { recursive: true });
   const html = pathToFileURL(billboardsHtml).href;
   const browser = await chromium.launch({ channel: 'chromium' });
   try {
     const page = await browser.newPage({
-      viewport: { width: 1280, height: 800 },
+      viewport: { width: boards[0]?.w ?? 1280, height: boards[0]?.h ?? 800 },
       deviceScaleFactor: 2,
     });
-    for (const board of STORE_BILLBOARDS) {
+    for (const board of boards) {
       await page.setViewportSize({ width: board.w, height: board.h });
       await page.goto(`${html}?view=${board.view}`, { waitUntil: 'networkidle', timeout: 60_000 });
       await page.evaluate(async () => {
@@ -448,9 +480,9 @@ async function renderStoreBillboards() {
         );
       });
       await page.waitForTimeout(200);
-      const tmp = path.join(outDir, `.tmp-${board.view}.png`);
+      const tmp = path.join(destDir, `.tmp-${board.view}.png`);
       await page.screenshot({ path: tmp, type: 'png', animations: 'disabled' });
-      const dest = path.join(outDir, board.dest);
+      const dest = path.join(destDir, board.dest);
       runPy(['resize-jpg', tmp, dest, String(board.w), String(board.h)]);
       rmSync(tmp, { force: true });
       console.log('wrote', dest);
@@ -460,11 +492,94 @@ async function renderStoreBillboards() {
   }
 }
 
+async function renderStoreBillboards() {
+  await renderBillboardSet(STORE_BILLBOARDS, outDir);
+}
+
+function renderSocialVideo(destDir) {
+  const ffmpeg = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' });
+  if (ffmpeg.status !== 0) {
+    console.warn('skip social video: ffmpeg not found');
+    return;
+  }
+  const fade = 0.3;
+  const inputs = [];
+  for (const frame of SOCIAL_VIDEO_FRAMES) {
+    const src = path.join(destDir, frame.dest);
+    if (!existsSync(src)) {
+      console.warn(`skip social video: missing ${frame.dest}`);
+      return;
+    }
+    inputs.push('-loop', '1', '-t', String(frame.hold), '-i', src);
+  }
+  const prep = SOCIAL_VIDEO_FRAMES.map(
+    (_, i) =>
+      `[${i}:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,setsar=1,fps=30,format=yuv420p[v${i}]`,
+  );
+  const fades = [];
+  let last = 'v0';
+  let offset = 0;
+  for (let i = 1; i < SOCIAL_VIDEO_FRAMES.length; i += 1) {
+    offset += SOCIAL_VIDEO_FRAMES[i - 1].hold - fade;
+    const next = i === SOCIAL_VIDEO_FRAMES.length - 1 ? 'vout' : `f${i}`;
+    fades.push(`[${last}][v${i}]xfade=transition=fade:duration=${fade}:offset=${offset.toFixed(3)}[${next}]`);
+    last = next;
+  }
+  const dest = path.join(destDir, '1337-features-1280x720.mp4');
+  const result = spawnSync(
+    'ffmpeg',
+    [
+      '-y',
+      ...inputs,
+      '-filter_complex',
+      [...prep, ...fades].join(';'),
+      '-map',
+      '[vout]',
+      '-an',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'slow',
+      '-crf',
+      '18',
+      '-profile:v',
+      'high',
+      '-pix_fmt',
+      'yuv420p',
+      '-movflags',
+      '+faststart',
+      dest,
+    ],
+    { encoding: 'utf8' },
+  );
+  if (result.status !== 0) {
+    process.stderr.write(result.stderr || result.stdout || 'ffmpeg failed\n');
+    process.exit(result.status ?? 1);
+  }
+  console.log('wrote', dest);
+}
+
+async function renderSocialBillboards() {
+  await renderBillboardSet(SOCIAL_BILLBOARDS, socialDir);
+  const ogSrc = path.join(socialDir, 'og-1200x630.jpg');
+  const ogDest = path.join(websitePublic, 'og.jpg');
+  if (existsSync(ogSrc)) {
+    copyFileSync(ogSrc, ogDest);
+    console.log('wrote', ogDest);
+  }
+  renderSocialVideo(socialDir);
+}
+
 async function main() {
   mkdirSync(outDir, { recursive: true });
   mkdirSync(sourceDir, { recursive: true });
   const iconSrc = path.join(icons, 'icon-128.png');
   runPy(['icon', iconSrc, path.join(outDir, 'store-icon-128.png')]);
+
+  if (socialOnly) {
+    await renderSocialBillboards();
+    return;
+  }
 
   if (billboardsOnly) {
     await renderStoreBillboards();

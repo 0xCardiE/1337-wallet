@@ -1,8 +1,72 @@
 import Link from 'next/link';
 import type { FaqGroup } from '@/components/FaqList';
+import { WalletComparisonTable } from '@/components/WalletComparisonTable';
 import { SITE } from '@/lib/site';
 
 const linkClass = 'text-text underline-offset-4 hover:underline';
+
+export const PRIVACY_COMPARISON = [
+  {
+    topic: 'Account with the vendor',
+    metamask: 'Yes, for some features',
+    rabby: 'Not for the basic wallet',
+    us: 'No',
+  },
+  {
+    topic: 'Wallet server / backend',
+    metamask: 'Yes',
+    rabby: 'Yes',
+    us: 'No 1337 wallet server',
+  },
+  {
+    topic: 'Analytics / telemetry',
+    metamask: 'Yes — MetaMetrics',
+    rabby: 'Usage / service data',
+    us: 'No',
+  },
+  {
+    topic: 'Crash / error telemetry',
+    metamask: 'Yes, depending on the feature',
+    rabby: 'Yes',
+    us: 'No',
+  },
+  {
+    topic: 'Vendor can process your IP',
+    metamask: 'Yes',
+    rabby: 'Yes',
+    us: 'No 1337 server that receives it',
+  },
+  {
+    topic: 'Wallet address can reach the vendor',
+    metamask: 'Yes, through APIs',
+    rabby: 'Yes, depending on services',
+    us: 'Not to a 1337 server',
+  },
+  {
+    topic: 'Private key / seed',
+    metamask: 'Never leaves the device',
+    rabby: 'Never leaves the device',
+    us: 'Never leaves the device',
+  },
+  {
+    topic: 'RPC provider sees addresses',
+    metamask: 'Yes',
+    rabby: 'Yes',
+    us: 'Yes, if you use that RPC',
+  },
+  {
+    topic: 'Bring your own RPC',
+    metamask: 'Yes',
+    rabby: 'Yes',
+    us: 'Yes',
+  },
+  {
+    topic: 'Vendor can correlate usage with a wallet',
+    metamask: 'Possible through MetaMetrics',
+    rabby: 'Depends on their services',
+    us: 'No 1337 backend that could do that',
+  },
+] as const;
 
 export const PRODUCT_FAQ: FaqGroup[] = [
   {
@@ -49,6 +113,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               For keys and hardware, security is the same class. That question lives on{' '}
               <Link href="/security" className={linkClass}>
                 Security
+              </Link>
+              . For what the vendor can collect about you, see the{' '}
+              <Link href="/faq#privacy" className={linkClass}>
+                privacy comparison
               </Link>
               .
             </p>
@@ -222,7 +290,52 @@ export const PRODUCT_FAQ: FaqGroup[] = [
     title: 'Privacy',
     intro:
       'Keep all user data where it belongs on the user\'s machine. There is no 1337 server that could collect it, and there never will be.',
+    extra: (
+      <div>
+        <h3 className="text-lg font-medium tracking-tight">What the vendor can collect</h3>
+        <p className="mt-2 max-w-3xl text-muted">
+          If we look at how much the wallet maker itself collects about you, 1337 is a more
+          privacy-minimal model than MetaMask and Rabby. Your RPC and the dapps you use still see
+          what you send them — that is true in every wallet.
+        </p>
+        <div className="mt-6">
+          <WalletComparisonTable
+            rows={PRIVACY_COMPARISON}
+            emphasizeUs
+            caption="What the vendor can collect compared with MetaMask and Rabby"
+          />
+        </div>
+        <p className="mt-3 max-w-3xl text-sm text-muted">
+          MetaMask and Rabby change their stacks; this is typical current behavior, not a legal
+          audit. 1337 has no collection server to add later.
+        </p>
+      </div>
+    ),
     items: [
+      {
+        q: 'How does 1337 compare to MetaMask and Rabby on privacy?',
+        a: (
+          <>
+            <p>
+              Same self-custody on the device: seed and private keys do not leave the machine in
+              1337, MetaMask, or Rabby. The split is what the vendor can collect. MetaMask ships
+              MetaMetrics and vendor APIs. Rabby runs product and security services that can see
+              usage. 1337 has no account, no analytics, no crash telemetry, and no 1337 server that
+              could receive your IP or address.
+            </p>
+            <p className="mt-3">
+              An RPC you choose still sees requests from your wallet. That is true in every signer.
+              Bring your own RPC if you do not want a public endpoint to see those calls. Third
+              parties you opt into — LI.FI, an explorer key, Trezor Connect — still see what those
+              features need. We do not get a copy. Full policy:{' '}
+              <Link href="/privacy" className={linkClass}>
+                Privacy
+              </Link>
+              .
+            </p>
+          </>
+        ),
+      },
       {
         q: 'Is 1337 private by design?',
         a: (
@@ -342,9 +455,13 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <Link href="/integrate" className={linkClass}>
                 Integrate
               </Link>
-              . Keys, hardware, and MetaMask / Rabby comparisons:{' '}
+              . Keys and hardware:{' '}
               <Link href="/security" className={linkClass}>
                 Security
+              </Link>
+              . Privacy compared with MetaMask and Rabby:{' '}
+              <Link href="/faq#privacy" className={linkClass}>
+                Privacy FAQ
               </Link>
               .
             </p>

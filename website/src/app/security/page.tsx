@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
 import { Kicker } from '@/components/Kicker';
 import { DiscordJoin, XFollow } from '@/components/Outbound';
+import { WalletComparisonTable } from '@/components/WalletComparisonTable';
 import { SECURITY_COMPARISON, SECURITY_FAQ } from '@/content/securityFaq';
 
 export const metadata: Metadata = {
@@ -35,27 +36,11 @@ export default function SecurityPage() {
           Workflow and privacy differ. Who can move funds does not.
         </p>
 
-        <div className="mt-8 overflow-x-auto rounded-[6px] border border-border/80">
-          <table className="w-full min-w-[52rem] text-left text-sm">
-            <thead className="bg-bg-elevated text-text">
-              <tr>
-                <th className="px-4 py-3 font-medium">Topic</th>
-                <th className="px-4 py-3 font-medium">MetaMask</th>
-                <th className="px-4 py-3 font-medium">Rabby</th>
-                <th className="px-4 py-3 font-medium">1337</th>
-              </tr>
-            </thead>
-            <tbody>
-              {SECURITY_COMPARISON.map(row => (
-                <tr key={row.topic} className="border-t border-border/70">
-                  <th className="px-4 py-3 align-top font-medium text-text">{row.topic}</th>
-                  <td className="px-4 py-3 align-top text-muted">{row.metamask}</td>
-                  <td className="px-4 py-3 align-top text-muted">{row.rabby}</td>
-                  <td className="px-4 py-3 align-top text-muted">{row.us}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-8">
+          <WalletComparisonTable
+            rows={SECURITY_COMPARISON}
+            caption="Custody and signing compared with MetaMask and Rabby"
+          />
         </div>
       </section>
 

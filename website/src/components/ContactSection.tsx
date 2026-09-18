@@ -18,7 +18,8 @@ export function ContactSection() {
           <a href="/faq" className="text-text underline-offset-4 hover:underline">
             FAQ
           </a>
-          . Keys, hardware, and how we compare to MetaMask and Rabby are on{' '}
+          , including a privacy comparison with MetaMask and Rabby. Keys, hardware, and custody
+          comparisons are on{' '}
           <a href="/security" className="text-text underline-offset-4 hover:underline">
             Security
           </a>

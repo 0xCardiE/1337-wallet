@@ -11,6 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.origin),
   title: {
     default: `${SITE.name}`,
     template: `%s · ${SITE.name}`,
@@ -19,6 +20,30 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icon-128.png',
     apple: '/icon-128.png',
+  },
+  openGraph: {
+    title: SITE.name,
+    description: SITE.description,
+    url: '/',
+    siteName: SITE.name,
+    locale: 'en_US',
+    type: 'website',
+    images: [
+      {
+        url: '/og.jpg',
+        width: 1200,
+        height: 630,
+        alt: '1337 Wallet — an EVM wallet for hackers',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@1337wallet',
+    creator: '@1337wallet',
+    title: SITE.name,
+    description: SITE.description,
+    images: ['/og.jpg'],
   },
 };
 
