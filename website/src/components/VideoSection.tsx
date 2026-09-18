@@ -3,16 +3,16 @@ import { ScreenshotGallery } from '@/components/ScreenshotGallery';
 
 const PITCHES = [
   {
-    href: '#confirm',
-    index: '01',
-    title: 'Confirm',
-    body: 'Human summary, local eth_call, danger flags. See pass / fail / revert / gas before you spend.',
-  },
-  {
     href: '#networks',
-    index: '02',
+    index: '01',
     title: 'RPC',
     body: 'Your endpoint, per chain. Switch when one is dead. Doctor probes chainId. We do not run an RPC.',
+  },
+  {
+    href: '#confirm',
+    index: '02',
+    title: 'Confirm',
+    body: 'Human summary, local eth_call, danger flags. See pass / fail / revert / gas before you spend.',
   },
   {
     href: '#accounts',

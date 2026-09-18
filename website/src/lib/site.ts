@@ -32,36 +32,6 @@ export type ProductFeature = {
 
 export const PRODUCT_FEATURES: ProductFeature[] = [
   {
-    id: 'confirm',
-    kicker: 'Confirm sheet',
-    title: 'Read the request before you sign',
-    hook: 'Each dapp request shows a plain-language summary, a local simulation, and the contract you are calling. Open the decode for the selector, Solidity source, and calldata. If you use hardware, you still confirm on the device.',
-    tryIt: 'Connect a dapp, send a token, and read the sheet before you confirm.',
-    shots: [
-      {
-        src: '/screenshots/features/confirm-summary.png',
-        width: 503,
-        height: 353,
-        caption: 'Summary first: “Send tokens.” Simulation against the current chain. Verified proxy, with owner and implementation.',
-        alt: '1337 confirm sheet summarizing a token transfer, with a successful simulation and Derive marked as a verified proxy',
-      },
-      {
-        src: '/screenshots/features/confirm-decode.png',
-        width: 488,
-        height: 630,
-        caption: 'Decoded call: selector, likely function, and the Solidity from the explorer.',
-        alt: 'Confirm overview showing eth_sendTransaction fields, ERC-20 transfer decode, and OpenZeppelin transfer source',
-      },
-      {
-        src: '/screenshots/features/confirm-hardware.png',
-        width: 502,
-        height: 398,
-        caption: 'Full calldata if you want it. Reject here, or confirm on Trezor.',
-        alt: 'Confirm sheet calldata for an ERC-20 transfer with Reject and Confirm on Trezor buttons',
-      },
-    ],
-  },
-  {
     id: 'networks',
     kicker: 'Networks',
     title: 'Pick the chain and the RPC',
@@ -111,6 +81,52 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
         height: 678,
         caption: 'RPC list for that chain. This order is the RPC dropdown. First in the list is preferred.',
         alt: 'HyperEVM RPC list with reorder handles and a Preferred badge on PublicNode',
+      },
+    ],
+  },
+  {
+    id: 'doctor',
+    kicker: 'RPC Doctor',
+    title: 'See which endpoints are actually up',
+    hook: 'Probe chainId on every RPC for the active chain. Healthy, down, missing API key, and HTTP errors show in the same list. Failover uses the healthy ones.',
+    tryIt: 'Tap Doctor next to the RPC field on Assets.',
+    shots: [
+      {
+        src: '/screenshots/features/doctor.png',
+        width: 509,
+        height: 781,
+        caption: 'Seven healthy, three down. Preferred and active are marked. Use a healthy RPC, or probe all again.',
+        alt: 'RPC Doctor on Ethereum showing healthy and down endpoints, including Ankr unauthorized and HTTP 521/525 errors',
+      },
+    ],
+  },
+  {
+    id: 'confirm',
+    kicker: 'Confirm sheet',
+    title: 'Read the request before you sign',
+    hook: 'Each dapp request shows a plain-language summary, a local simulation, and the contract you are calling. Open the decode for the selector, Solidity source, and calldata. If you use hardware, you still confirm on the device.',
+    tryIt: 'Connect a dapp, send a token, and read the sheet before you confirm.',
+    shots: [
+      {
+        src: '/screenshots/features/confirm-summary.png',
+        width: 503,
+        height: 353,
+        caption: 'Summary first: “Send tokens.” Simulation against the current chain. Verified proxy, with owner and implementation.',
+        alt: '1337 confirm sheet summarizing a token transfer, with a successful simulation and Derive marked as a verified proxy',
+      },
+      {
+        src: '/screenshots/features/confirm-decode.png',
+        width: 488,
+        height: 630,
+        caption: 'Decoded call: selector, likely function, and the Solidity from the explorer.',
+        alt: 'Confirm overview showing eth_sendTransaction fields, ERC-20 transfer decode, and OpenZeppelin transfer source',
+      },
+      {
+        src: '/screenshots/features/confirm-hardware.png',
+        width: 502,
+        height: 398,
+        caption: 'Full calldata if you want it. Reject here, or confirm on Trezor.',
+        alt: 'Confirm sheet calldata for an ERC-20 transfer with Reject and Confirm on Trezor buttons',
       },
     ],
   },
@@ -214,22 +230,6 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
         height: 416,
         caption: 'Destination chain, native amount to receive, pay-from chain, pay-with token.',
         alt: 'Gas station quoting 0.2 ETH on Ethereum paid from Base USDC',
-      },
-    ],
-  },
-  {
-    id: 'doctor',
-    kicker: 'RPC Doctor',
-    title: 'See which endpoints are actually up',
-    hook: 'Probe chainId on every RPC for the active chain. Healthy, down, missing API key, and HTTP errors show in the same list. Failover uses the healthy ones.',
-    tryIt: 'Tap Doctor next to the RPC field on Assets.',
-    shots: [
-      {
-        src: '/screenshots/features/doctor.png',
-        width: 509,
-        height: 781,
-        caption: 'Seven healthy, three down. Preferred and active are marked. Use a healthy RPC, or probe all again.',
-        alt: 'RPC Doctor on Ethereum showing healthy and down endpoints, including Ankr unauthorized and HTTP 521/525 errors',
       },
     ],
   },

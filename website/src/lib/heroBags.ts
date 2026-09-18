@@ -39,6 +39,15 @@ const USDC: HeroToken = {
   amount: '18,420 USDC',
 };
 
+const USDT: HeroToken = {
+  kind: 'major',
+  symbol: 'USDT',
+  name: 'Tether',
+  logo: '/tokens/usdt.png',
+  usd: '$19,840.00',
+  amount: '19,840 USDT',
+};
+
 const PEPE: HeroToken = {
   kind: 'meme',
   symbol: 'PEPE',
@@ -129,15 +138,37 @@ const CRV: HeroToken = {
   amount: '4,620 CRV',
 };
 
-/** One major, one meme, one DeFi. Picked at random in the hero. */
+const HYPE: HeroToken = {
+  kind: 'defi',
+  symbol: 'HYPE',
+  name: 'Hyperliquid',
+  logo: '/tokens/hype.png',
+  usd: '$6,230.00',
+  amount: '67.8 HYPE',
+};
+
+const VVV: HeroToken = {
+  kind: 'defi',
+  symbol: 'VVV',
+  name: 'Venice Token',
+  logo: '/tokens/vvv.png',
+  usd: '$3,820.00',
+  amount: '139.6 VVV',
+};
+
+/** Three-token bags. Picked at random in the hero. */
 export const HERO_BAGS: HeroBag[] = [
   { id: 'eth-pepe-uni', tokens: [ETH, PEPE, UNI] },
-  { id: 'eth-shib-aave', tokens: [ETH, SHIB, AAVE] },
-  { id: 'wbtc-pepe-ldo', tokens: [WBTC, PEPE, LDO] },
-  { id: 'usdc-floki-mkr', tokens: [USDC, FLOKI, MKR] },
-  { id: 'eth-mog-link', tokens: [ETH, MOG, LINK] },
+  { id: 'usdt-hype-vvv', tokens: [USDT, HYPE, VVV] },
   { id: 'wbtc-shib-crv', tokens: [WBTC, SHIB, CRV] },
-  { id: 'usdc-pepe-uni', tokens: [USDC, PEPE, UNI] },
+  { id: 'usdt-pepe-hype', tokens: [USDT, PEPE, HYPE] },
+  { id: 'eth-shib-vvv', tokens: [ETH, SHIB, VVV] },
+  { id: 'usdc-floki-mkr', tokens: [USDC, FLOKI, MKR] },
+  { id: 'wbtc-mog-hype', tokens: [WBTC, MOG, HYPE] },
+  { id: 'usdt-shib-uni', tokens: [USDT, SHIB, UNI] },
+  { id: 'eth-mog-link', tokens: [ETH, MOG, LINK] },
+  { id: 'usdc-pepe-vvv', tokens: [USDC, PEPE, VVV] },
+  { id: 'wbtc-floki-hype', tokens: [WBTC, FLOKI, HYPE] },
   { id: 'eth-floki-aave', tokens: [ETH, FLOKI, AAVE] },
 ];
 
