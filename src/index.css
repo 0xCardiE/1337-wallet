@@ -831,7 +831,8 @@ button.w1337-acct-sheet-backdrop:focus-visible {
   position: relative;
   z-index: 1;
   margin-top: auto;
-  max-height: min(360px, 55vh);
+  max-height: min(520px, 78vh);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--bg-overlay);
@@ -863,13 +864,32 @@ button.w1337-acct-sheet-backdrop:focus-visible {
 }
 
 .w1337-acct-sheet-list {
+  /* Row ≈ 12+12 padding + 14px/1.5 label + 2px gap + 11px/1.5 meta. */
+  --w1337-acct-row: 64px;
+  --w1337-acct-gap: 4px;
+  --w1337-acct-list-y: 18px;
+  --w1337-acct-peek: 12px;
   list-style: none;
   margin: 0;
   padding: 8px 0 10px;
-  overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--w1337-acct-gap);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  /* Five full rows, then mouse-wheel / trackpad / scrollbar. Peek the next. */
+  max-height: min(
+    calc(
+      var(--w1337-acct-row) * 5 + var(--w1337-acct-gap) * 4 + var(--w1337-acct-list-y) +
+        var(--w1337-acct-peek)
+    ),
+    calc(78vh - 56px)
+  );
 }
 
 .w1337-acct-dock {
@@ -916,6 +936,7 @@ button.w1337-acct-dock__chev:focus-visible {
 .w1337-acct-sheet-item {
   display: flex;
   align-items: stretch;
+  flex-shrink: 0;
   gap: 0;
   margin: 0 8px;
   border-radius: 12px;
@@ -1097,6 +1118,9 @@ button.w1337-acct-sheet-row--on:hover:not(:disabled) {
 .w1337-acct-sheet-row__label {
   font-size: 14px;
   font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .w1337-acct-sheet-row__label--copied,
@@ -1107,6 +1131,9 @@ button.w1337-acct-sheet-row--on:hover:not(:disabled) {
 .w1337-acct-sheet-row__meta {
   font-size: 11px;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .w1337-acct-sheet-row__check {

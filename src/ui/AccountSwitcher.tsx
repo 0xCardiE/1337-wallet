@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   getAccountsMeta,
@@ -69,6 +69,7 @@ export function AccountSwitcher({
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     const bump = () => setTick(t => t + 1);
@@ -91,6 +92,37 @@ export function AccountSwitcher({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const list = listRef.current;
+    const selected = list?.querySelector<HTMLElement>('.w1337-acct-sheet-item--on');
+    if (!list || !selected) return;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = selected.getBoundingClientRect();
+    if (rowRect.top < listRect.top) {
+      list.scrollTop -= listRect.top - rowRect.top;
+    } else if (rowRect.bottom > listRect.bottom) {
+      list.scrollTop += rowRect.bottom - listRect.bottom;
+    }
+  }, [open, activeId]);
+
+  useEffect(() => {
+    if (!open) return;
+    const list = listRef.current;
+    if (!list) return;
+    const onWheel = (e: WheelEvent) => {
+      if (list.scrollHeight <= list.clientHeight) return;
+      e.stopPropagation();
+      const atTop = list.scrollTop <= 0;
+      const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+      if ((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom)) {
+        e.preventDefault();
+      }
+    };
+    list.addEventListener('wheel', onWheel, { passive: false });
+    return () => list.removeEventListener('wheel', onWheel);
   }, [open]);
 
   if (!active || accounts.length === 0) return null;
@@ -185,7 +217,7 @@ export function AccountSwitcher({
                 ) : null}
               </div>
 
-              <ul className="w1337-acct-sheet-list">
+              <ul ref={listRef} className="w1337-acct-sheet-list" data-testid="acct-sheet-list">
                 {accounts.map(account => {
                   const selected = account.id === activeId;
                   const burnerOn = accountInstantEnabled(account, settings);
