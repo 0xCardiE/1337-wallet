@@ -5,14 +5,14 @@ Regen images: npm run store:billboards
 Upload in this order. Chrome allows 5 screenshots.
 
 Screenshots (1280×800 JPEG)
-  1. screenshot-01-hero-1280x800.jpg
+  1. screenshot-01-hero-1280x800.jpg   ← regen (site hero copy changed)
   2. screenshot-02-confirm-1280x800.jpg
   3. screenshot-03-rpc-1280x800.jpg
   4. screenshot-04-approvals-1280x800.jpg
   5. screenshot-05-swap-1280x800.jpg
 
-Promo tiles
-  Small  440×280  promo-small-440x280.jpg
+Promo tiles (regen marquee + large with the site hero)
+  Small  440×280  promo-small-440x280.jpg   ← keep (no listing copy)
   Marquee 1400×560  promo-marquee-1400x560.jpg
   Large  920×680  promo-large-920x680.jpg  (optional)
 
@@ -21,18 +21,34 @@ Icon
 
 Short description (132 chars, must match public/manifest.json)
 
+CURRENT (in the published 2.2.2 zip — changing this needs a new store version):
 An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.
 
---- Detailed description (paste into the listing) ---
+NEXT ZIP (75 chars):
+An EVM wallet for hackers. Privacy and power. No analytics. No 1337 server.
 
-An EVM wallet for hackers. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No tracking server. Works with every MetaMask dapp.
+--- Detailed description (paste into the listing; no new zip required) ---
+
+An EVM wallet for hackers. Privacy and power.
+
+Keep all user data where it belongs on the user's machine. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No 1337 server. Never. Works with every MetaMask dapp.
+
+Twitter: https://x.com/1337wallet
+
+🔒 PRIVATE BY DESIGN
+- Privacy is only possible when there is no central entity with the power to violate it. Other wallets keep that power. 1337 does not, and never will
+- No analytics. No tracking. No telemetry. No user accounts. Never a 1337 collection server
+- Vault, settings, and session stay in Chrome extension storage on the user's machine
+- Network calls happen only when you use RPCs, swaps, explorers, or hardware
+- History uses the explorer API key you paste in Settings — there is no 1337 history backend
+https://1337wallet.io/privacy
 
 📌 THE BASICS
 - Self-custody EOA wallet on 20+ EVM chains, same address everywhere
 - Works with Uniswap and every MetaMask dapp (window.ethereum drop-in + EIP-6963)
 - Seed phrase, imported private keys, Ledger (WebHID), and Trezor Connect
 - Side panel by default so the dapp and the signer sit side by side — or switch to a popup
-- Encrypted vault in Chrome storage on this device. No 1337 account. No 1337 server
+- Encrypted vault on the user's machine. No 1337 account. No 1337 server
 
 📖 READABLE CONFIRMS
 - Plain-language summary before you sign
@@ -62,14 +78,6 @@ An EVM wallet for hackers. Readable confirms, easy RPC switching, approvals, swa
 - Risk gates still pause unlimited approvals, unknown contracts, high-value sends, permits, and SIWE mismatches unless you ungate them
 - Hardware always confirms on the device
 
-🔒 PRIVATE BY DESIGN
-- Privacy is only possible when there is no central entity with the power to violate it. Other wallets keep that power. 1337 does not, and never will
-- No analytics. No tracking. No telemetry. No user accounts. Never a 1337 collection server
-- Vault, settings, and session stay in Chrome extension storage on the user's machine
-- Network calls happen only when you use RPCs, swaps, explorers, or hardware
-- History uses the explorer API key you paste in Settings — there is no 1337 history backend
-https://1337wallet.io/privacy
-
 ⚠️ SELF-CUSTODY
 You hold the keys. We do not guarantee, insure, or recover funds. Simulation and danger flags help you judge a request. They do not insure the outcome.
 https://1337wallet.io/terms
@@ -84,19 +92,20 @@ Q: Does it work with Uniswap and other dapps?
 A: Yes. Enable MetaMask drop-in for sites that only look for MetaMask, or connect as 1337 via EIP-6963.
 
 Q: How is this different from MetaMask or Rabby?
-A: Same job — connect, send, sign — with denser signer tools: per-chain RPC picker and network doctor, readable confirms with local simulate, approval revoke, LI.FI swaps, multisend, ENS, side panel, and optional Burner Mode. No analytics. No 1337 server.
+A: Same job — connect, send, sign — built for privacy and power: per-chain RPC picker and network doctor, readable confirms with local simulate, approval revoke, LI.FI swaps, multisend, ENS, side panel, and optional Burner Mode. No analytics. No 1337 server. User data stays on the user's machine.
 
 Q: Do you track me?
 A: No. 1337 is private by design. Privacy is only possible when there is no central entity with the power to violate it — other wallets keep that power. We do not collect analytics, telemetry, or any data on a 1337 server, and we never will. Third parties you choose (RPC, LI.FI, explorer, Trezor Connect) still see what those features need.
 
+Q: Will you add analytics later?
+A: No. A wallet that can collect is not private; it is promising not to. There is no 1337 collection server, and there will not be.
+
 Q: What is Burner Mode?
 A: A per-wallet option that auto-signs ordinary dapp requests on a local key you treat as disposable. Risky actions still pause unless you ungate them. Hardware never auto-signs.
 
-Q: Is it a Foundry or Etherscan replacement?
-A: No. 1337 is a wallet you sign with. Inspect, History, and the confirm sheet cover “what is this address / token / tx?” Use Foundry and explorers for the lab work.
-
 ---
 Site: https://1337wallet.io/
+Twitter: https://x.com/1337wallet
 Discord: https://discord.gg/ZgADAzAKFd
 Privacy: https://1337wallet.io/privacy
 Terms: https://1337wallet.io/terms

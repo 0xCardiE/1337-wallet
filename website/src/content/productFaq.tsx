@@ -34,19 +34,6 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         ),
       },
       {
-        q: 'Is it a Foundry or Etherscan replacement?',
-        a: (
-          <>
-            <p>
-              No. 1337 is a wallet you sign with: understand the request, judge the risk, sign or
-              reject. Inspect, History, and the confirm sheet cover “what is this address / token /
-              tx?” There is no ABI playground, storage inspector, or cast-style workbench. Use
-              Foundry and explorers for that.
-            </p>
-          </>
-        ),
-      },
-      {
         q: 'How is it different from MetaMask and Rabby as a product?',
         a: (
           <>
