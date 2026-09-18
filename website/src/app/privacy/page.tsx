@@ -32,8 +32,8 @@ export default function PrivacyPage() {
         <p>
           {SITE.name} is a self-custody Chrome extension. This policy describes what the extension
           stores on your device and when it talks to the network. There is no 1337 account, no
-          analytics SDK, and no tracking server that receives your vault. Responsibility for keys
-          and funds is in the{' '}
+          analytics SDK, and no tracking server that receives your vault. There never will be.
+          Responsibility for keys and funds is in the{' '}
           <Link href="/terms" className="text-text underline-offset-4 hover:underline">
             terms of use
           </Link>
@@ -61,7 +61,20 @@ export default function PrivacyPage() {
           .
         </p>
 
-        <h2>What stays on your machine</h2>
+        <h2>Private by design</h2>
+        <p>
+          Privacy is only possible when there is no central entity with the power to violate it.
+          Other wallets keep that power: analytics, accounts, or a server that could watch you.
+          1337 does not. Keep all user data where it belongs on the user&apos;s machine. We cannot
+          collect, sell, or leak what we have no endpoint to receive. That is architecture, not a
+          policy we might relax later. See also the{' '}
+          <Link href="/faq#privacy" className="text-text underline-offset-4 hover:underline">
+            privacy FAQ
+          </Link>
+          .
+        </p>
+
+        <h2>What stays on the user&apos;s machine</h2>
         <p>The extension uses Chrome storage on this browser profile:</p>
         <ul>
           {PRIVACY_STORED.map(line => (
@@ -112,8 +125,9 @@ export default function PrivacyPage() {
 
         <h2>Changes</h2>
         <p>
-          If this policy changes, we will update the date on this page. The extension remains
-          local-first: new network destinations appear here if we add a feature that calls them.
+          If this policy changes, we will update the date on this page. We will not add analytics
+          or a 1337 collection server. New third-party destinations appear here if we add a feature
+          that calls them — those calls still do not phone home to us.
         </p>
 
         <p className="mt-10">

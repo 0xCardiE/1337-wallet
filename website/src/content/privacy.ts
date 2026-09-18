@@ -1,7 +1,7 @@
-export const PRIVACY_UPDATED = '9 September 2026';
+export const PRIVACY_UPDATED = '18 September 2026';
 
 export const PRIVACY_SUMMARY =
-  '1337 Wallet does not run analytics, does not phone home to a tracking server, and does not create user profiles. Your vault, settings, and session live in Chrome extension storage on your machine.';
+  'Keep all user data where it belongs on the user\'s machine. 1337 Wallet is private by design: no analytics, no tracking server, and no 1337 collection of your data — ever.';
 
 export const PRIVACY_STORED = [
   'Encrypted vault (seed / private keys) in chrome.storage.local',
@@ -19,8 +19,9 @@ export const PRIVACY_NETWORK = [
 ] as const;
 
 export const PRIVACY_NEVER = [
+  'Analytics, telemetry, crash reports, or usage metrics — now or later',
+  'Anything sent to a 1337 server. There is no such server, and there will not be',
   'Browsing history beyond what Chrome grants for dapp connection',
   'Wallet addresses or balances sent to a 1337 database',
-  'Crash or usage telemetry to 1337',
   'Email, phone, or social login',
 ] as const;

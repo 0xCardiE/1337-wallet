@@ -23,8 +23,8 @@ const PITCHES = [
   {
     href: '#privacy',
     index: '04',
-    title: 'Local',
-    body: 'No analytics. No 1337 server. Encrypted vault in Chrome storage on this machine.',
+    title: 'Private',
+    body: 'Keep all user data where it belongs on the user\'s machine. No analytics. No 1337 server.',
   },
 ] as const;
 
@@ -41,8 +41,9 @@ export function VideoSection() {
           </h2>
         </div>
         <p className="max-w-md text-base leading-relaxed text-muted lg:justify-self-end">
-          You already have a wallet. 1337 is the confirm sheet it still doesn&apos;t give you — plus
-          the RPC picker, hardware, and a vault that never leaves this machine.
+          You already have a wallet. 1337 is privacy and power: the confirm sheet it still
+          doesn&apos;t give you, plus the RPC picker, hardware, and a vault that never leaves the
+          user&apos;s machine.
         </p>
       </div>
 

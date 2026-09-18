@@ -18,7 +18,7 @@ export function SiteFooter() {
           </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">{SITE.tagline}</p>
           <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-            No analytics. No tracking server.
+            Privacy and power. Data stays on the user&apos;s machine.
           </p>
         </div>
 

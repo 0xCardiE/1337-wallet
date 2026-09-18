@@ -45,7 +45,7 @@ export const SECURITY_COMPARISON = [
     topic: 'Analytics about your wallet',
     metamask: 'Product telemetry in the extension',
     rabby: 'Product / security services in the stack',
-    us: 'None. No 1337 telemetry.',
+    us: 'None. Never. No 1337 telemetry.',
   },
 ] as const;
 
@@ -204,7 +204,8 @@ export const SECURITY_FAQ: FaqGroup[] = [
               multisend, side panel, optional Burner Mode on a disposable key.
             </p>
             <p className="mt-3">
-              Privacy is a real split: 1337 has no analytics and no tracking server. Supply-chain
+              Privacy is a real split: 1337 is private by design. No analytics, no tracking server,
+              and no central entity that could watch you. Supply-chain
               hardening is in MetaMask’s family (LavaMoat compartments on the sensitive bundles).
               Auto-lock is available but off by default. Turn it on if the machine is shared.
             </p>

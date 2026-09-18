@@ -8,7 +8,7 @@ import { PRODUCT_FAQ } from '@/content/productFaq';
 export const metadata: Metadata = {
   title: 'FAQ',
   description:
-    'Questions about 1337 Wallet: who it is for, install, dapps, tools, privacy, and how it differs from MetaMask and Rabby.',
+    'Questions about 1337 Wallet: who it is for, install, dapps, tools, private-by-design privacy, and how it differs from MetaMask and Rabby.',
 };
 
 export default function FaqPage() {
@@ -21,8 +21,8 @@ export default function FaqPage() {
             Questions about the product
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-            Install, dapps, tools, networks, and privacy. Keys, hardware, and “what if I do not
-            trust it?” live on{' '}
+            Install, dapps, tools, networks, and why 1337 is private by design. Keys, hardware, and
+            “what if I do not trust it?” live on{' '}
             <Link href="/security" className="text-text underline-offset-4 hover:underline">
               Security
             </Link>

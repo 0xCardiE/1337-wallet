@@ -54,7 +54,9 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               Same job (connect to dapps, send, sign) with a denser toolkit: per-chain RPC picker
               and network doctor, Inspect, approval revoke, LiFi swaps, multisend, ENS, side panel,
               optional Burner Mode on a disposable key. MetaMask is the compatibility baseline.
-              Rabby is the closest power-user cousin. 1337 is local-first and has no analytics.
+              Rabby is the closest power-user cousin. 1337 is privacy and power: no analytics, no
+              1337 server, no central entity that could watch you. User data stays on the user&apos;s
+              machine.
             </p>
             <p className="mt-3">
               For keys and hardware, security is the same class. That question lives on{' '}
@@ -230,7 +232,64 @@ export const PRODUCT_FAQ: FaqGroup[] = [
   },
   {
     id: 'privacy',
-    title: 'Privacy and support',
+    title: 'Privacy',
+    intro:
+      'Keep all user data where it belongs on the user\'s machine. There is no 1337 server that could collect it, and there never will be.',
+    items: [
+      {
+        q: 'Is 1337 private by design?',
+        a: (
+          <>
+            <p>
+              Privacy is only possible when there is no central entity with the power to violate it.
+              Other wallets keep that power: analytics, accounts, or a server that could watch you
+              if they chose to. 1337 does not. There is no 1337 backend, no user database, and no
+              analytics SDK. Keep all user data where it belongs on the user&apos;s machine. We
+              cannot leak or sell what we do not have. That is architecture, not a privacy setting
+              we might change later.
+            </p>
+          </>
+        ),
+      },
+      {
+        q: 'Do you collect any information?',
+        a: (
+          <>
+            <p>
+              No. The wallet does not collect analytics, telemetry, addresses, balances, or usage.
+              There is no 1337 server that receives your data, and there never will be. Vault,
+              settings, and session stay in Chrome extension storage on the user&apos;s machine.
+            </p>
+            <p className="mt-3">
+              Third parties you choose — RPC, LI.FI when you swap, the explorer key you paste for
+              History, Trezor Connect — still see what those features need. We do not get a copy.
+              Full policy:{' '}
+              <Link href="/privacy" className={linkClass}>
+                Privacy
+              </Link>
+              .
+            </p>
+          </>
+        ),
+      },
+      {
+        q: 'Will you add analytics later?',
+        a: (
+          <>
+            <p>
+              No. A wallet that can collect is not private; it is promising not to. We will not add
+              a 1337 analytics SDK, tracking server, or user database. If a feature talks to a
+              third party you opt into, it is listed on the privacy page — it still does not phone
+              home to us.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'support',
+    title: 'Support',
     items: [
       {
         q: 'Do you guarantee my funds?',
@@ -243,22 +302,6 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               insure the outcome. Full text:{' '}
               <Link href="/terms" className={linkClass}>
                 Terms
-              </Link>
-              .
-            </p>
-          </>
-        ),
-      },
-      {
-        q: 'Does it track me?',
-        a: (
-          <>
-            <p>
-              No analytics, no telemetry, no tracking server. Vault and settings stay in Chrome
-              extension storage on your machine. Third parties you choose (RPC, LI.FI, explorer,
-              Trezor Connect) still see what those features need. Full policy:{' '}
-              <Link href="/privacy" className={linkClass}>
-                Privacy
               </Link>
               .
             </p>
