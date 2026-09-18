@@ -2,7 +2,7 @@
   "$schema": "./product.manifest.schema.json",
   "name": "1337 Wallet",
   "shortName": "1337",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "tagline": "A professional EVM signer for developers, hackers, and advanced users.",
   "elevatorPitch": "Self-custody signer: understand the request, judge the risk, sign or reject. Easy RPC switching, hardware, LiFi swaps, and a fast terminal UI — no 1337 accounts, no analytics, no tracking server.",
   "audience": [
