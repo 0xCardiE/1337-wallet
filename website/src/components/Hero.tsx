@@ -29,9 +29,6 @@ export function Hero() {
           <p className="mt-6 max-w-xl text-xl font-medium tracking-tight text-text md:text-2xl">
             Privacy and power.
           </p>
-          <p className="mt-3 max-w-xl text-lg leading-relaxed text-text">
-            Keep all user data where it belongs on the user&apos;s machine.
-          </p>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
             Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No
             analytics. No 1337 server. Works with every MetaMask dapp.
