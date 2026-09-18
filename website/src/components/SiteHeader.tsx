@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BrandLockup } from '@/components/BrandLockup';
-import { ChromeDownload } from '@/components/Outbound';
-import { NAV_LINKS } from '@/lib/site';
+import { ChromeDownload, DiscordMark, SocialIconLink, XMark } from '@/components/Outbound';
+import { NAV_LINKS, SITE } from '@/lib/site';
 
 export function SiteHeader() {
   return (
@@ -24,7 +24,15 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <ChromeDownload className="btn-primary col-start-2 row-start-1 px-3 py-2 text-sm md:col-start-auto md:row-start-auto" />
+        <div className="col-start-2 row-start-1 flex items-center gap-1 md:col-start-auto md:row-start-auto">
+          <SocialIconLink href={SITE.discordUrl} label="Join Discord">
+            <DiscordMark className="h-4 w-[1.3rem] shrink-0" />
+          </SocialIconLink>
+          <SocialIconLink href={SITE.xUrl} label="Follow on X">
+            <XMark />
+          </SocialIconLink>
+          <ChromeDownload className="btn-primary px-3 py-2 text-sm" />
+        </div>
       </div>
     </header>
   );

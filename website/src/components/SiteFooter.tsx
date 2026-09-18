@@ -73,6 +73,16 @@ export function SiteFooter() {
                 Discord
               </a>
             </li>
+            <li>
+              <a
+                href={SITE.xUrl}
+                className="hover:text-text"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                X
+              </a>
+            </li>
           </ul>
         </div>
       </div>

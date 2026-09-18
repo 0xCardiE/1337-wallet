@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FaqList } from '@/components/FaqList';
 import { Kicker } from '@/components/Kicker';
-import { DiscordJoin } from '@/components/Outbound';
+import { DiscordJoin, XFollow } from '@/components/Outbound';
 import { PRODUCT_FAQ } from '@/content/productFaq';
 
 export const metadata: Metadata = {
@@ -39,6 +39,7 @@ export default function FaqPage() {
             Security
           </Link>
           <DiscordJoin>Ask on Discord</DiscordJoin>
+          <XFollow>Follow on X</XFollow>
         </div>
       </div>
     </div>

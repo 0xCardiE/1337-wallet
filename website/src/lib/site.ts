@@ -8,6 +8,7 @@ export const SITE = {
   chromeStoreUrl:
     'https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl',
   discordUrl: 'https://discord.gg/ZgADAzAKFd',
+  xUrl: 'https://x.com/1337wallet',
   privacyPath: '/privacy',
   termsPath: '/terms',
 } as const;

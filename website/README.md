@@ -56,6 +56,7 @@ Do not put SSH passwords or private keys in the repo. The Actions key is GitHub 
 - Copy & links: `src/lib/site.ts`
 - Chrome Web Store URL: `SITE.chromeStoreUrl`
 - Discord: `SITE.discordUrl`
+- X: `SITE.xUrl`
 - Feature tour copy: `src/lib/site.ts` (`PRODUCT_FEATURES`)
 - Live UI captures for the landing gallery: `public/screenshots/features/` (not overwritten by store frames)
 - Chrome Web Store billboards: `npm run store:assets` from the repo root copies framed cards into `public/screenshots/`. `npm run store:frames` re-renders those from `brand/screenshot-sources/`

@@ -181,6 +181,14 @@ const address = await signer.getAddress();`}
         >
           Integration support on Discord
         </a>
+        <a
+          href={SITE.xUrl}
+          className="btn-secondary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Follow on X
+        </a>
       </div>
     </div>
   );

@@ -135,6 +135,15 @@ export default function TermsPage() {
           >
             Discord
           </a>
+          {' · '}
+          <a
+            href={SITE.xUrl}
+            className="text-text underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            X
+          </a>
           . These terms are the agreement for using the tool. They are not a promise that funds are
           safe.
         </p>

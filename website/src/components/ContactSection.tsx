@@ -1,5 +1,5 @@
 import { Kicker } from '@/components/Kicker';
-import { DiscordJoin } from '@/components/Outbound';
+import { DiscordJoin, XFollow } from '@/components/Outbound';
 
 export function ContactSection() {
   return (
@@ -24,7 +24,10 @@ export function ContactSection() {
           </a>
           .
         </p>
-        <DiscordJoin className="btn-primary mt-8">Join Discord</DiscordJoin>
+        <div className="mt-8 flex flex-wrap gap-4">
+          <DiscordJoin className="btn-primary">Join Discord</DiscordJoin>
+          <XFollow>Follow on X</XFollow>
+        </div>
       </div>
     </section>
   );

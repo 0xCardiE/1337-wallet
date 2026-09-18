@@ -304,6 +304,10 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <a href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Discord
               </a>
+              {' '}or follow{' '}
+              <a href={SITE.xUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                @1337wallet on X
+              </a>
               . Dapp and AI integration lives on{' '}
               <Link href="/integrate" className={linkClass}>
                 Integrate

@@ -498,6 +498,10 @@ export const SECURITY_FAQ: FaqGroup[] = [
               <Link href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Discord
               </Link>
+              {' '}or{' '}
+              <Link href={SITE.xUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                @1337wallet on X
+              </Link>
               . Start with a burner account until you are comfortable.
             </p>
           </>

@@ -49,6 +49,15 @@ export default function PrivacyPage() {
           >
             Discord
           </a>
+          {' · '}
+          <a
+            href={SITE.xUrl}
+            className="text-text underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            X
+          </a>
           .
         </p>
 
