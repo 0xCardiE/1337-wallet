@@ -26,10 +26,7 @@ export function Hero() {
           <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl md:leading-[1.05]">
             An EVM wallet for <span className="text-accent-deep">hackers</span>.
           </h1>
-          <p className="mt-6 max-w-xl text-xl font-medium tracking-tight text-text md:text-2xl">
-            Privacy and power.
-          </p>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
             Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No
             analytics. No 1337 server. Works with every MetaMask dapp.
           </p>

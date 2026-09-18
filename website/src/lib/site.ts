@@ -275,8 +275,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
   },
   {
     id: 'burner',
-    kicker: 'Burner Mode',
-    title: 'Auto-sign on a disposable key',
+    kicker: 'Auto-sign',
+    title: 'Burner mode',
     hook: 'Ordinary dapp requests can auto-sign on a software wallet you treat as disposable. Unlimited approvals, unknown contracts, permits, and SIWE mismatches still pause unless you turn those gates off. Hardware always confirms on the device.',
     tryIt: 'Turn Burner on for a throwaway account, and leave the risk gates checked.',
     shots: [
