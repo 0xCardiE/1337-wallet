@@ -29,6 +29,8 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Install Pillow
+        run: sudo apt-get update && sudo apt-get install -y python3-pil
       - name: Production build
         run: npm run icons && npm run build
       - name: Install Chromium

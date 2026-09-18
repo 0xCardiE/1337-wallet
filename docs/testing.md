@@ -12,7 +12,7 @@ Hardware wallets, store listing, and live mainnet money movement are **not** aut
 ```bash
 npm install
 npx playwright install chromium   # once per machine
-npm run icons                     # once per machine (PNGs are generated)
+npm run icons                     # once per machine (needs Python Pillow)
 
 npm run test:unit                 # Vitest
 npm run test:watch

@@ -33,7 +33,7 @@ See [brand/product.manifest.json](brand/product.manifest.json) for the full mani
 
 ```bash
 npm install
-npm run icons   # generate PNG icons from SVG
+npm run icons   # generate PNG icons from SVG (needs Python Pillow: `python3 -m pip install Pillow` or `python3-pil`)
 npm run build   # Webpack + LavaMoat (popup, background) + content scripts
 npm run package:store   # production dist/ → release/1337-wallet-<version>.zip
 ```
