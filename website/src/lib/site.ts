@@ -4,7 +4,7 @@ export const SITE = {
   origin: 'https://1337wallet.io',
   tagline: 'A professional EVM signer for privacy and power.',
   description:
-    'Privacy and power. Keep all user data where it belongs on the user\'s machine. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No 1337 server. Works with every MetaMask dapp.',
+    'Privacy and power. Keep all user data where it belongs on the user\'s machine. Detailed confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No 1337 server. Works with every MetaMask dapp.',
   chromeStoreUrl:
     'https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl',
   discordUrl: 'https://discord.gg/ZgADAzAKFd',
@@ -104,15 +104,15 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
   {
     id: 'confirm',
     kicker: 'Confirm sheet',
-    title: 'Read the request before you sign',
-    hook: 'Each dapp request shows a plain-language summary, a local simulation, and the contract you are calling. Open the decode for the selector, Solidity source, and calldata. If you use hardware, you still confirm on the device.',
-    tryIt: 'Connect a dapp, send a token, and read the sheet before you confirm.',
+    title: 'Detailed transaction inspection',
+    hook: 'Every dapp request opens the decode: selector, Solidity source, full calldata, a local simulation, and the contract you are calling. Built for power users and devs. If you use hardware, you still confirm on the device.',
+    tryIt: 'Connect a dapp, send a token, and inspect the sheet before you confirm.',
     shots: [
       {
         src: '/screenshots/features/confirm-summary.png',
         width: 503,
         height: 353,
-        caption: 'Summary first: “Send tokens.” Simulation against the current chain. Verified proxy, with owner and implementation.',
+        caption: 'Local simulation against the current chain. Verified proxy, with owner and implementation.',
         alt: '1337 confirm sheet summarizing a token transfer, with a successful simulation and Derive marked as a verified proxy',
       },
       {
@@ -134,8 +134,8 @@ export const PRODUCT_FEATURES: ProductFeature[] = [
   {
     id: 'history',
     kicker: 'History',
-    title: 'Your transactions, in plain language',
-    hook: 'Rows like “Approved token spending”, not a raw hash. Copy the fields or open the explorer. History uses the explorer API key you paste in Settings. A public RPC cannot list your transactions.',
+    title: 'Detailed history of your transactions',
+    hook: 'Hash, nonce, from, to, function, method ID, and gas on every row. Labels in plain language, then the fields you copy or open on the explorer. History uses the explorer API key you paste in Settings. A public RPC cannot list your transactions.',
     tryIt: 'Add an explorer key in Settings, then open History.',
     shots: [
       {

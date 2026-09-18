@@ -79,8 +79,8 @@ export const PRODUCT_FAQ: FaqGroup[] = [
           <>
             <p>
               Developers, security researchers, and advanced users who want a serious signer.
-              Readable confirms, easy RPC switching, and hardware. If you already live in MetaMask
-              or Rabby and wish the wallet assumed you can read a transaction, you are the audience.
+              Detailed confirms, easy RPC switching, and hardware. If you already live in MetaMask
+              or Rabby and wish the wallet assumed you can inspect a transaction, you are the audience.
             </p>
           </>
         ),

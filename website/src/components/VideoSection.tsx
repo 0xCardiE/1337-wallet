@@ -12,7 +12,7 @@ const PITCHES = [
     href: '#confirm',
     index: '02',
     title: 'Confirm',
-    body: 'Human summary, local eth_call, danger flags. See pass / fail / revert / gas before you spend.',
+    body: 'Decode, calldata, Solidity source, local eth_call. See pass / fail / revert / gas before you spend.',
   },
   {
     href: '#accounts',
