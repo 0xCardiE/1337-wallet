@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { BrandLockup } from '@/components/BrandLockup';
 import { BuiltOnEthereumBadge } from '@/components/BuiltOnEthereumBadge';
 import { Colophon } from '@/components/Colophon';
+import { DonateAddress } from '@/components/DonateAddress';
 import { FOOTER_EXTRA_LINKS, SITE } from '@/lib/site';
 
 export function SiteFooter() {
@@ -88,7 +89,16 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-border/60 px-5 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-8">
+          <div id="donate" className="flex w-full scroll-mt-32 flex-col items-center gap-3 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent-deep">
+              Self-funded
+            </p>
+            <p className="max-w-md text-sm leading-relaxed text-muted">
+              1337 is self-funded. Donations in tokens and NFTs are welcome.
+            </p>
+            <DonateAddress />
+          </div>
           <BuiltOnEthereumBadge />
           <Colophon compact />
           <p className="text-center text-xs text-muted">

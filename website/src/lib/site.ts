@@ -11,6 +11,7 @@ export const SITE = {
   xUrl: 'https://x.com/1337wallet',
   privacyPath: '/privacy',
   termsPath: '/terms',
+  donationAddress: '0x1697AdD6BAC5367ceD7BeC27F1431E2e8efc778F',
 } as const;
 
 export type FeatureShot = {
@@ -314,6 +315,7 @@ export const FOOTER_EXTRA_LINKS = [
   { href: '/#features', label: 'Features' },
   { href: '/#download', label: 'Install' },
   { href: '/#contact', label: 'Contact' },
+  { href: '/#donate', label: 'Donate' },
 ] as const;
 
 export const PROVIDER = {
