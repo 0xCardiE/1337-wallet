@@ -23,6 +23,7 @@ import {
   fetchTxFailureDetail,
   type TxFailureDetail,
 } from '../lib/txFailureDetail';
+import { filterHistoryRows } from '../lib/txHistorySearch';
 import { humanizeHistoryRow } from '../lib/txHumanize';
 import { describeError } from '../lib/utils';
 import { LiFiIcon } from './LiFiIcon';
@@ -473,9 +474,15 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
   const [err, setErr] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [expandedHash, setExpandedHash] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
-  const grouped = useMemo(() => groupRowsByDate(rows), [rows]);
+  const filteredRows = useMemo(
+    () => filterHistoryRows(rows, query, chainId),
+    [rows, query, chainId],
+  );
+  const grouped = useMemo(() => groupRowsByDate(filteredRows), [filteredRows]);
   const failedCount = useMemo(() => rows.filter(r => !r.success).length, [rows]);
+  const searching = query.trim().length > 0;
 
   const persist = useCallback(
     async (nextRows: TxHistoryRow[], pages: number, more: boolean) => {
@@ -547,6 +554,7 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
   useEffect(() => {
     setHydrated(false);
     setExpandedHash(null);
+    setQuery('');
     void loadInitial();
   }, [chainId, addr, apiKey]);
 
@@ -606,9 +614,11 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
             <p className="w1337-tx-history__head-title">{chain?.name ?? `Chain ${chainId}`}</p>
             <p className="w1337-tx-history__head-sub muted">
               {rows.length > 0
-                ? `${rows.length} tx${rows.length === 1 ? '' : 's'}${
-                    failedCount ? ` · ${failedCount} failed` : ''
-                  }`
+                ? searching
+                  ? `${filteredRows.length} of ${rows.length} txs`
+                  : `${rows.length} tx${rows.length === 1 ? '' : 's'}${
+                      failedCount ? ` · ${failedCount} failed` : ''
+                    }`
                 : 'Activity'}
               {pagesLoaded > 1 ? ` · ${pagesLoaded} pages` : ''}
             </p>
@@ -621,6 +631,54 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
         />
       </div>
 
+      {hydrated && (rows.length > 0 || searching) ? (
+        <div className="w1337-tx-history__search" role="search">
+          <svg
+            className="w1337-tx-history__search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="search"
+            className="w1337-tx-history__search-input"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Escape' && query) {
+                e.preventDefault();
+                setQuery('');
+              }
+            }}
+            placeholder="Approvals, sent tokens, 0x…"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            aria-label="Search history"
+            data-testid="history-search"
+          />
+          {searching ? (
+            <button
+              type="button"
+              className="w1337-tx-history__search-clear"
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {err ? <p className="error">{err}</p> : null}
 
       {!hydrated || (busy && rows.length === 0) ? (
@@ -631,7 +689,14 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
         <p className="w1337-tools-empty muted">No transactions found for this address on this network.</p>
       ) : null}
 
-      {rows.length > 0 ? (
+      {searching && rows.length > 0 && filteredRows.length === 0 ? (
+        <p className="w1337-tools-empty muted">
+          No loaded transactions match “{query.trim()}”.
+          {hasMore ? ' Load more if it might be older.' : ''}
+        </p>
+      ) : null}
+
+      {filteredRows.length > 0 ? (
         <div className="w1337-tx-history__groups">
           {grouped.map(group => (
             <section key={group.label} className="w1337-tx-history__group">
@@ -666,7 +731,7 @@ export function HistoryPanel({ settings }: { settings: AppSettings }) {
         >
           {loadingMore ? 'Loading…' : `Load ${TX_HISTORY_PAGE_SIZE} more`}
         </button>
-      ) : rows.length > 0 ? (
+      ) : rows.length > 0 && filteredRows.length > 0 ? (
         <p className="w1337-tx-history__end muted">End of loaded history</p>
       ) : null}
     </div>
