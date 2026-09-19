@@ -10,7 +10,9 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'brand/hoodie-sources/hoodie-evm.png'
 OUT = ROOT / 'public/icons'
+SOCIAL = ROOT / 'brand/social'
 GREEN = (0, 255, 0, 255)
+PLATE = (5, 8, 6)
 WORD_SCALE = 12
 # Knock out the near-black plate without eating the baked glow.
 BG_MAX = 12
@@ -18,6 +20,10 @@ GLOW_FADE = 36
 # Crop to the hood, not the faint halo, so small lockups still read.
 CROP_GREEN = 80
 MARK_PAD = 4
+# X / Discord / GitHub circle-crop the square. 14% inset keeps the hood
+# peak inside the disc so it reads as a mark on a plate, not a green fill.
+AVATAR_SIZE = 1024
+AVATAR_PAD = 0.14
 
 # Chunky arcade 1337 wordmark (#00ff00).
 ONE = [
@@ -123,6 +129,20 @@ def write_mark() -> None:
     svg_dest = OUT / '1337-skull.svg'
     svg_dest.write_text(svg)
     print('wrote', svg_dest)
+    write_social_avatar(canvas)
+
+
+def write_social_avatar(mark: Image.Image) -> None:
+    """Opaque square plate for circle-cropped profile photos."""
+    SOCIAL.mkdir(parents=True, exist_ok=True)
+    pad = round(AVATAR_SIZE * AVATAR_PAD)
+    inner = AVATAR_SIZE - pad * 2
+    canvas = Image.new('RGBA', (AVATAR_SIZE, AVATAR_SIZE), (*PLATE, 255))
+    fitted = mark.resize((inner, inner), Image.Resampling.NEAREST)
+    canvas.paste(fitted, (pad, pad), fitted)
+    dest = SOCIAL / 'avatar-1024.png'
+    canvas.convert('RGB').save(dest, 'PNG', optimize=True)
+    print('wrote', dest, (AVATAR_SIZE, AVATAR_SIZE), f'(opaque, {int(AVATAR_PAD * 100)}% pad)')
 
 
 def glyph_pixels(rows: list[str], ox: int) -> set[tuple[int, int]]:

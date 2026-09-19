@@ -7,6 +7,7 @@
 - Chrome Web Store description drafts and listing assets (`brand/chrome-web-store/LISTING.txt`, `npm run store:billboards`)
 - Chrome Web Store billboards: `scripts/store-listing-billboards.html` + `npm run store:billboards`
 - X / Open Graph share set: `brand/social/` via `npm run social:assets` (16:9 carousel, OG card, looping feature video)
+- Profile avatar: `brand/social/avatar-1024.png` via `npm run icons` (opaque plate, padded for circle crops)
 - Onboarding and Settings copy (imported via `src/lib/productManifest.ts`)
 - Future website, landing page, or promo material
 
