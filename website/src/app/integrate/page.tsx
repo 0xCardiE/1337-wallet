@@ -174,6 +174,14 @@ const address = await signer.getAddress();`}
           ← Back to home
         </Link>
         <a
+          href={SITE.githubUrl}
+          className="btn-secondary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Source on GitHub
+        </a>
+        <a
           href={SITE.discordUrl}
           className="btn-primary"
           target="_blank"

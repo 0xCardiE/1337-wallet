@@ -2,6 +2,7 @@
   "name": "1337-wallet",
   "version": "2.2.3",
   "description": "An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

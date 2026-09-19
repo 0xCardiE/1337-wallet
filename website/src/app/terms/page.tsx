@@ -128,6 +128,15 @@ export default function TermsPage() {
         <p>
           Questions:{' '}
           <a
+            href={SITE.githubUrl}
+            className="text-text underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+          {' · '}
+          <a
             href={SITE.discordUrl}
             className="text-text underline-offset-4 hover:underline"
             target="_blank"

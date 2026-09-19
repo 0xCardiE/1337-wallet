@@ -141,8 +141,12 @@ export const SECURITY_FAQ: FaqGroup[] = [
               signer in that family, with no 1337 backend that could hold a copy.
             </p>
             <p className="mt-3">
-              If you want proof instead of copy, install only from the official Chrome Web Store,
-              start with a burner key, and keep size on hardware until you are satisfied.
+              If you want proof instead of copy, the wallet is{' '}
+              <Link href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                open source on GitHub
+              </Link>
+              . Install only from the official Chrome Web Store, start with a burner key, and keep
+              size on hardware until you are satisfied.
             </p>
           </>
         ),
@@ -464,7 +468,11 @@ export const SECURITY_FAQ: FaqGroup[] = [
               <Link href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Chrome Web Store listing
               </Link>
-              . Do not sideload a zip from Discord or anywhere else.
+              . Do not sideload a zip from Discord or anywhere else. The source is public on{' '}
+              <Link href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                GitHub
+              </Link>
+              {' '}so you can read what the store build is made from.
             </p>
             <p className="mt-3">
               The extension pages use a strict script policy (scripts shipped with the extension
@@ -503,9 +511,13 @@ export const SECURITY_FAQ: FaqGroup[] = [
               <Link href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Discord
               </Link>
-              {' '}or{' '}
+              {', '}
               <Link href={SITE.xUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 @1337wallet on X
+              </Link>
+              , or{' '}
+              <Link href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                GitHub
               </Link>
               . Start with a burner account until you are comfortable.
             </p>

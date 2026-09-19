@@ -98,6 +98,25 @@ export const PRODUCT_FAQ: FaqGroup[] = [
         ),
       },
       {
+        q: 'Is 1337 open source?',
+        a: (
+          <>
+            <p>
+              Yes. The wallet is open source under the MIT license. Read the code, open issues, and
+              send pull requests on{' '}
+              <a href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+              . Install the signed build from the{' '}
+              <a href={SITE.chromeStoreUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                Chrome Web Store
+              </a>
+              ; the repository is how you inspect what that build is made from.
+            </p>
+          </>
+        ),
+      },
+      {
         q: 'How is it different from MetaMask and Rabby as a product?',
         a: (
           <>
@@ -140,7 +159,11 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               </a>
               . Chrome, Brave, Opera, and Arc all use that same listing. After install it opens in
               the side panel by default. Switch to popup in Settings if you prefer MetaMask-style
-              chrome.
+              chrome. You can also clone and build from{' '}
+              <a href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                source
+              </a>
+              .
             </p>
           </>
         ),
@@ -447,9 +470,13 @@ export const PRODUCT_FAQ: FaqGroup[] = [
               <a href={SITE.discordUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 Discord
               </a>
-              {' '}or follow{' '}
+              , follow{' '}
               <a href={SITE.xUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
                 @1337wallet on X
+              </a>
+              , or open an issue on{' '}
+              <a href={SITE.githubUrl} className={linkClass} target="_blank" rel="noopener noreferrer">
+                GitHub
               </a>
               . Dapp and AI integration lives on{' '}
               <Link href="/integrate" className={linkClass}>

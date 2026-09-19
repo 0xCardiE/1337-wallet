@@ -31,9 +31,10 @@ An EVM wallet for hackers. Privacy and power. No analytics. No 1337 server.
 
 An EVM wallet for hackers. Privacy and power.
 
-Keep all user data where it belongs on the user's machine. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No 1337 server. Never. Works with every MetaMask dapp.
+Keep all user data where it belongs on the user's machine. Readable confirms, easy RPC switching, approvals, swaps, ENS, and multisend. Open source. No analytics. No 1337 server. Never. Works with every MetaMask dapp.
 
 Twitter: https://x.com/1337wallet
+GitHub: https://github.com/0xCardiE/1337-wallet
 
 🔒 PRIVATE BY DESIGN
 - Privacy is only possible when there is no central entity with the power to violate it. Other wallets keep that power. 1337 does not, and never will
@@ -100,11 +101,15 @@ A: No. 1337 is private by design. Privacy is only possible when there is no cent
 Q: Will you add analytics later?
 A: No. A wallet that can collect is not private; it is promising not to. There is no 1337 collection server, and there will not be.
 
+Q: Is 1337 open source?
+A: Yes. The wallet is MIT-licensed. Read the code at https://github.com/0xCardiE/1337-wallet. Install the signed build from the Chrome Web Store.
+
 Q: What is Burner Mode?
 A: A per-wallet option that auto-signs ordinary dapp requests on a local key you treat as disposable. Risky actions still pause unless you ungate them. Hardware never auto-signs.
 
 ---
 Site: https://1337wallet.io/
+GitHub: https://github.com/0xCardiE/1337-wallet
 Twitter: https://x.com/1337wallet
 Discord: https://discord.gg/ZgADAzAKFd
 Privacy: https://1337wallet.io/privacy

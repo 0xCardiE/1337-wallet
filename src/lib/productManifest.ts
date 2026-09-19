@@ -18,3 +18,4 @@ export const PRODUCT_SETTINGS_CUSTODY_HEADING = manifest.messaging.settingsCusto
 export const PRODUCT_SETTINGS_CUSTODY_LEAD = manifest.messaging.settingsCustodyLead;
 export const PRODUCT_TERMS_URL = manifest.links.terms;
 export const PRODUCT_PRIVACY_URL = manifest.links.privacy;
+export const PRODUCT_GITHUB_URL = manifest.links.github;

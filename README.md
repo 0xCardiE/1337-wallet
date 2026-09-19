@@ -1,8 +1,8 @@
 # 1337 Wallet (Chrome extension)
 
-**1337** — a **signer** for developers, hackers, and power users: understand the request, judge the risk, sign or reject. Multi-RPC, LiFi swaps, hardware signing, and MetaMask-compatible dapps. **No analytics. No 1337 server.** Not a Foundry/Etherscan lab — see **[docs/signer.md](docs/signer.md)**. Styled after [1337 Skulls Wallet](https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk).
+**1337** — a **signer** for developers, hackers, and power users: understand the request, judge the risk, sign or reject. Multi-RPC, LiFi swaps, hardware signing, and MetaMask-compatible dapps. **Open source.** **No analytics. No 1337 server.** Not a Foundry/Etherscan lab — see **[docs/signer.md](docs/signer.md)**. Styled after [1337 Skulls Wallet](https://chromewebstore.google.com/detail/1337-skulls-wallet/maggcienpliglmghmmfbnnmjclmopglk).
 
-Product positioning, privacy claims, and promo copy live in **[brand/product.manifest.json](brand/product.manifest.json)** (imported in the app via `src/lib/productManifest.ts`).
+Product positioning, privacy claims, and promo copy live in **[brand/product.manifest.json](brand/product.manifest.json)** (imported in the app via `src/lib/productManifest.ts`). Source: **[github.com/0xCardiE/1337-wallet](https://github.com/0xCardiE/1337-wallet)** (MIT).
 
 ## Features
 

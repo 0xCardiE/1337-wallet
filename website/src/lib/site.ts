@@ -2,11 +2,12 @@ export const SITE = {
   name: '1337 Wallet',
   shortName: '1337',
   origin: 'https://1337wallet.io',
-  tagline: 'A professional EVM signer for privacy and power.',
+  tagline: 'An open-source EVM signer for privacy and power.',
   description:
-    'Privacy and power. Keep all user data where it belongs on the user\'s machine. Detailed confirms, easy RPC switching, approvals, swaps, ENS, and multisend. No analytics. No 1337 server. Works with every MetaMask dapp.',
+    'Privacy and power. Keep all user data where it belongs on the user\'s machine. Detailed confirms, easy RPC switching, approvals, swaps, ENS, and multisend. Open source. No analytics. No 1337 server. Works with every MetaMask dapp.',
   chromeStoreUrl:
     'https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl',
+  githubUrl: 'https://github.com/0xCardiE/1337-wallet',
   discordUrl: 'https://discord.gg/ZgADAzAKFd',
   xUrl: 'https://x.com/1337wallet',
   privacyPath: '/privacy',

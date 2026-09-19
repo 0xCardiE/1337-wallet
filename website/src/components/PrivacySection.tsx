@@ -1,4 +1,5 @@
 import { Kicker } from '@/components/Kicker';
+import { SITE } from '@/lib/site';
 
 export function PrivacySection() {
   return (
@@ -18,8 +19,8 @@ export function PrivacySection() {
             <p className="mt-4 max-w-xl text-muted">
               Privacy is only possible when there is no central entity with the power to violate it.
               Other wallets keep that power — analytics, accounts, a server that could watch you.
-              1337 has none of those, and never will. No analytics. No 1337 servers collecting
-              anything.
+              1337 has none of those, and never will. Open source. No analytics. No 1337 servers
+              collecting anything.
             </p>
             <p className="mt-4 max-w-xl text-sm text-muted">
               <a href="/faq#privacy" className="text-text underline-offset-4 hover:underline">
@@ -52,6 +53,17 @@ export function PrivacySection() {
             </li>
             <li className="rounded-[4px] border border-border/80 px-4 py-3">
               No central account that could watch you
+            </li>
+            <li className="rounded-[4px] border border-border/80 px-4 py-3">
+              Open source.{' '}
+              <a
+                href={SITE.githubUrl}
+                className="text-text underline-offset-4 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read the code on GitHub
+              </a>
             </li>
           </ul>
         </div>

@@ -25,6 +25,7 @@ import {
   PRODUCT_SETTINGS_CUSTODY_LEAD,
   PRODUCT_MANIFEST,
   PRODUCT_PRIVACY_URL,
+  PRODUCT_GITHUB_URL,
   PRODUCT_TERMS_URL,
 } from '../lib/productManifest';
 import {
@@ -392,7 +393,11 @@ export function SettingsView({
               <li>{PRODUCT_MANIFEST.privacy.networkWhenYouUseFeatures[0]}</li>
             </ul>
             <p className="muted" style={{ margin: '8px 0 0', fontSize: 10, lineHeight: 1.4 }}>
-              No analytics SDK. No 1337 user accounts.{' '}
+              No analytics SDK. No 1337 user accounts. Open source.{' '}
+              <a href={PRODUCT_GITHUB_URL} target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+              {' · '}
               <a href={PRODUCT_PRIVACY_URL} target="_blank" rel="noreferrer">
                 Privacy policy
               </a>

@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { BrandLockup } from '@/components/BrandLockup';
-import { ChromeDownload, DiscordMark, SocialIconLink, XMark } from '@/components/Outbound';
+import {
+  ChromeDownload,
+  DiscordMark,
+  GitHubMark,
+  SocialIconLink,
+  XMark,
+} from '@/components/Outbound';
 import { NAV_LINKS, SITE } from '@/lib/site';
 
 export function SiteHeader() {
@@ -25,6 +31,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="col-start-2 row-start-1 flex items-center gap-1 md:col-start-auto md:row-start-auto">
+          <SocialIconLink href={SITE.githubUrl} label="Source on GitHub">
+            <GitHubMark />
+          </SocialIconLink>
           <SocialIconLink href={SITE.discordUrl} label="Join Discord">
             <DiscordMark className="h-4 w-[1.3rem] shrink-0" />
           </SocialIconLink>

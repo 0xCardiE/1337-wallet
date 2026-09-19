@@ -18,7 +18,7 @@ export function SiteFooter() {
           </p>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">{SITE.tagline}</p>
           <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-            Privacy and power. Data stays on the user&apos;s machine.
+            Open source. Privacy and power. Data stays on the user&apos;s machine.
           </p>
         </div>
 
@@ -63,6 +63,16 @@ export function SiteFooter() {
               <Link href="/rpc" className="hover:text-text">
                 RPC methods
               </Link>
+            </li>
+            <li>
+              <a
+                href={SITE.githubUrl}
+                className="hover:text-text"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub
+              </a>
             </li>
             <li>
               <a

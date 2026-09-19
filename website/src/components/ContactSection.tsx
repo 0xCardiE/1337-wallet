@@ -1,5 +1,6 @@
 import { Kicker } from '@/components/Kicker';
-import { DiscordJoin, XFollow } from '@/components/Outbound';
+import { DiscordJoin, GitHubFollow, XFollow } from '@/components/Outbound';
+import { SITE } from '@/lib/site';
 
 export function ContactSection() {
   return (
@@ -10,7 +11,16 @@ export function ContactSection() {
           Questions, integrations, feature requests
         </h2>
         <p className="mt-4 text-muted">
-          Builders start with the{' '}
+          1337 is open source.{' '}
+          <a
+            href={SITE.githubUrl}
+            className="text-text underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read the code on GitHub
+          </a>
+          . Builders start with the{' '}
           <a href="/integrate" className="text-text underline-offset-4 hover:underline">
             integration guide
           </a>
@@ -27,6 +37,7 @@ export function ContactSection() {
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
           <DiscordJoin className="btn-primary">Join Discord</DiscordJoin>
+          <GitHubFollow>GitHub</GitHubFollow>
           <XFollow>Follow on X</XFollow>
         </div>
       </div>
