@@ -42,17 +42,15 @@ def store_icon(src: Path, dest: Path) -> None:
 
 
 def punch_mark(path: Path) -> Image.Image:
-    """Keep only the green pixels. No baked black or dark-green box."""
+    """Keep the mark's own pixels; drop near-black plate only."""
     im = Image.open(path).convert('RGBA')
     px = im.load()
     w, h = im.size
     for y in range(h):
         for x in range(w):
             r, g, b, a = px[x, y]
-            if a < 16 or g < 80 or r > 80 or b > 80:
+            if a < 16 or g < 24:
                 px[x, y] = (0, 0, 0, 0)
-            else:
-                px[x, y] = (0, 255, 0, 255)
     box = im.getbbox()
     return im.crop(box) if box else im
 
@@ -63,6 +61,14 @@ def pixel_fit(im: Image.Image, box: tuple[int, int]) -> Image.Image:
     nw = max(1, int(round(w * scale)))
     nh = max(1, int(round(h * scale)))
     return im.resize((nw, nh), Image.Resampling.NEAREST)
+
+
+def smooth_fit(im: Image.Image, box: tuple[int, int]) -> Image.Image:
+    w, h = im.size
+    scale = min(box[0] / w, box[1] / h)
+    nw = max(1, int(round(w * scale)))
+    nh = max(1, int(round(h * scale)))
+    return im.resize((nw, nh), Image.Resampling.LANCZOS)
 
 
 def paste_mark(canvas: Image.Image, mark: Image.Image, xy: tuple[int, int]) -> None:
@@ -78,7 +84,7 @@ def font(path: Path, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
 
 def promo_small(mark: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (440, 280), BG)
-    s = pixel_fit(punch_mark(mark), (118, 130))
+    s = smooth_fit(punch_mark(mark), (118, 130))
     w = pixel_fit(punch_mark(word), (196, 48))
     gap = 22
     lock_w = s.width + gap + w.width
@@ -96,7 +102,7 @@ def promo_small(mark: Path, word: Path, dest: Path) -> None:
 
 def promo_marquee(mark: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (1400, 560), BG)
-    s = pixel_fit(punch_mark(mark), (280, 300))
+    s = smooth_fit(punch_mark(mark), (280, 300))
     w = pixel_fit(punch_mark(word), (520, 120))
     gap = 56
     lock_w = s.width + gap + max(w.width, 640)

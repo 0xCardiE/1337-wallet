@@ -8,11 +8,11 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / 'brand/hoodie-sources/hoodie-eth.png'
+SRC = ROOT / 'brand/hoodie-sources/hoodie-evm.png'
 OUT = ROOT / 'public/icons'
 GREEN = (0, 255, 0, 255)
 WORD_SCALE = 12
-# Knock out the near-black plate without eating the baked glow or ETH facets.
+# Knock out the near-black plate without eating the baked glow.
 BG_MAX = 12
 GLOW_FADE = 36
 # Crop to the hood, not the faint halo, so small lockups still read.

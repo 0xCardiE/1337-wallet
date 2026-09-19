@@ -1,4 +1,4 @@
-/** Hero branding — original hoodie+ETH mark + pixel 1337 wordmark. */
+/** Hero branding — hoodie mark + pixel 1337 wordmark. */
 
 const MARK_SRC = 'icons/1337-skull.png';
 const WORD_SRC = 'icons/1337-wordmark.png';
