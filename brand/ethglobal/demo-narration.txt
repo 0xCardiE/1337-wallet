@@ -1,0 +1,15 @@
+This is 1337. A Chrome extension you sign with. Not a slide deck. The live product.
+
+The vault is created on this machine. Password encrypted. There is no 1337 account, and no 1337 server.
+
+Assets. Pick the chain. Pick the RPC. If an endpoint dies, switch it. Doctor probes chainId. We do not run an RPC of our own.
+
+Tools are things you do with the signer. Approvals to revoke. Swaps. ENS. Multisend through Disperse. Not a Foundry lab.
+
+Private by design. No analytics. No tracking. The vault stays in Chrome storage on this device.
+
+Here is the job. A dapp asks for an unlimited USDC approve. The confirm sheet says so in English. Local simulation: pass, fail, revert, or gas. Reject it.
+
+A phishing sign-in. The domain does not match this page. Called out before you sign.
+
+Install 1337. Connect a dapp you already use. Read the sheet. Then sign. 1337wallet.io

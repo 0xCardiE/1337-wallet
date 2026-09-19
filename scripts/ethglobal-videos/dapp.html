@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Acme DEX</title>
+    <style>
+      :root {
+        --bg: #070b08;
+        --text: #f4f4f5;
+        --muted: #9ca3af;
+        --acc: #22c55e;
+        --danger: #f87171;
+        --border: #16321f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        padding: 18px 28px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .brand {
+        color: var(--acc);
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        font-size: 13px;
+      }
+      main { padding: 40px 28px; max-width: 560px; }
+      h1 { font-size: 32px; letter-spacing: -0.03em; margin: 0 0 12px; }
+      p { color: var(--muted); line-height: 1.5; }
+      button {
+        background: var(--acc);
+        color: #04120a;
+        border: 0;
+        padding: 11px 16px;
+        font-weight: 700;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--danger);
+        border: 1px solid #7f1d1d;
+      }
+      .card {
+        border: 1px solid var(--border);
+        padding: 18px;
+        margin-top: 18px;
+        border-radius: 6px;
+      }
+      .card strong { display: block; margin-bottom: 6px; }
+      #log {
+        font: 12px ui-monospace, monospace;
+        color: var(--muted);
+        white-space: pre-wrap;
+        margin-top: 16px;
+        min-height: 3em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="brand">ACME DEX</span>
+      <button id="connect" type="button">Connect wallet</button>
+    </header>
+    <main>
+      <h1>Trade. After you approve.</h1>
+      <p>
+        A live page talking to <code>window.ethereum</code> — the same path every
+        MetaMask dapp uses.
+      </p>
+      <div class="card">
+        <strong>Unlimited USDC approve</strong>
+        <p>Spender 0x1111…1111 · amount max uint256</p>
+        <button id="approve" type="button">Request approve</button>
+      </div>
+      <div class="card">
+        <strong>Sign in with Ethereum</strong>
+        <p>Claims to be evil.com on this origin — phishing check.</p>
+        <button id="siwe" class="ghost" type="button">Phishing SIWE</button>
+      </div>
+      <div id="log"></div>
+    </main>
+    <script>
+      const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+      const DATA =
+        '0x095ea7b3' +
+        '0000000000000000000000001111111111111111111111111111111111111111' +
+        'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+      const logEl = document.getElementById('log');
+      function log(s) {
+        logEl.textContent += s + '\n';
+      }
+      async function accounts() {
+        const acc = await window.ethereum.request({ method: 'eth_accounts' });
+        return acc[0];
+      }
+      document.getElementById('connect').onclick = async () => {
+        try {
+          const acc = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          log('connected ' + acc);
+        } catch (e) {
+          log('connect ' + (e && e.message ? e.message : e));
+        }
+      };
+      document.getElementById('approve').onclick = async () => {
+        try {
+          const from = await accounts();
+          await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from, to: USDC, data: DATA }],
+          });
+        } catch (e) {
+          log('approve ' + (e && e.message ? e.message : e));
+        }
+      };
+      document.getElementById('siwe').onclick = async () => {
+        try {
+          const from = await accounts();
+          const siwe =
+            'evil.com wants you to sign in with your Ethereum account:\n' +
+            from +
+            '\n\nURI: https://evil.com\nVersion: 1\nChain ID: 1\nNonce: demo\nIssued At: 2026-09-19T00:00:00.000Z';
+          await window.ethereum.request({ method: 'personal_sign', params: [siwe, from] });
+        } catch (e) {
+          log('siwe ' + (e && e.message ? e.message : e));
+        }
+      };
+    </script>
+  </body>
+</html>

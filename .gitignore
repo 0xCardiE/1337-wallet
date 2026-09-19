@@ -18,7 +18,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env (keep examples in repo only)
-.env
 .env*.local
 
 # Tests
@@ -34,6 +33,18 @@ playwright/.cache/
 .cursorignore
 .cursor/
 
+# ETHGlobal recording scratch
+brand/ethglobal/raw/
+brand/ethglobal/audio/
+
 # Wallet research local data
 wallet-research/data/*.json
 !wallet-research/data/.gitkeep
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+!.env.example

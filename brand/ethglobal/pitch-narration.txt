@@ -1,0 +1,13 @@
+I'm Marko. I built 1337.
+
+I was tired of two kinds of wallets. Ones that flatten the confirm screen until you cannot tell what you're signing. And ones that turn into labs: ABI playgrounds, storage inspectors, converters. That is not the daily job.
+
+The daily job is: understand the request, judge the risk, sign or reject, then live with the result.
+
+So I built a signer. Chrome extension. Every request gets a human summary, a local eth_call simulation, and contract danger flags. Keys stay on your machine: seed, imported key, Ledger, or Trezor.
+
+There is no 1337 server. No analytics. Not now, not later. Privacy only holds when nobody in the middle has the power to break it.
+
+I ship this as a real product. It is on the Chrome Web Store. The code is open source. And I use it myself.
+
+If you already sign, install 1337, and read the sheet. That's the whole pitch.
