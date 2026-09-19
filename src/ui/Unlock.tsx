@@ -45,7 +45,7 @@ export function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
   return (
     <div className="unlock-screen">
       <div className="unlock-brand">
-        <Brand1337 className="unlock-brand-stack" skullSize={72} wordmarkWidth={168} />
+        <Brand1337 className="unlock-brand-stack" />
       </div>
 
       <form className="unlock-form" onSubmit={e => void submit(e)}>

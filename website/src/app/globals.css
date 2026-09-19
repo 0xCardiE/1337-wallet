@@ -39,6 +39,22 @@ body {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.brand-lockup__mark {
+  display: block;
+  object-fit: contain;
+}
+
+.brand-lockup__word {
+  display: block;
+  image-rendering: pixelated;
+}
+
 ::selection {
   background: var(--accent-soft);
   color: var(--text);
@@ -222,12 +238,12 @@ body {
 
 .hero-wallet__brand img {
   display: block;
-  image-rendering: pixelated;
 }
 
 .hero-wallet__wordmark {
   height: 11px;
   width: auto;
+  image-rendering: pixelated;
 }
 
 .hero-wallet__gear {

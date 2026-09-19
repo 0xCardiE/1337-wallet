@@ -76,9 +76,9 @@ def font(path: Path, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
         return ImageFont.load_default()
 
 
-def promo_small(skull: Path, word: Path, dest: Path) -> None:
+def promo_small(mark: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (440, 280), BG)
-    s = pixel_fit(punch_mark(skull), (118, 130))
+    s = pixel_fit(punch_mark(mark), (118, 130))
     w = pixel_fit(punch_mark(word), (196, 48))
     gap = 22
     lock_w = s.width + gap + w.width
@@ -94,9 +94,9 @@ def promo_small(skull: Path, word: Path, dest: Path) -> None:
     save_jpg(canvas, dest)
 
 
-def promo_marquee(skull: Path, word: Path, dest: Path) -> None:
+def promo_marquee(mark: Path, word: Path, dest: Path) -> None:
     canvas = Image.new('RGB', (1400, 560), BG)
-    s = pixel_fit(punch_mark(skull), (280, 300))
+    s = pixel_fit(punch_mark(mark), (280, 300))
     w = pixel_fit(punch_mark(word), (520, 120))
     gap = 56
     lock_w = s.width + gap + max(w.width, 640)

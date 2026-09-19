@@ -13,7 +13,7 @@ export function ScreenHeader({ title, onClose, trailing }: Props) {
   return (
     <header className="screen-header">
       <div className="screen-header-left">
-        <Mark1337 className="screen-header-logo" size={26} />
+        <Mark1337 className="screen-header-logo" size={22} />
       </div>
       <h1 className="screen-header-title">{title}</h1>
       <div className="screen-header-right">

@@ -431,12 +431,10 @@ hr.sep {
   filter: drop-shadow(0 1px 2px rgba(34, 197, 94, 0.18));
 }
 
-/* ── 1337 skull mark + wordmark ──────────────────────────────── */
+/* ── 1337 hoodie mark + pixel wordmark ───────────────────────── */
 .w1337-mark {
   display: block;
   flex-shrink: 0;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 .w1337-mark--live {
@@ -458,18 +456,32 @@ hr.sep {
   gap: 10px;
 }
 
-.w1337-brand__skull {
+.w1337-brand__mark-slot {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.w1337-brand__mark-glow {
+  position: absolute;
+  inset: 0;
   display: block;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.38));
+  width: 100%;
+  height: 100%;
+  filter: blur(12px);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.w1337-brand__mark {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .w1337-brand__wordmark {
   display: block;
-  max-width: min(240px, 88vw);
   image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
 @keyframes w1337-glow {
@@ -553,11 +565,10 @@ hr.sep {
 }
 
 .w1337-main-header__title {
-  font-size: 15px;
-  font-weight: 780;
-  letter-spacing: 0.08em;
-  color: var(--acc);
-  text-transform: uppercase;
+  display: block;
+  height: 13px;
+  width: auto;
+  image-rendering: pixelated;
 }
 
 button.w1337-acct-trigger {
@@ -1581,11 +1592,9 @@ button.bfox-main-header__addr:hover:not(:disabled) {
   0%,
   100% {
     opacity: 1;
-    transform: scale(1);
   }
   50% {
     opacity: 0.72;
-    transform: scale(0.96);
   }
 }
 

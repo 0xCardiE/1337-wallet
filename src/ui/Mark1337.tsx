@@ -1,6 +1,6 @@
-/** Compact skull mark for headers and toolbar contexts. */
+/** Compact hoodie mark for headers and toolbar contexts. */
 
-const SKULL_SRC = 'icons/1337-skull.png';
+const MARK_SRC = 'icons/1337-skull.png';
 
 export function Mark1337({
   className,
@@ -14,7 +14,7 @@ export function Mark1337({
 }) {
   return (
     <img
-      src={SKULL_SRC}
+      src={MARK_SRC}
       alt=""
       width={size}
       height={size}

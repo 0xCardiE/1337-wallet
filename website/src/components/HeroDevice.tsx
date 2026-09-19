@@ -42,12 +42,12 @@ export function HeroDevice() {
             <span className="hero-wallet">
               <span className="hero-wallet__top">
                 <span className="hero-wallet__brand">
-                  <img src="/1337-skull.svg" alt="" width={18} height={18} />
+                  <img src="/1337-skull.png" alt="" width={22} height={22} />
                   <img
                     src="/1337-wordmark.png"
-                    alt=""
-                    width={84}
-                    height={18}
+                    alt="1337"
+                    width={35}
+                    height={11}
                     className="hero-wallet__wordmark"
                   />
                 </span>

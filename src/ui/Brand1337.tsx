@@ -1,38 +1,50 @@
-/** Hero branding — pixel skull + 1337 wordmark (public/icons). */
+/** Hero branding — original hoodie+ETH mark + pixel 1337 wordmark. */
 
-const SKULL_SRC = 'icons/1337-skull.png';
-const WORDMARK_SRC = 'icons/1337-wordmark.png';
+const MARK_SRC = 'icons/1337-skull.png';
+const WORD_SRC = 'icons/1337-wordmark.png';
+const WORD_NATIVE = { w: 35, h: 11 };
 
 export function Brand1337({
-  skullSize = 88,
-  wordmarkWidth = 200,
+  markSize = 128,
+  wordHeight = WORD_NATIVE.h * 2,
   className,
 }: {
-  skullSize?: number;
-  wordmarkWidth?: number;
+  markSize?: number;
+  wordHeight?: number;
   className?: string;
 }) {
-  const wordmarkHeight = Math.round(wordmarkWidth * (6 / 28));
+  const wordWidth = (WORD_NATIVE.w / WORD_NATIVE.h) * wordHeight;
 
   return (
     <div className={`w1337-brand${className ? ` ${className}` : ''}`}>
+      <span className="w1337-brand__mark-slot" style={{ width: markSize, height: markSize }}>
+        <img
+          src={MARK_SRC}
+          alt=""
+          className="w1337-brand__mark-glow"
+          width={markSize}
+          height={markSize}
+          aria-hidden
+          decoding="async"
+          draggable={false}
+        />
+        <img
+          src={MARK_SRC}
+          alt=""
+          className="w1337-brand__mark"
+          width={markSize}
+          height={markSize}
+          decoding="async"
+          draggable={false}
+        />
+      </span>
       <img
-        src={SKULL_SRC}
-        alt=""
-        className="w1337-brand__skull"
-        width={skullSize}
-        height={skullSize}
-        style={{ width: skullSize, height: skullSize }}
-        decoding="async"
-        draggable={false}
-      />
-      <img
-        src={WORDMARK_SRC}
+        src={WORD_SRC}
         alt="1337"
         className="w1337-brand__wordmark"
-        width={wordmarkWidth}
-        height={wordmarkHeight}
-        style={{ width: wordmarkWidth, height: wordmarkHeight }}
+        width={wordWidth}
+        height={wordHeight}
+        style={{ width: wordWidth, height: wordHeight }}
         decoding="async"
         draggable={false}
       />

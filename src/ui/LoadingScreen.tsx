@@ -8,7 +8,7 @@ export function LoadingScreen({ message }: { message?: string }) {
       aria-live="polite"
       aria-busy="true"
     >
-      <Brand1337 className="loading-screen-brand-stack" skullSize={80} wordmarkWidth={180} />
+      <Brand1337 className="loading-screen-brand-stack" />
       {message ? (
         <p className="loading-screen-message">{message}</p>
       ) : (

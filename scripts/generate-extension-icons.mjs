@@ -36,9 +36,15 @@ console.log('wrote', join(outDir, '1337-logo.svg'));
 const websitePublic = join(__dirname, '../website/public');
 const skullSvg = readFileSync(join(outDir, '1337-skull.svg'));
 writeFileSync(join(websitePublic, '1337-skull.svg'), skullSvg);
+writeFileSync(join(websitePublic, '1337-wordmark.svg'), readFileSync(join(outDir, '1337-wordmark.svg')));
+writeFileSync(join(websitePublic, '1337-skull.png'), readFileSync(join(outDir, '1337-skull.png')));
+writeFileSync(join(websitePublic, '1337-wordmark.png'), readFileSync(join(outDir, '1337-wordmark.png')));
 writeFileSync(join(websitePublic, 'logo.svg'), skullSvg);
 writeFileSync(join(websitePublic, 'icon-128.png'), readFileSync(join(outDir, 'icon-128.png')));
 console.log('wrote', join(websitePublic, '1337-skull.svg'));
+console.log('wrote', join(websitePublic, '1337-wordmark.svg'));
+console.log('wrote', join(websitePublic, '1337-skull.png'));
+console.log('wrote', join(websitePublic, '1337-wordmark.png'));
 console.log('wrote', join(websitePublic, 'logo.svg'));
 console.log('wrote', join(websitePublic, 'icon-128.png'));
 

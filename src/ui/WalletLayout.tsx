@@ -66,7 +66,15 @@ export function WalletLayout({
       <header className="screen-header w1337-main-header">
         <div className="w1337-main-header__brand">
           <Mark1337 size={22} animated={false} />
-          <span className="w1337-main-header__title">1337</span>
+          <img
+            src="icons/1337-wordmark.png"
+            alt="1337"
+            className="w1337-main-header__title"
+            width={41}
+            height={13}
+            decoding="async"
+            draggable={false}
+          />
         </div>
         <div className="screen-header-right">{settingsBtn}</div>
       </header>
