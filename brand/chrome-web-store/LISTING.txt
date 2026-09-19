@@ -1,8 +1,15 @@
-Chrome Web Store listing — 1337 Wallet 2.2.2
+Chrome Web Store listing — 1337 Wallet 2.2.4
 https://chromewebstore.google.com/detail/1337-wallet/ggdidobiifdhehiigbcjiddeeadklmhl
 
+Upload zip: release/1337-wallet-2.2.4.zip  (npm run package:store)
 Regen images: npm run store:billboards
 Upload in this order. Chrome allows 5 screenshots.
+
+What's new (paste into the Developer Dashboard)
+- New hoodie + EVM visor mark
+- History search: find approvals, sends, and hashes in the loaded list
+- Open source on GitHub (MIT)
+- Short description: privacy-first, no 1337 server
 
 Screenshots (1280×800 JPEG)
   1. screenshot-01-hero-1280x800.jpg   ← regen (site hero copy changed)
@@ -21,10 +28,6 @@ Icon
 
 Short description (132 chars, must match public/manifest.json)
 
-CURRENT (in the published 2.2.2 zip — changing this needs a new store version):
-An EVM wallet for hackers. Readable confirms, easy RPC switching, hardware. No analytics. No tracking server.
-
-NEXT ZIP (75 chars):
 An EVM wallet for hackers. Privacy and power. No analytics. No 1337 server.
 
 --- Detailed description (paste into the listing; no new zip required) ---
@@ -50,6 +53,7 @@ https://1337wallet.io/privacy
 - Seed phrase, imported private keys, Ledger (WebHID), and Trezor Connect
 - Side panel by default so the dapp and the signer sit side by side — or switch to a popup
 - Encrypted vault on the user's machine. No 1337 account. No 1337 server
+- History — keyword search for approvals, sends, and hashes in the loaded list
 
 📖 READABLE CONFIRMS
 - Plain-language summary before you sign
