@@ -1,17 +1,17 @@
 # 1337 Wallet
 
-### An open-source EVM wallet for developers, hackers, and power users.
+### An EVM wallet for hackers.
 
-1337 is a self-custodial browser wallet built around one simple idea:
+**Privacy · Power · Open source**
 
-> **See the request. Understand the risk. Then sign.**
+1337 is a self-custodial browser wallet for developers, hackers, and power users.
 
-Instead of hiding transaction details behind a generic confirmation button, 1337 gives you the information you need to understand what a dapp is asking you to sign — including decoded calldata, contract information, local simulation results, and risk signals.
+See what a dapp is asking you to sign. Inspect the request, decode the call, simulate the transaction, check the contract, choose your RPC, and then decide whether to sign.
 
-Open source. Self-custodial. No analytics. No 1337 backend.
+**Open source. No analytics. No 1337 server.**
 
 <p align="center">
-  <img src="brand/screenshots/wallet.png" width="380" alt="1337 Wallet" />
+  <img src="https://1337wallet.io/screenshots/features/assets.png?v=8" width="420" alt="1337 Wallet" />
 </p>
 
 <p align="center">
@@ -19,294 +19,201 @@ Open source. Self-custodial. No analytics. No 1337 backend.
   ·
   <a href="https://github.com/0xCardiE/1337-wallet">GitHub</a>
   ·
-  <a href="docs/">Documentation</a>
+  <a href="https://1337wallet.io/">Install</a>
 </p>
 
 ---
 
-## Why 1337?
+## See the request. Then sign.
 
-Most wallets are designed around making signing as quick as possible.
+Most wallets try to make signing as quick as possible.
 
-1337 is designed around making signing **understandable**.
+1337 is built to make signing **understandable**.
 
-When a dapp asks you to sign a transaction, 1337 can show:
+When a dapp sends a transaction, 1337 can expose:
 
-- What contract you're calling
-- What function is being called
-- Decoded parameters
+- Transaction summary
+- Function selector
+- Decoded function and parameters
 - Full calldata
 - Solidity source when available
 - Local `eth_call` simulation
+- Contract information
+- Proxy information
+- Risk signals
 - Gas information
-- Contract and transaction risk signals
-- Whether the simulation succeeds, fails, or reverts
+- Simulation success, failure, or revert
 
-You decide whether the request makes sense.
+You decide what the transaction means.
 
-**No blind signing.**
+You decide whether to sign.
 
 ---
 
-# See 1337 in action
+# The wallet
 
-## Understand what you're signing
-
-Transaction confirmations are designed to expose what a dapp is actually asking you to do.
-
-Inspect the decoded function, calldata, contract information, simulation result, and risk signals before signing.
+The main interface gives you your accounts, balances, networks, RPC endpoint, and tools in one place.
 
 <p align="center">
-  <img src="brand/screenshots/confirm.png" width="800" alt="1337 transaction confirmation" />
+  <img src="https://1337wallet.io/screenshots/features/assets.png?v=8" width="500" alt="1337 Wallet Assets" />
 </p>
 
----
-
-## Control your RPC
-
-Choose exactly which RPC endpoint your wallet uses.
-
-1337 does not operate its own RPC infrastructure. You can select, reorder, test, and switch between endpoints directly from the wallet.
-
-<p align="center">
-  <img src="brand/screenshots/rpc.png" width="800" alt="1337 RPC management" />
-</p>
+Switch between mainnets and testnets, change RPC endpoints, inspect endpoint health, and manage your assets without leaving the wallet.
 
 ---
 
-## Check RPC health
-
-RPC Doctor lets you test endpoints and see whether they are responding correctly.
-
-When an endpoint becomes unavailable or unreliable, you can switch to another endpoint without changing your wallet or dapp setup.
-
-<p align="center">
-  <img src="brand/screenshots/rpc-doctor.png" width="800" alt="1337 RPC Doctor" />
-</p>
-
----
-
-## Manage approvals
-
-Review token permissions directly from the wallet.
-
-Supported approvals include:
-
-- ERC-20 allowances
-- NFT operator approvals
-- Permit2 approvals
-
-<p align="center">
-  <img src="brand/screenshots/approvals.png" width="800" alt="1337 token approvals" />
-</p>
-
----
-
-## Swap across chains
-
-Get token routes through **LI.FI**, inspect the resulting transaction, and sign it from the wallet.
-
-<p align="center">
-  <img src="brand/screenshots/swap.png" width="800" alt="1337 swaps" />
-</p>
-
----
-
-# Built for power users
-
-<table>
-<tr>
-<td width="50%">
-
-### Transaction inspection
-
-<img src="brand/screenshots/confirm.png" width="100%" alt="Transaction inspection" />
-
-Decode calls, inspect calldata, view Solidity source, and simulate transactions before signing.
-
-</td>
-
-<td width="50%">
-
-### RPC control
-
-<img src="brand/screenshots/rpc.png" width="100%" alt="RPC control" />
-
-Choose your RPC per chain and check endpoint health with RPC Doctor.
-
-</td>
-</tr>
-
-<tr>
-<td width="50%">
-
-### Approvals
-
-<img src="brand/screenshots/approvals.png" width="100%" alt="Token approvals" />
-
-Review and revoke ERC-20, NFT, and Permit2 permissions.
-
-</td>
-
-<td width="50%">
-
-### Swaps
-
-<img src="brand/screenshots/swap.png" width="100%" alt="Token swaps" />
-
-Get cross-chain routes through LI.FI and review the transaction before signing.
-
-</td>
-</tr>
-</table>
-
----
-
-# Features
-
-## Transaction confirmation
+# Detailed transaction confirmation
 
 Every dapp transaction goes through a detailed confirmation flow.
 
-Inspect the request before signing and see what is actually being sent to the network.
+Before signing, inspect the request and see what is actually being sent to the network.
 
-- Human-readable transaction summaries
-- Function and selector decoding
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/confirm-summary.png?v=8" width="600" alt="1337 transaction confirmation" />
+</p>
+
+The confirmation flow can show:
+
+- What contract is being called
+- What function is being executed
+- Decoded parameters
+- Contract verification information
+- Proxy implementation information
+- Local simulation results
+- Transaction calldata
 - Solidity source when available
-- Full calldata inspection
-- Local transaction simulation
-- Contract information
-- Risk and danger flags
-- Simulation success, failure, or revert state
-- Hardware confirmation when using Ledger or Trezor
 
-The goal is not to tell you what to sign.
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/confirm-decode.png?v=8" width="600" alt="1337 transaction decoder" />
+</p>
 
-The goal is to give you enough information to decide yourself.
+The purpose is simple:
+
+> **Understand the request before you sign it.**
 
 ---
 
-## Multiple accounts
+# RPC control
 
-Manage multiple accounts from a single wallet.
+Your RPC is your choice.
 
-Supported account types include:
+1337 does not operate its own RPC infrastructure. You can choose the endpoint you want to use for each network.
 
-- HD accounts derived from a seed phrase
-- Imported private keys
-- Ledger accounts
-- Trezor accounts
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/rpc.png?v=8" width="500" alt="1337 RPC picker" />
+</p>
 
-Seed-based accounts use the standard Ethereum derivation path:
-
-```text
-m/44'/60'/0'/0/n
-```
-
-Switch between accounts directly from the wallet interface.
-
----
-
-## Hardware wallets
-
-1337 works with hardware wallets while keeping the signing operation on the device.
-
-Supported:
-
-- Ledger
-- Trezor
-
-Hardware accounts use the same transaction confirmation interface as software accounts.
-
-The wallet prepares and explains the transaction, while the hardware device remains responsible for signing.
-
----
-
-## RPC control
-
-Choose exactly which RPC endpoint your wallet uses.
-
-For each network you can:
+You can:
 
 - Select an RPC endpoint
-- Switch between endpoints
-- Reorder RPCs
+- Switch RPCs without changing networks
+- Reorder RPC endpoints
 - Set a preferred endpoint
-- Test endpoint health
-- Detect incorrect or unavailable endpoints
-- Fail over to another healthy endpoint
-
-The built-in **RPC Doctor** checks endpoints by probing the chain and reports their current status.
-
-Mainnets and testnets use the same network interface.
+- Use public RPCs
+- Use your own endpoints
+- Switch between mainnet and testnet RPCs
 
 ---
 
-## Approvals
+# RPC Doctor
 
-Review token permissions directly from the wallet.
+Not sure whether an RPC is actually working?
 
-The approvals tool supports:
+RPC Doctor probes the endpoints configured for the active chain and reports their status.
+
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/doctor.png?v=8" width="600" alt="1337 RPC Doctor" />
+</p>
+
+It checks:
+
+- RPC availability
+- `eth_chainId`
+- HTTP errors
+- API authorization problems
+- Preferred endpoint health
+- Endpoint latency
+
+When an endpoint is unavailable, healthy endpoints can be used for failover.
+
+---
+
+# Approvals
+
+See and revoke token permissions directly from the wallet.
+
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/approvals.png?v=8" width="600" alt="1337 token approvals" />
+</p>
+
+Supported:
 
 - ERC-20 allowances
 - NFT operator approvals
 - Permit2 approvals
 
-You can inspect the spender and allowance and revoke permissions through the same confirmation flow used for normal transactions.
+Revoking an approval uses the same transaction confirmation flow as other transactions.
 
 ---
 
-## Swaps
+# Swaps
 
-Swap tokens across networks using **LI.FI** routing.
+Get token swap routes through **LI.FI**.
 
 1337 does not operate its own swap backend.
 
-Instead:
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/swap.png?v=8" width="500" alt="1337 token swap" />
+</p>
 
-1. Request a quote
-2. Review the route
-3. Review the transaction
-4. Confirm the transaction
-5. Sign with your wallet or hardware device
+The flow is:
+
+1. Select the source token
+2. Select the destination token
+3. Enter the amount
+4. Request a quote
+5. Review the route
+6. Review the transaction
+7. Sign
 
 Cross-chain routes are provided by LI.FI.
 
 ---
 
-## ENS
+# ENS
 
 Register and manage `.eth` names directly from the wallet.
 
-The ENS tools support:
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/ens-register.png?v=8" width="600" alt="1337 ENS registration" />
+</p>
 
-- Name registration
-- Name management
-- Renewals
+ENS functionality includes:
+
+- Registering names
+- Managing names
+- Renewing names
 - Content hashes
 - URLs
 - ENS records
 
-ENS operations go through the normal ENS controller flow and use the same transaction confirmation system.
+ENS registration follows the standard commit → wait → register flow.
 
 ---
 
-## Multisend
+# Multisend
 
-Send assets to multiple addresses in a single transaction.
+Send native assets or ERC-20 tokens to multiple addresses in one transaction.
 
-Paste a list of recipients and send:
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/multisend.png?v=8" width="600" alt="1337 Multisend" />
+</p>
 
-- Native assets
-- ERC-20 tokens
-
-Multisend uses [Disperse](https://disperse.app/) where available.
-
-Hardware wallets are supported through the same signing flow.
+Paste recipient addresses, specify the amount, and send through Disperse.
 
 ---
 
-## Gas station
+# Gas Station
 
 Need native gas on another network?
 
@@ -315,35 +222,106 @@ The Gas tool lets you quote a cross-chain gas top-up.
 For example:
 
 ```text
-Pay with USDC on Base
-        ↓
-Receive ETH on Ethereum
+USDC on Base
+      ↓
+    route
+      ↓
+ETH on Ethereum
 ```
 
-Select the destination chain, amount, source chain, and token, then review and sign the resulting transaction.
+Choose the destination chain, amount, source chain, and token you want to pay with.
 
 ---
 
-## Transaction history
+# Multiple accounts
+
+Manage different account types from the same interface.
+
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/accounts-passport.png?v=8" width="500" alt="1337 account switcher" />
+</p>
+
+Supported accounts include:
+
+- Seed-derived accounts
+- Imported private keys
+- Ledger
+- Trezor
+
+Seed-derived accounts use the standard Ethereum derivation path:
+
+```text
+m/44'/60'/0'/0/n
+```
+
+Hardware wallets continue to keep the private key on the device.
+
+---
+
+# Hardware wallets
+
+1337 supports:
+
+- Ledger
+- Trezor
+
+Hardware accounts use the same transaction inspection flow as software accounts.
+
+1337 prepares and explains the transaction.
+
+The hardware device still has to approve the signature.
+
+---
+
+# Burner mode
+
+1337 includes an optional Burner Mode for disposable software-wallet accounts.
+
+<p align="center">
+  <img src="https://1337wallet.io/screenshots/features/burner.png?v=8" width="600" alt="1337 Burner Mode" />
+</p>
+
+Burner Mode can automatically sign ordinary dapp requests while still pausing on configurable risk gates such as:
+
+- Unlimited token approvals
+- Unknown contract calls
+- High-value sends
+- Permit / Permit2 signatures
+- EIP-712 chain ID mismatches
+- SIWE domain mismatches
+
+Hardware wallets always require confirmation on the device.
+
+---
+
+# Transaction history
 
 Inspect detailed transaction history when an explorer API key is configured.
 
-History includes fields such as:
+History can include:
 
 - Transaction hash
 - Nonce
-- Sender
-- Recipient
+- From
+- To
 - Function
 - Method ID
 - Gas
 - Explorer link
 
-The wallet does not claim to retrieve transaction history through public RPCs alone. Explorer history uses the API key configured by the user.
+The wallet does not rely on public RPCs to discover your complete transaction history.
 
 ---
 
-## Inspect
+# Signings
+
+1337 keeps a local history of messages and typed-data signatures made through the wallet.
+
+Signing history stays on the device.
+
+---
+
+# Inspect
 
 An optional inspection tool lets you investigate on-chain objects directly from the wallet.
 
@@ -354,38 +332,41 @@ You can inspect:
 - ENS names
 - Transaction hashes
 
-The tool is opt-in and can be enabled from **Settings → Tools**.
+Inspect can be enabled from:
+
+```text
+Settings → Tools
+```
 
 ---
 
-## Signings
+# Dapp compatibility
 
-Keep a local history of messages and typed-data signatures made through the wallet.
+1337 provides a MetaMask-compatible `window.ethereum` provider.
 
-Signing history stays on the device.
+Existing EVM dapps can therefore connect to 1337 without requiring a wallet-specific integration.
+
+If a dapp supports MetaMask, it can generally work with 1337.
+
+The extension opens in the browser side panel by default, with popup mode also available.
 
 ---
 
-## Burner mode
+# Networks
 
-1337 includes an optional burner mode for disposable software-wallet accounts.
+1337 comes with a collection of popular EVM networks and public RPC endpoints.
 
-Useful for:
+Networks and RPC endpoints are user-configurable.
 
-- Testing dapps
-- Experimental interactions
-- Automated workflows
-- Temporary accounts
+You can:
 
-Risk gates can still pause potentially dangerous requests, including:
-
-- Unlimited approvals
-- Unknown contracts
-- High-value transfers
-- Permits
-- SIWE/domain mismatches
-
-Hardware wallets always require confirmation on the device.
+- Switch networks
+- Use mainnets and testnets
+- Reorder networks
+- Reorder RPC endpoints
+- Select a preferred RPC
+- Add supported networks
+- Switch RPC endpoints independently of the selected chain
 
 ---
 
@@ -399,47 +380,43 @@ There is no analytics or usage telemetry inside the extension.
 
 ### No 1337 backend
 
-Wallet vaults and settings remain in the browser's local extension storage.
-
-There is no 1337 server receiving your wallet data.
+Your vault and settings remain in browser extension storage on your machine.
 
 ### No central account
 
-There is no 1337 account that needs to know who you are or what addresses you use.
+There is no 1337 account that needs to know who you are or which addresses you use.
 
-### Network requests are explicit
+### Explicit network communication
 
-The extension communicates with external services only when functionality requires it, such as:
+External network requests happen when you use functionality that requires them, such as:
 
-- Blockchain RPC endpoints
-- LI.FI for swap routing
-- Explorer APIs when you configure an API key
-- Hardware-wallet SDKs
-- Other explicitly used third-party services
+- Blockchain RPCs
+- LI.FI swaps
+- Explorer APIs
+- Hardware wallet SDKs
 
-The wallet itself does not operate an RPC, swap, or blockchain-indexing backend.
+The wallet does not operate its own RPC or indexing backend.
 
 ---
 
 # Security
 
-Security is treated as part of the wallet architecture rather than just a UI feature.
+Security is part of the wallet architecture.
 
-Software-wallet keys are encrypted with a user password before being stored in browser extension storage.
+Software-wallet keys are password-encrypted before being stored in browser extension storage.
 
-Hardware-wallet accounts keep their private keys on the hardware device.
+Ledger and Trezor accounts keep private keys on the hardware device.
 
-The extension also uses [LavaMoat](https://github.com/LavaMoat/LavaMoat) to isolate application components and reduce supply-chain risk.
+The project also uses **LavaMoat** to isolate application components and reduce supply-chain risk.
 
-The project maintains dedicated documentation covering:
+The repository includes dedicated security documentation covering:
 
-- Wallet security
-- Key custody
+- Key storage
 - Hardware wallets
-- Supply-chain protection
+- Supply-chain security
 - LavaMoat
 - Transaction signing
-- Explorer integrations
+- Wallet architecture
 
 See:
 
@@ -448,72 +425,11 @@ See:
 
 ---
 
-# Dapp compatibility
-
-1337 provides a MetaMask-compatible `window.ethereum` provider.
-
-This means existing EVM dapps can connect to 1337 without requiring a wallet-specific integration.
-
-If a dapp already supports MetaMask, it can generally work with 1337.
-
-The wallet can be opened as a browser side panel by default, with popup mode also available.
-
----
-
-# Browser extension
-
-1337 is built as a browser extension and integrates directly with the EVM dapp ecosystem.
-
-The extension provides:
-
-- An in-browser wallet interface
-- Dapp connection support
-- Transaction interception and confirmation
-- Message and typed-data signing
-- Network and RPC management
-- Hardware-wallet support
-- On-chain inspection
-- Wallet tools
-
-The extension can be installed on Chromium-based browsers including:
-
-- Chrome
-- Brave
-- Opera
-- Arc
-
-<p align="center">
-  <img src="brand/screenshots/wallet.png" width="380" alt="1337 browser extension" />
-</p>
-
-**[Install 1337 Wallet](https://1337wallet.io/)**
-
----
-
-# Networks
-
-1337 ships with a collection of popular EVM networks and public RPC endpoints.
-
-Networks and RPC endpoints are user-configurable.
-
-You can:
-
-- Add supported networks
-- Reorder networks
-- Reorder RPC endpoints
-- Select preferred endpoints
-- Switch RPCs without changing networks
-- Use mainnets and testnets from the same interface
-
-The wallet does not force you to use a proprietary RPC.
-
----
-
 # Open source
 
-1337 is fully open source and released under the **MIT License**.
+1337 is open source and released under the **MIT License**.
 
-The source code is available on GitHub:
+The source code is available here:
 
 https://github.com/0xCardiE/1337-wallet
 
@@ -559,7 +475,7 @@ sudo apt install python3-pil
 npm run build
 ```
 
-This builds the extension using Webpack and applies the project's LavaMoat configuration.
+The build uses Webpack and applies the project's LavaMoat configuration.
 
 ## Package for the Chrome Web Store
 
@@ -572,8 +488,6 @@ The production extension is packaged into:
 ```text
 release/1337-wallet-<version>.zip
 ```
-
-Upload the generated ZIP to the Chrome Web Store.
 
 ---
 
@@ -592,15 +506,15 @@ Then open:
 chrome://extensions
 ```
 
-Enable **Developer mode** and choose **Load unpacked**.
+Enable **Developer mode** and choose:
 
-Select the generated:
+**Load unpacked**
+
+Select:
 
 ```text
 dist/
 ```
-
-directory.
 
 ---
 
@@ -618,33 +532,40 @@ Run unit tests:
 npm run test:unit
 ```
 
-Run the extension end-to-end tests:
+Run end-to-end tests:
 
 ```bash
 npm run test:e2e
 ```
 
-The project uses Vitest for unit testing and Playwright for browser-level testing.
+The project uses:
+
+- Vitest for unit tests
+- Playwright for browser-level tests
 
 Hardware wallets and live dapp integrations require additional manual testing.
 
 ---
 
-# Architecture
+# LavaMoat
 
-The extension is composed of several browser-extension components, including:
+1337 uses LavaMoat to protect the extension's privileged bundles against dependency and supply-chain risks.
 
-- Wallet UI
-- Background service
-- Content scripts
-- In-page dapp provider
-- Transaction signer
-- Network/RPC management
-- Hardware wallet integrations
+The protected components include:
 
-The build uses Webpack and LavaMoat.
+- Background bundle
+- Popup UI
 
-LavaMoat protections are applied to the background and UI bundles, while the dapp-facing content/in-page components operate outside those compartments where required for browser dapp compatibility.
+The dapp-facing content and in-page provider components remain outside LavaMoat compartments where required for browser dapp compatibility.
+
+After dependency changes:
+
+```bash
+npm run build:policy
+npm run lavamoat:check
+```
+
+Review any policy changes before committing them.
 
 ---
 
@@ -652,28 +573,26 @@ LavaMoat protections are applied to the background and UI bundles, while the dap
 
 ```text
 .
-├── brand/                 # Brand and product assets
-│   └── screenshots/       # README product screenshots
-├── docs/                  # Documentation
-├── e2e/                   # End-to-end tests
-├── lavamoat/              # LavaMoat security policies
-├── public/                # Static assets
-├── release/               # Packaged releases
-├── scripts/               # Build and development scripts
-├── src/                   # Extension source
-├── tests/unit/             # Unit tests
-├── wallet-research/        # Local wallet research tooling
-├── webpack/               # Webpack configuration
-├── website/               # Website
+├── brand/
+├── docs/
+├── e2e/
+├── lavamoat/
+├── public/
+├── release/
+├── scripts/
+├── src/
+├── tests/
+├── wallet-research/
+├── webpack/
+├── website/
 ├── package.json
+├── webpack.config.cjs
 └── README.md
 ```
 
 ---
 
-# Design philosophy
-
-1337 is built around a few principles.
+# Design principles
 
 ### Understand before signing
 
@@ -685,7 +604,7 @@ Users control their keys and signing devices.
 
 ### Privacy
 
-A wallet should not need a central service to know what its users are doing.
+A wallet should not require a central service to know what its users are doing.
 
 ### User-controlled infrastructure
 
@@ -693,19 +612,30 @@ Users should be able to choose their RPC endpoints instead of being locked into 
 
 ### Developer-first
 
-EVM developers and power users often need more information than a simplified consumer wallet provides.
+EVM developers and power users often need more information than a simplified wallet interface provides.
 
-1337 puts that information directly in the signing flow.
+1337 puts that information directly into the signing flow.
 
 ---
 
-# Disclaimer
+# Install
 
-1337 is self-custodial software.
+1337 runs on Chromium-based browsers including:
 
-You are responsible for your keys, signing decisions, transactions, and assets.
+- Chrome
+- Brave
+- Opera
+- Arc
 
-Always verify transaction details before signing. Hardware wallets provide an additional signing boundary, but you should still review transactions carefully.
+<p align="center">
+  <a href="https://1337wallet.io/">
+    <img src="https://1337wallet.io/screenshots/features/assets.png?v=8" width="420" alt="Install 1337 Wallet" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://1337wallet.io/"><strong>Get 1337 Wallet →</strong></a>
+</p>
 
 ---
 
@@ -716,6 +646,18 @@ Always verify transaction details before signing. Hardware wallets provide an ad
 - **Documentation:** [`docs/`](docs/)
 - **Security:** [`docs/wallet-security.md`](docs/wallet-security.md)
 - **Signer architecture:** [`docs/signer.md`](docs/signer.md)
+
+---
+
+# Disclaimer
+
+1337 is self-custodial software.
+
+You are responsible for your keys, signing decisions, transactions, and assets.
+
+Always verify transaction details before signing.
+
+Hardware wallets provide an additional signing boundary, but you should still review transactions carefully.
 
 ---
 
