@@ -282,6 +282,15 @@ export function isWeakReply(body: string): boolean {
   return isTemplateReply(body) || WEAK_REPLY.test(body);
 }
 
+const AI_TELL =
+  /[—–;]|curious whether|what i(?:'|’)m curious|what i wonder|from the outside|the easy part|the interesting|it(?:'|’)s worth|here(?:'|’)s the thing|let(?:'|’)s unpack|i(?:'|’)d argue|one thing to note|that said|at its core|when it comes to|in a world|not just .{8,80} but |delve|landscape|tapestry|moreover|furthermore|ultimately|in essence|split cleanly|the real (?:test|question|issue|trap) is|the one that matters|that(?:'|’)s the gap|is the kind of|that is when|people will keep|\bdo not\b|\bcannot\b|\bwill not\b|\bit is\b/i;
+
+/** Phrases and punctuation that read as a model, not a person typing. */
+export function aiTellReason(body: string): string | null {
+  if (AI_TELL.test(body)) return 'Reply sounds written by a model';
+  return null;
+}
+
 /** True when the reply is mostly a slice of the post it is answering. */
 export function echoesPost(body: string, source: string): boolean {
   const compact = body.replace(/\s+/g, ' ').toLowerCase();

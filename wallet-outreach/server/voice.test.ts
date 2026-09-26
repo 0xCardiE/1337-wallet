@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildComment, classifyThread, isReplyWorthy, postBlockReason, skipReason } from './voice.js';
+import { aiTellReason, buildComment, classifyThread, isReplyWorthy, postBlockReason, skipReason } from './voice.js';
 
 describe('what we reply to', () => {
   it('suggests a note on security and transaction talk', () => {
@@ -105,5 +105,17 @@ describe('what we reply to', () => {
       ),
     );
     assert.ok(postBlockReason('Check this out', 'reddit'));
+  });
+
+  it('flags replies that sound like a model', () => {
+    assert.ok(aiTellReason('Curious whether wallets spell out liquidation before someone signs.'));
+    assert.ok(aiTellReason('The easy part is the volume. What I wonder is the confirm.'));
+    assert.ok(aiTellReason('The confirm says one thing — the ticker says another.'));
+    assert.ok(aiTellReason("That's the gap between the press line and whether you can get out."));
+    assert.ok(aiTellReason('The exchange will not say which keys left.'));
+    assert.equal(
+      aiTellReason("Posting Apple as collateral is fine until the confirm just says Contract Interaction."),
+      null,
+    );
   });
 });
