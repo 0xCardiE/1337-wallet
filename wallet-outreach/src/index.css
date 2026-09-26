@@ -97,6 +97,25 @@ a {
   border-color: rgba(255, 200, 87, 0.35);
 }
 
+.session-card {
+  margin: 8px 0 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(62, 207, 142, 0.1);
+  border: 1px solid rgba(62, 207, 142, 0.4);
+}
+
+.session-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.session-card p {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 320px 1fr;

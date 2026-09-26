@@ -6,36 +6,28 @@ import type { Moment, OutreachQuery, Source, Tone } from './types.js';
  */
 export const QUERIES: OutreachQuery[] = [
   {
-    id: 'quiet-wallet',
-    label: 'Quiet wallet posts',
+    id: 'wallets',
+    label: 'Wallet talk with an audience',
     seeds: ['my wallet ethereum', 'switched to rabby', 'using metamask'],
     subs: ['ethereum', 'ethfinance', 'CryptoCurrency'],
     xQuery:
-      '("my wallet" OR "switched to" OR Rabby OR MetaMask OR "browser wallet") (crypto OR eth OR chain OR base OR arbitrum) lang:en -is:retweet',
+      '("my wallet" OR "switched to" OR Rabby OR MetaMask OR "browser wallet") (ethereum OR base OR arbitrum OR wallet) lang:en -is:retweet min_faves:2',
   },
   {
-    id: 'quiet-chain',
-    label: 'Quiet chain posts',
-    seeds: ['bridged to base', 'on arbitrum wallet', 'robinhood chain'],
+    id: 'chains',
+    label: 'Chain talk with an audience',
+    seeds: ['bridged to base', 'on arbitrum wallet', 'wallet on optimism'],
     subs: ['ethereum', 'defi', 'CryptoCurrency'],
     xQuery:
-      '("on base" OR "on arbitrum" OR "on optimism" OR "robinhood chain" OR "just bridged" OR "I minted") (wallet OR eth OR crypto OR nft) lang:en -is:retweet',
-  },
-  {
-    id: 'quiet-share',
-    label: 'People sharing crypto',
-    seeds: ['I tried a crypto wallet', 'just shipped ethereum', 'loving defi'],
-    subs: ['ethereum', 'CryptoCurrency', 'ethfinance'],
-    xQuery:
-      '("I tried" OR "I built" OR "just shipped" OR "finally" OR "loving" OR "nice to see") (wallet OR crypto OR chain OR defi OR ethereum) lang:en -is:retweet',
+      '("on base" OR "on arbitrum" OR "on optimism" OR "just bridged" OR "I built") (wallet OR ethereum OR defi) lang:en -is:retweet min_faves:2',
   },
   {
     id: 'security',
-    label: 'Wallet security',
+    label: 'Wallet security with an audience',
     seeds: ['wallet security', 'token approval', 'what am I signing'],
     subs: ['ethereum', 'defi', 'CryptoCurrency'],
     xQuery:
-      '(wallet OR chain OR crypto) (approval OR signing OR privacy OR security OR phishing OR revoke) lang:en -is:retweet',
+      '(wallet OR MetaMask OR Rabby) (approval OR "what am I signing" OR phishing OR revoke OR "wallet security") lang:en -is:retweet min_faves:2',
   },
 ];
 
@@ -65,6 +57,11 @@ const HARD_SKIP: Array<{ pattern: RegExp; reason: string }> = [
   { pattern: /i('ll| will) recover/i, reason: 'Recovery offer' },
   { pattern: /\b(whatsapp|sign up bonus|our expert team|here is the trick|i made \$|casino)\b/i, reason: 'Promo, not a conversation' },
   { pattern: /\b(they took|got hacked|got drained|lost all my|stolen)\b/i, reason: 'Someone lost funds — a compliment is the wrong reply' },
+  {
+    pattern:
+      /\b(redefine|the future of|the only way to|on-demand|don't miss|introducing|whitelist|presale|resource model|is building the fix|start at execution|update on the)\b|👇|🧵/i,
+    reason: 'Promo or bot voice',
+  },
 ];
 
 const NAMED =
@@ -145,6 +142,13 @@ export function skipReason(text: string): string | null {
   for (const rule of HARD_SKIP) {
     if (rule.pattern.test(text)) return rule.reason;
   }
+  const letters = text.replace(/[^A-Za-z]/g, '');
+  const capitals = letters.replace(/[^A-Z]/g, '');
+  const head = letters.slice(0, 48);
+  const headCaps = head.replace(/[^A-Z]/g, '');
+  if (letters.length >= 40 && capitals.length / letters.length >= 0.55) return 'All-caps blast';
+  if (head.length >= 24 && headCaps.length / head.length >= 0.8) return 'All-caps blast';
+  if ((text.match(/#\w+/g) ?? []).length >= 4) return 'Hashtag blast';
   return null;
 }
 
@@ -152,9 +156,10 @@ export function toneFor(text: string): Tone {
   return ASKING.test(text) ? 'plug' : 'note';
 }
 
-/** Quiet posts are where a reply gets read. A post that already has a crowd does not need one. */
+/** A measured zero is usually a bot. Unknown counts are left alone. A real audience can be large. */
 export function attentionSkip(likes?: number, comments?: number): string | null {
-  if ((likes ?? 0) >= 15 || (comments ?? 0) >= 10) return 'Already has attention';
+  if (likes == null && comments == null) return null;
+  if ((likes ?? 0) + (comments ?? 0) < 2) return 'No audience yet — usually a bot or an empty post';
   return null;
 }
 
@@ -176,7 +181,7 @@ export function classifyThread(
   if (blocked) return { fit: 'skip', skipReason: blocked };
   const crowded = attentionSkip(engagement?.likes, engagement?.comments);
   if (crowded) return { fit: 'skip', skipReason: crowded };
-  if (BITCOIN.test(text) && !EVM.test(text) && !NAMED.test(text) && !CHAIN.test(text)) {
+  if (BITCOIN.test(text) && !EVM.test(text) && !/\b(metamask|meta mask|rabby|rainbow)\b/i.test(text)) {
     return { fit: 'skip', skipReason: 'Bitcoin-only — 1337 is an EVM signer' };
   }
   if (PRICE.test(text) && !WALLET.test(text) && !NAMED.test(text) && !SECURITY.test(text)) {
@@ -266,8 +271,25 @@ export function isMessyReply(body: string): boolean {
   return false;
 }
 
+const WEAK_REPLY =
+  /appreciate this|that'?s a specific thing to share|you can tell this is from actually using it|not enough people write the actual setup|^good note\b|self-custody is not silence/i;
+
 export function isTemplateReply(body: string): boolean {
   return TEMPLATE_MARK.test(body);
+}
+
+export function isWeakReply(body: string): boolean {
+  return isTemplateReply(body) || WEAK_REPLY.test(body);
+}
+
+/** True when the reply is mostly a slice of the post it is answering. */
+export function echoesPost(body: string, source: string): boolean {
+  const compact = body.replace(/\s+/g, ' ').toLowerCase();
+  const hay = source.replace(/\s+/g, ' ').toLowerCase();
+  for (let i = 0; i + 48 <= compact.length; i += 8) {
+    if (hay.includes(compact.slice(i, i + 48))) return true;
+  }
+  return false;
 }
 
 function renderReply(detail: string, tone: Tone, frame: number): string {

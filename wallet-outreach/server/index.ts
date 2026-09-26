@@ -1,8 +1,17 @@
 import cors from 'cors';
 import express from 'express';
-import { draftMissing, publishDraft, rescoreStoredTopics, runSearch, runTick, syncLoop } from './agent.js';
+import {
+  draftMissing,
+  markRedditPosted,
+  publishDraft,
+  rescoreStoredTopics,
+  rewriteSuggested,
+  runSearch,
+  runTick,
+  syncLoop,
+} from './agent.js';
 import { redditAuthReady } from './poster/reddit.js';
-import { saveXSession } from './poster/x.js';
+import { readXAccount, refreshXAccount, saveXSession } from './poster/x.js';
 import { xSessionPath } from './search/x.js';
 import { lastPostedAt, loadStore, postsToday, saveAuth, updateStore } from './storage.js';
 import type { DraftStatus, Settings } from './types.js';
@@ -20,6 +29,7 @@ app.get('/api/health', async (_req, res) => {
     ok: true,
     redditAuth: await redditAuthReady(),
     xSession: Boolean(xSessionPath()),
+    xAccount: await readXAccount(),
     autopilot: store.settings.autopilot,
     autoApprove: store.settings.autoApprove,
     dryRun: store.settings.dryRun,
@@ -77,7 +87,8 @@ app.post('/api/x-session', async (req, res) => {
   }
   try {
     await saveXSession(authToken, ct0);
-    res.json({ xSession: true });
+    void refreshXAccount();
+    res.json({ xSession: true, xAccount: await readXAccount() });
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
   }
@@ -88,6 +99,15 @@ app.post('/api/search', async (req, res) => {
   const started = runSearch({ sources });
   const job = await waitForRunning(started);
   res.status(202).json(job ?? { ok: true });
+});
+
+app.post('/api/drafts/rewrite', async (_req, res) => {
+  try {
+    const drafted = await rewriteSuggested();
+    res.json({ drafted });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 app.post('/api/draft', async (req, res) => {
@@ -114,6 +134,15 @@ app.patch('/api/drafts/:id', async (req, res) => {
     return;
   }
   res.json(updated);
+});
+
+app.post('/api/drafts/:id/mark-posted', async (req, res) => {
+  try {
+    const draft = await markRedditPosted(req.params.id);
+    res.json(draft);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 app.post('/api/drafts/:id/post', async (req, res) => {
@@ -152,4 +181,5 @@ app.listen(PORT, () => {
   void rescoreStoredTopics()
     .then(() => syncLoop())
     .catch((err) => console.error(err));
+  void refreshXAccount().catch(() => undefined);
 });

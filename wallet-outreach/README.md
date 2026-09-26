@@ -5,7 +5,7 @@ Watches X for talk about wallets, wallet security, and transactions, then drafts
 - **Note** — a reply about what that person actually wrote. No two replies use the same text.
 - **Plug** — names 1337 and the site, only when they are choosing a wallet.
 
-Quiet posts (few or no likes) are the ones worth a reply. A post that already has a crowd is held.
+Posts with no likes or replies are held, along with promo and all-caps blasts. A reply is for someone who already has a small audience.
 
 Seed-phrase threads and Bitcoin-only posts are held.
 
@@ -30,7 +30,7 @@ Each tick searches the next complaint (privacy, RPC, confirm, approval, account)
 - **Autopilot is off by default.** It runs only while `npm run dev` or `npm run loop` is open.
 - **Auto-approve is off.** With autopilot alone, only drafts you marked Approve are sent.
 - New installs cap at 2 posts a day, 3 hours apart. **Post now** is a manual send and ignores the cap.
-- Reddit is off unless you turn it on. X is the account this tool posts as.
+- Reddit search is off unless you turn it on. A Reddit reply is copied to the clipboard and the thread opens so you can paste it. X is the account this tool posts as.
 
 ## Auth
 
@@ -38,6 +38,6 @@ Stored in `wallet-outreach/data/` (gitignored).
 
 **X** — cookies `auth_token` and `ct0` from x.com while logged in as @1337wallet. If outreach has no session, it reuses the wallet-research session file, which has to be that same account.
 
-**Reddit** — optional. A script app on reddit.com/prefs/apps.
+**Reddit** — no login in this tool. Open the thread from a draft and paste the copied reply while you are logged in on Reddit.
 
 `npm run x:setup` installs Chromium for X search and replies.

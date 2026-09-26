@@ -31,6 +31,7 @@ describe('what we reply to', () => {
 
   it('holds bitcoin-only, seed phrases, and our own posts', () => {
     assert.equal(isReplyWorthy('What wallet should I use for bitcoin?'), false);
+    assert.equal(isReplyWorthy('I moved my bitcoin from Coinbase to a ledger wallet'), false);
     assert.equal(isReplyWorthy('Lost my seed phrase, any ethereum wallet?'), false);
     assert.ok(skipReason('I lost my seed phrase, which wallet can restore it?'));
     assert.equal(isReplyWorthy('MetaMask privacy is a mess', '1337wallet'), false);
@@ -82,11 +83,16 @@ describe('what we reply to', () => {
     assert.equal(postBlockReason(plug.body, 'x'), null);
   });
 
-  it('holds crowded posts and replies to a quiet chain share', () => {
+  it('holds bots and empty posts, and keeps a real post that has an audience', () => {
     assert.equal(
-      classifyThread('I hate MetaMask privacy, they track everything I do', undefined, { likes: 80 }).fit,
+      classifyThread('I hate MetaMask privacy, they track everything I do', undefined, { likes: 0, comments: 0 }).skipReason,
+      'No audience yet — usually a bot or an empty post',
+    );
+    assert.equal(
+      classifyThread("Agreed that's the future of crypto wallet security and privacy", undefined, { likes: 4 }).fit,
       'skip',
     );
+    assert.equal(classifyThread('I hate MetaMask privacy, they track everything I do', undefined, { likes: 6 }).fit, 'reply');
     assert.equal(isReplyWorthy('Just bridged to Base with my wallet and it felt smooth'), true);
   });
 

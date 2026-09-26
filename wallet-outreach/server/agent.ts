@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { postRedditComment, redditAuthReady } from './poster/reddit.js';
 import { postXReply } from './poster/x.js';
-import { redditFullname, searchRedditTopics } from './search/reddit.js';
+import { searchRedditTopics } from './search/reddit.js';
 import { searchXTopics, xSessionPath } from './search/x.js';
-import { lastPostedAt, postsToday, updateStore, upsertTopic } from './storage.js';
-import type { Draft, JobState, Store, Topic } from './types.js';
-import { QUERIES, buildComment, classifyThread, isMessyReply, isTemplateReply, postBlockReason } from './voice.js';
+import { lastPostedAt, loadStore, postsToday, updateStore, upsertTopic } from './storage.js';
+import type { Draft, JobState, Moment, Store, Tone, Topic } from './types.js';
+import { QUERIES, classifyThread, postBlockReason } from './voice.js';
+import { writeWithCursor } from './writer.js';
 
 let running = false;
 
@@ -26,41 +26,36 @@ async function setJob(patch: Partial<JobState> & Pick<JobState, 'id' | 'kind' | 
   });
 }
 
-function draftTopic(store: Store, topic: Topic, replace: boolean): Draft | null {
+function avoidBodies(store: Store, topicId: string): string[] {
+  return store.drafts.filter((d) => d.topicId !== topicId && d.status !== 'skipped').map((d) => d.body);
+}
+
+async function composeDraft(topic: Topic, avoid: string[]): Promise<{ angle: Moment; tone: Tone; body: string }> {
+  const text = `${topic.title}\n${topic.snippet}`;
+  const classified = classifyThread(text, topic.author, topic.engagement);
+  const angle = topic.angle ?? classified.angle ?? 'share';
+  const tone = topic.tone ?? classified.tone ?? 'note';
+  const body = await writeWithCursor({
+    title: topic.title,
+    snippet: topic.snippet,
+    source: topic.source,
+    tone,
+    angle,
+    avoid,
+  });
+  return { angle, tone, body };
+}
+
+function saveDraft(store: Store, topic: Topic, built: { angle: Moment; tone: Tone; body: string }): Draft {
   const existing = store.drafts.find((d) => d.topicId === topic.id);
-  if (topic.fit !== 'reply') {
-    if (existing && existing.status !== 'posted') {
-      existing.status = 'skipped';
-      existing.error = topic.skipReason;
-      existing.updatedAt = new Date().toISOString();
-    }
-    return null;
-  }
-  if (existing?.status === 'posted') return null;
-  if (existing && !replace && existing.status !== 'failed') return null;
-  const avoid = store.drafts
-    .filter((d) => d.topicId !== topic.id && d.status !== 'skipped')
-    .map((d) => d.body);
-  const built = buildComment(topic, topic.source, avoid);
-  if (!built) {
-    topic.fit = 'skip';
-    topic.skipReason = topic.skipReason || 'Nothing specific to reply to, or it would repeat another reply';
-    if (existing) {
-      existing.status = 'skipped';
-      existing.error = topic.skipReason;
-      existing.updatedAt = new Date().toISOString();
-    }
-    return null;
-  }
-  const { angle, body, tone } = built;
   const now = new Date().toISOString();
   const draft: Draft = {
     id: existing?.id ?? randomUUID(),
     topicId: topic.id,
-    body,
-    angle,
-    tone,
-    status: 'suggested',
+    body: built.body,
+    angle: built.angle,
+    tone: built.tone,
+    status: existing?.status === 'approved' ? 'approved' : 'suggested',
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -73,16 +68,59 @@ function draftTopic(store: Store, topic: Topic, replace: boolean): Draft | null 
   return draft;
 }
 
+async function draftOne(topic: Topic, replace: boolean): Promise<Draft | null> {
+  const store = await updateStore((s) => s);
+  const existing = store.drafts.find((d) => d.topicId === topic.id);
+  if (topic.fit !== 'reply') return null;
+  if (existing?.status === 'posted') return null;
+  if (existing && !replace && existing.status !== 'failed') return null;
+  const built = await composeDraft(topic, avoidBodies(store, topic.id));
+  return updateStore((s) => {
+    const current = s.drafts.find((d) => d.topicId === topic.id);
+    if (current?.status === 'posted') return null;
+    return saveDraft(s, topic, built);
+  });
+}
+
 export async function ingestTopics(topics: Topic[], replaceDrafts: boolean): Promise<{ found: number; drafted: number }> {
-  return updateStore((store) => {
-    let drafted = 0;
+  const pending: Topic[] = [];
+  const found = await updateStore((store) => {
+    let replyWorthy = 0;
     for (const topic of topics) {
       const saved = upsertTopic(store, topic);
-      const draft = draftTopic(store, saved, replaceDrafts);
-      if (draft) drafted += 1;
+      if (saved.fit === 'reply') replyWorthy += 1;
+      const existing = store.drafts.find((d) => d.topicId === saved.id);
+      if (saved.fit !== 'reply') {
+        if (existing && existing.status !== 'posted') {
+          existing.status = 'skipped';
+          existing.error = saved.skipReason;
+          existing.updatedAt = new Date().toISOString();
+        }
+        continue;
+      }
+      if (existing?.status === 'posted') continue;
+      if (existing && !replaceDrafts && existing.status !== 'failed') continue;
+      pending.push(saved);
     }
-    return { found: topics.filter((t) => t.fit === 'reply').length, drafted };
+    return replyWorthy;
   });
+  let drafted = 0;
+  for (const topic of pending) {
+    try {
+      if (await draftOne(topic, replaceDrafts)) drafted += 1;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await updateStore((store) => {
+        const existing = store.drafts.find((d) => d.topicId === topic.id);
+        if (existing && existing.status !== 'posted') {
+          existing.error = message;
+          existing.updatedAt = new Date().toISOString();
+        }
+        log(store, `Draft failed: ${message}`);
+      });
+    }
+  }
+  return { found, drafted };
 }
 
 export async function runSearch(options?: { queryIds?: string[]; sources?: Array<'reddit' | 'x'> }): Promise<JobState> {
@@ -175,26 +213,83 @@ export async function runSearch(options?: { queryIds?: string[]; sources?: Array
 }
 
 export async function draftMissing(topicId?: string): Promise<number> {
-  return updateStore((store) => {
-    const topics = store.topics.filter((t) => t.fit === 'reply' && (!topicId || t.id === topicId));
-    let count = 0;
-    for (const topic of topics) {
-      if (draftTopic(store, topic, Boolean(topicId))) count += 1;
+  const store = await loadStore();
+  const topics = store.topics.filter((t) => t.fit === 'reply' && (!topicId || t.id === topicId));
+  let count = 0;
+  for (const topic of topics) {
+    try {
+      if (await draftOne(topic, Boolean(topicId))) count += 1;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await updateStore((s) => {
+        const existing = s.drafts.find((d) => d.topicId === topic.id);
+        if (existing && existing.status !== 'posted') {
+          existing.error = message;
+          existing.updatedAt = new Date().toISOString();
+        }
+        log(s, `Draft failed: ${message}`);
+      });
     }
-    if (count) log(store, `Drafted ${count} comment${count === 1 ? '' : 's'}`);
-    return count;
-  });
+  }
+  if (count) {
+    await updateStore((s) => {
+      log(s, `Drafted ${count} comment${count === 1 ? '' : 's'}`);
+    });
+  }
+  return count;
+}
+
+/** Replace open suggested replies with Cursor agent drafts. Posted replies stay. */
+export async function rewriteSuggested(): Promise<number> {
+  const store = await loadStore();
+  const topics = store.drafts
+    .filter((d) => d.status === 'suggested')
+    .map((d) => store.topics.find((t) => t.id === d.topicId))
+    .filter((t): t is Topic => Boolean(t && t.fit === 'reply'));
+  let count = 0;
+  const queue = [...topics];
+  async function worker() {
+    for (;;) {
+      const topic = queue.shift();
+      if (!topic) return;
+      try {
+        if (await draftOne(topic, true)) {
+          count += 1;
+          console.log(`Cursor reply ${count}/${topics.length}`);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`Cursor reply failed: ${message}`);
+        await updateStore((s) => {
+          const existing = s.drafts.find((d) => d.topicId === topic.id);
+          if (existing && existing.status === 'suggested') {
+            existing.error = message;
+            existing.updatedAt = new Date().toISOString();
+          }
+          log(s, `Draft failed: ${message}`);
+        });
+      }
+    }
+  }
+  await Promise.all([worker(), worker()]);
+  if (count) {
+    await updateStore((s) => {
+      log(s, `Cursor agent rewrote ${count} suggested repl${count === 1 ? 'y' : 'ies'}`);
+    });
+  }
+  return count;
 }
 
 function eligibleDraft(store: Store): Draft | null {
   const open = store.drafts.filter((d) => d.status === 'approved' || (store.settings.autoApprove && d.status === 'suggested'));
   open.sort((a, b) => {
     const likes = (id: string) => store.topics.find((t) => t.id === id)?.engagement?.likes ?? 0;
-    return likes(a.topicId) - likes(b.topicId) || a.createdAt.localeCompare(b.createdAt);
+    return likes(b.topicId) - likes(a.topicId) || a.createdAt.localeCompare(b.createdAt);
   });
   for (const draft of open) {
     const topic = store.topics.find((t) => t.id === draft.topicId);
     if (!topic || topic.fit !== 'reply') continue;
+    if (topic.source === 'reddit') continue;
     if (postBlockReason(draft.body, topic.source)) continue;
     if (store.settings.dryRun && draft.rehearsedAt) continue;
     return draft;
@@ -235,10 +330,7 @@ export async function publishDraft(draftId: string, force = false): Promise<Draf
   try {
     let postUrl: string | undefined;
     if (topic.source === 'reddit') {
-      if (!(await redditAuthReady())) throw new Error('Reddit auth is not set');
-      const fullname = redditFullname(topic);
-      if (!fullname) throw new Error('Could not read the Reddit post id from the URL');
-      postUrl = await postRedditComment(fullname, draft.body);
+      throw new Error('Reddit replies are pasted by hand. Open the thread and paste the copied text.');
     } else {
       if (!xSessionPath()) throw new Error('X session is not set');
       await postXReply(topic.url, draft.body);
@@ -265,6 +357,25 @@ export async function publishDraft(draftId: string, force = false): Promise<Draf
       return row;
     });
   }
+}
+
+/** Record a Reddit reply the user pasted themselves. Does not call Reddit. */
+export async function markRedditPosted(draftId: string): Promise<Draft> {
+  const store = await updateStore((s) => s);
+  const draft = store.drafts.find((d) => d.id === draftId);
+  if (!draft) throw new Error('Draft not found');
+  const topic = store.topics.find((t) => t.id === draft.topicId);
+  if (!topic || topic.source !== 'reddit') throw new Error('Only a Reddit draft can be marked posted by hand');
+  return updateStore((s) => {
+    const row = s.drafts.find((d) => d.id === draftId)!;
+    row.status = 'posted';
+    row.postedAt = new Date().toISOString();
+    row.updatedAt = row.postedAt;
+    row.postUrl = topic.url;
+    row.error = undefined;
+    log(s, `Marked Reddit reply as pasted: ${topic.url}`);
+    return row;
+  });
 }
 
 /** One agent step: search the next topic query, draft replies, maybe post one. */
@@ -380,20 +491,11 @@ export async function rescoreStoredTopics(): Promise<number> {
         changed += 1;
       }
       const existing = store.drafts.find((d) => d.topicId === topic.id);
-      const repeated =
-        existing &&
-        store.drafts.some(
-          (d) => d.id !== existing.id && d.status !== 'skipped' && d.body.trim() === existing.body.trim(),
-        );
-      const stale =
-        existing &&
-        existing.status !== 'posted' &&
-        (changedThis ||
-          repeated ||
-          isTemplateReply(existing.body) ||
-          isMessyReply(existing.body) ||
-          Boolean(postBlockReason(existing.body, topic.source)));
-      draftTopic(store, topic, Boolean(stale));
+      if (existing && existing.status !== 'posted' && fit !== 'reply') {
+        existing.status = 'skipped';
+        existing.error = skip;
+        existing.updatedAt = new Date().toISOString();
+      }
     }
     if (changed) log(store, `Re-checked ${changed} threads. Replies have to be specific, and no two can match.`);
     return changed;

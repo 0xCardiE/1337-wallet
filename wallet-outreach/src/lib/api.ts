@@ -4,6 +4,7 @@ export interface Health {
   ok: boolean;
   redditAuth: boolean;
   xSession: boolean;
+  xAccount: string | null;
   autopilot: boolean;
   autoApprove: boolean;
   dryRun: boolean;
@@ -71,6 +72,10 @@ export function updateDraft(id: string, patch: { body?: string; status?: DraftSt
 
 export function postDraft(id: string, force = false) {
   return json<Draft>(`/api/drafts/${id}/post`, { method: 'POST', body: JSON.stringify({ force }) });
+}
+
+export function markRedditPosted(id: string) {
+  return json<Draft>(`/api/drafts/${id}/mark-posted`, { method: 'POST', body: '{}' });
 }
 
 export function runTick() {
