@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  draftComments,
+  addDraftVersion,
   fetchHealth,
   fetchState,
   markRedditPosted,
@@ -101,7 +101,10 @@ export default function App() {
     if (filter === 'suggested') {
       filtered.sort((a, b) => {
         const likes = (id: string) => topicsById.get(id)?.engagement?.likes ?? 0;
-        return likes(b.topicId) - likes(a.topicId);
+        const byLikes = likes(b.topicId) - likes(a.topicId);
+        if (byLikes) return byLikes;
+        if (a.topicId !== b.topicId) return a.topicId.localeCompare(b.topicId);
+        return b.createdAt.localeCompare(a.createdAt);
       });
     }
     return filtered;
@@ -242,39 +245,56 @@ export default function App() {
               checked={state?.settings.autoApprove ?? false}
               onChange={(e) => void saveVoice({ autoApprove: e.target.checked })}
             />
-            Also send suggested drafts, not only approved ones
+            Post without approving each reply
           </div>
+          <p className="hint">
+            On: the loop sends suggested replies by itself. Off: it only sends ones you marked Approve. Dry run still
+            has to be off for a real post.
+          </p>
           <div className="field">
             <label>Max posts per day</label>
             <input
               type="number"
               min={1}
-              max={12}
-              value={state?.settings.maxPerDay ?? 2}
+              max={80}
+              value={state?.settings.maxPerDay ?? 50}
               onChange={(e) => void saveVoice({ maxPerDay: Number(e.target.value) })}
             />
           </div>
           <div className="field">
-            <label>Minutes between posts</label>
+            <label>Wait at least (minutes)</label>
             <input
               type="number"
-              min={15}
-              value={state?.settings.minGapMinutes ?? 180}
+              min={1}
+              max={120}
+              value={state?.settings.minGapMinutes ?? 4}
               onChange={(e) => void saveVoice({ minGapMinutes: Number(e.target.value) })}
             />
           </div>
           <div className="field">
-            <label>Loop every (minutes)</label>
+            <label>Wait at most (minutes)</label>
             <input
               type="number"
-              min={10}
-              value={state?.settings.loopMinutes ?? 30}
+              min={1}
+              max={180}
+              value={state?.settings.maxGapMinutes ?? 16}
+              onChange={(e) => void saveVoice({ maxGapMinutes: Number(e.target.value) })}
+            />
+          </div>
+          <div className="field">
+            <label>Search every (minutes)</label>
+            <input
+              type="number"
+              min={5}
+              value={state?.settings.loopMinutes ?? 10}
               onChange={(e) => void saveVoice({ loopMinutes: Number(e.target.value) })}
             />
           </div>
           <p className="hint">
-            Leave the dev server open, or run <code>npm run loop</code> in wallet-outreach. The loop stops when that
-            process stops.
+            After each reply the next wait is a random number of minutes inside that range, so it is not the same gap
+            every time. The server looks about once a minute to see if the wait is over, and searches on the slower
+            timer. It stops at the daily cap. Leave this server open, or run <code>npm run loop</code> in
+            wallet-outreach.
           </p>
 
           <h2 style={{ marginTop: 22 }}>X session</h2>
@@ -383,12 +403,8 @@ export default function App() {
                 onStatus={(status) => void act('status', () => updateDraft(draft.id, { status }))}
                 onRegen={() =>
                   void act('regen', async () => {
-                    await draftComments(draft.topicId);
-                    setBodies((prev) => {
-                      const next = { ...prev };
-                      delete next[draft.id];
-                      return next;
-                    });
+                    await addDraftVersion(draft.topicId);
+                    setNotice('New version added. This reply is still here.');
                   })
                 }
                 dryRun={state?.settings.dryRun ?? true}
@@ -495,22 +511,22 @@ function DraftCard({
           {body.length}
           {topic?.source === 'x' ? '/280' : ''} chars
         </span>
-        <button className="btn small" disabled={busy} onClick={onSave}>
+        <button className="btn small" disabled={busy} title="Keep your edits on this reply" onClick={onSave}>
           Save edit
         </button>
-        <button className="btn small" disabled={busy} onClick={onCopy}>
+        <button className="btn small" disabled={busy} title="Copy this reply" onClick={onCopy}>
           Copy
         </button>
-        <button className="btn small" disabled={busy} onClick={onRegen}>
+        <button className="btn small" disabled={busy} title="Ask for another reply and keep this one" onClick={onRegen}>
           Redraft
         </button>
         {draft.status !== 'approved' && draft.status !== 'posted' && (
-          <button className="btn small useful" disabled={busy} onClick={() => onStatus('approved')}>
+          <button className="btn small useful" disabled={busy} title="Let the loop send this one" onClick={() => onStatus('approved')}>
             Approve
           </button>
         )}
         {draft.status !== 'skipped' && draft.status !== 'posted' && (
-          <button className="btn small not-useful" disabled={busy} onClick={() => onStatus('skipped')}>
+          <button className="btn small not-useful" disabled={busy} title="Drop this reply from the queue" onClick={() => onStatus('skipped')}>
             Skip
           </button>
         )}
@@ -530,13 +546,13 @@ function DraftCard({
           </button>
         )}
         {!reddit && draft.status !== 'posted' && (
-          <button className="btn small primary" disabled={busy || over} onClick={() => onPost(false)}>
-            {dryRun ? 'Rehearse' : 'Post now'}
-          </button>
-        )}
-        {!reddit && draft.status !== 'posted' && dryRun && (
-          <button className="btn small" disabled={busy || over} onClick={() => onPost(true)}>
-            Send for real
+          <button
+            className="btn small primary"
+            disabled={busy || over}
+            title={dryRun ? 'Post this reply on X now. Dry run only holds the automatic loop.' : 'Post this reply on X now'}
+            onClick={() => onPost(dryRun)}
+          >
+            {dryRun ? 'Send for real' : 'Post now'}
           </button>
         )}
         {draft.postUrl && (

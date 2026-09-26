@@ -48,6 +48,10 @@ export function draftComments(topicId?: string) {
   return json<{ drafted: number }>('/api/draft', { method: 'POST', body: JSON.stringify({ topicId }) });
 }
 
+export function addDraftVersion(topicId: string) {
+  return json<Draft>('/api/drafts/version', { method: 'POST', body: JSON.stringify({ topicId }) });
+}
+
 export function saveSettings(patch: Partial<Settings>) {
   return json<Settings>('/api/settings', { method: 'PATCH', body: JSON.stringify(patch) });
 }

@@ -62,7 +62,10 @@ export interface Settings {
   /** Log the comment that would be posted and do not call Reddit or X. */
   dryRun: boolean;
   maxPerDay: number;
+  /** Shortest wait after a reply, in minutes. */
   minGapMinutes: number;
+  /** Longest wait after a reply, in minutes. The next gap is chosen at random inside this range. */
+  maxGapMinutes: number;
   loopMinutes: number;
   includeX: boolean;
   includeReddit: boolean;
@@ -106,4 +109,6 @@ export interface Store {
   settings: Settings;
   job: JobState | null;
   cursor: number;
+  /** Do not send another reply before this time. Set after each send so the gap is not a fixed beat. */
+  nextPostAt?: string | null;
 }

@@ -2,12 +2,29 @@ import { randomUUID } from 'node:crypto';
 import { postXReply } from './poster/x.js';
 import { searchRedditTopics } from './search/reddit.js';
 import { searchXTopics, xSessionPath } from './search/x.js';
-import { lastPostedAt, loadStore, postsToday, updateStore, upsertTopic } from './storage.js';
+import { loadStore, postsToday, updateStore, upsertTopic } from './storage.js';
 import type { Draft, JobState, Moment, Store, Tone, Topic } from './types.js';
 import { QUERIES, classifyThread, postBlockReason } from './voice.js';
 import { writeWithCursor } from './writer.js';
 
 let running = false;
+let postTimer: NodeJS.Timeout | null = null;
+
+function rollGapMinutes(min: number, max: number): number {
+  const lo = Math.min(min, max);
+  const hi = Math.max(min, max);
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+
+function scheduleNextPost(store: Store): number {
+  const gap = rollGapMinutes(store.settings.minGapMinutes, store.settings.maxGapMinutes ?? store.settings.minGapMinutes);
+  store.nextPostAt = new Date(Date.now() + gap * 60_000).toISOString();
+  return gap;
+}
+
+function gapStillOpen(store: Store): boolean {
+  return Boolean(store.nextPostAt && Date.now() < new Date(store.nextPostAt).getTime());
+}
 
 function log(store: Store, message: string) {
   store.logs.unshift({ id: randomUUID(), at: new Date().toISOString(), message });
@@ -66,6 +83,32 @@ function saveDraft(store: Store, topic: Topic, built: { angle: Moment; tone: Ton
     store.drafts.unshift(draft);
   }
   return draft;
+}
+
+/** Another reply for the same post. The current draft stays. */
+export async function addDraftVersion(topicId: string): Promise<Draft> {
+  const store = await loadStore();
+  const topic = store.topics.find((t) => t.id === topicId);
+  if (!topic) throw new Error('Thread not found');
+  if (topic.fit !== 'reply') throw new Error(topic.skipReason || 'This thread is not one we reply on');
+  const avoid = store.drafts.filter((d) => d.status !== 'skipped').map((d) => d.body);
+  const built = await composeDraft(topic, avoid);
+  return updateStore((s) => {
+    const now = new Date().toISOString();
+    const draft: Draft = {
+      id: randomUUID(),
+      topicId: topic.id,
+      body: built.body,
+      angle: built.angle,
+      tone: built.tone,
+      status: 'suggested',
+      createdAt: now,
+      updatedAt: now,
+    };
+    s.drafts.unshift(draft);
+    log(s, `New reply version for ${topic.url}`);
+    return draft;
+  });
 }
 
 async function draftOne(topic: Topic, replace: boolean): Promise<Draft | null> {
@@ -310,9 +353,9 @@ export async function publishDraft(draftId: string, force = false): Promise<Draf
   const settings = store.settings;
   if (!force) {
     if (postsToday(store.drafts) >= settings.maxPerDay) throw new Error(`Daily cap is ${settings.maxPerDay}`);
-    const last = lastPostedAt(store.drafts);
-    if (last && Date.now() - new Date(last).getTime() < settings.minGapMinutes * 60_000) {
-      throw new Error(`Waiting ${settings.minGapMinutes} minutes between posts`);
+    if (gapStillOpen(store)) {
+      const mins = Math.max(1, Math.ceil((new Date(store.nextPostAt!).getTime() - Date.now()) / 60_000));
+      throw new Error(`Next reply in about ${mins} minutes`);
     }
   }
 
@@ -322,7 +365,8 @@ export async function publishDraft(draftId: string, force = false): Promise<Draf
       row.rehearsedAt = new Date().toISOString();
       row.updatedAt = row.rehearsedAt;
       row.error = undefined;
-      log(s, `Dry run (${topic.source}): would reply on ${topic.url}`);
+      const gap = scheduleNextPost(s);
+      log(s, `Dry run (${topic.source}): would reply on ${topic.url}. Next wait ${gap} min`);
       return row;
     });
   }
@@ -343,7 +387,8 @@ export async function publishDraft(draftId: string, force = false): Promise<Draf
       row.updatedAt = row.postedAt;
       row.postUrl = postUrl;
       row.error = undefined;
-      log(s, `Posted on ${topic.source}: ${topic.url}`);
+      const gap = scheduleNextPost(s);
+      log(s, `Posted on ${topic.source}: ${topic.url}. Next wait ${gap} min`);
       return row;
     });
   } catch (err) {
@@ -425,7 +470,7 @@ export async function runTick(): Promise<JobState> {
     let posted = 0;
     const after = await updateStore((s) => s);
     const next = eligibleDraft(after);
-    if (next && after.settings.autopilot) {
+    if (next && after.settings.autopilot && !gapStillOpen(after)) {
       const result = await publishDraft(next.id);
       posted = result.status === 'posted' || result.rehearsedAt ? 1 : 0;
     }
@@ -504,15 +549,40 @@ export async function rescoreStoredTopics(): Promise<number> {
 
 let timer: NodeJS.Timeout | null = null;
 
+/** Send one due reply without searching. The wait was chosen at random after the previous send. */
+export async function maybePostOne(): Promise<void> {
+  if (running) return;
+  running = true;
+  try {
+    const store = await loadStore();
+    if (!store.settings.autopilot || gapStillOpen(store)) return;
+    if (postsToday(store.drafts) >= store.settings.maxPerDay) return;
+    const next = eligibleDraft(store);
+    if (!next) return;
+    await publishDraft(next.id);
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+  } finally {
+    running = false;
+  }
+}
+
 export async function syncLoop(): Promise<void> {
   if (timer) {
     clearInterval(timer);
     timer = null;
   }
+  if (postTimer) {
+    clearInterval(postTimer);
+    postTimer = null;
+  }
   const store = await updateStore((s) => s);
   if (!store.settings.autopilot) return;
-  const minutes = Math.max(10, store.settings.loopMinutes || 30);
+  const minutes = Math.max(5, store.settings.loopMinutes || 10);
   timer = setInterval(() => {
     void runTick().catch(() => undefined);
   }, minutes * 60_000);
+  postTimer = setInterval(() => {
+    void maybePostOne().catch(() => undefined);
+  }, 60_000);
 }

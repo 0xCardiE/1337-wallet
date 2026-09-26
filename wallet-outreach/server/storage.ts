@@ -14,11 +14,12 @@ export const RESEARCH_SESSION_FILE = fileURLToPath(
 
 export const DEFAULT_SETTINGS: Settings = {
   autopilot: false,
-  autoApprove: false,
+  autoApprove: true,
   dryRun: true,
-  maxPerDay: 2,
-  minGapMinutes: 180,
-  loopMinutes: 30,
+  maxPerDay: 50,
+  minGapMinutes: 4,
+  maxGapMinutes: 16,
+  loopMinutes: 10,
   includeReddit: false,
   includeX: true,
 };

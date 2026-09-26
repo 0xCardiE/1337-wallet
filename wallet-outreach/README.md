@@ -28,8 +28,8 @@ Each tick searches the next complaint (privacy, RPC, confirm, approval, account)
 
 - **Dry run is on by default.** The log records the post it would reply to and does not call X.
 - **Autopilot is off by default.** It runs only while `npm run dev` or `npm run loop` is open.
-- **Auto-approve is off.** With autopilot alone, only drafts you marked Approve are sent.
-- New installs cap at 2 posts a day, 3 hours apart. **Post now** is a manual send and ignores the cap.
+- **Posting without Approve is on.** With autopilot on, suggested replies go out. Turn that off to send only ones you marked Approve.
+- New installs cap at 50 posts a day. After each reply the next wait is picked at random between 4 and 16 minutes. **Send for real** is a manual send and ignores the cap and the wait.
 - Reddit search is off unless you turn it on. A Reddit reply is copied to the clipboard and the thread opens so you can paste it. X is the account this tool posts as.
 
 ## Auth

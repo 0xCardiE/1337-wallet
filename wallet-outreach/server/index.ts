@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import {
+  addDraftVersion,
   draftMissing,
   markRedditPosted,
   publishDraft,
@@ -57,9 +58,13 @@ app.patch('/api/settings', async (req, res) => {
     store.settings = {
       ...store.settings,
       ...patch,
-      maxPerDay: clamp(patch.maxPerDay ?? store.settings.maxPerDay, 1, 12),
-      minGapMinutes: clamp(patch.minGapMinutes ?? store.settings.minGapMinutes, 15, 24 * 60),
-      loopMinutes: clamp(patch.loopMinutes ?? store.settings.loopMinutes, 10, 24 * 60),
+      maxPerDay: clamp(patch.maxPerDay ?? store.settings.maxPerDay, 1, 80),
+      minGapMinutes: clamp(patch.minGapMinutes ?? store.settings.minGapMinutes, 1, 120),
+      maxGapMinutes: Math.max(
+        clamp(patch.minGapMinutes ?? store.settings.minGapMinutes, 1, 120),
+        clamp(patch.maxGapMinutes ?? store.settings.maxGapMinutes ?? store.settings.minGapMinutes, 1, 180),
+      ),
+      loopMinutes: clamp(patch.loopMinutes ?? store.settings.loopMinutes, 5, 24 * 60),
     };
     return store.settings;
   });
@@ -105,6 +110,20 @@ app.post('/api/drafts/rewrite', async (_req, res) => {
   try {
     const drafted = await rewriteSuggested();
     res.json({ drafted });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+app.post('/api/drafts/version', async (req, res) => {
+  const { topicId } = req.body as { topicId?: string };
+  if (!topicId) {
+    res.status(400).json({ error: 'Need a topic' });
+    return;
+  }
+  try {
+    const draft = await addDraftVersion(topicId);
+    res.json(draft);
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
   }
