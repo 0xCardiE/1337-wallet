@@ -2,6 +2,8 @@
 
 Source crypto wallet complaints from **Reddit**, **Google/web**, and **X** into a local corpus, auto-tag them, then export for LLM analysis.
 
+Insight replies for @1337wallet live in the sibling tool `wallet-outreach` (`npm run wallet-outreach` from the repo root). This corpus tool is unchanged.
+
 No manual approval needed. The database is just a file you paste into Cursor / ChatGPT.
 
 ## Quick start

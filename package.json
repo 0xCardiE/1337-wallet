@@ -36,6 +36,9 @@
     "wallet-research:x-cookies": "npm run x:cookies --prefix wallet-research",
     "wallet-research:search": "npm run search --prefix wallet-research",
     "wallet-research:export": "npm run export --prefix wallet-research",
+    "wallet-outreach": "npm run dev --prefix wallet-outreach",
+    "wallet-outreach:loop": "npm run loop --prefix wallet-outreach",
+    "wallet-outreach:test": "npm test --prefix wallet-outreach",
     "website": "npm run dev --prefix website",
     "website:build": "npm run build --prefix website",
     "website:deploy": "bash scripts/deploy-website.sh"
